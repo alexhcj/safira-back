@@ -8,7 +8,9 @@ async function bootstrap() {
 
   app.setGlobalPrefix('api/v1');
 
-  app.useStaticAssets(join(__dirname, '..', 'public'));
+  app.useStaticAssets(join(__dirname, '..', 'assets'), {
+    prefix: '/assets',
+  });
 
   await app.listen(process.env.PORT || 3000, () =>
     console.log(`Server port: ${process.env.PORT}`),
