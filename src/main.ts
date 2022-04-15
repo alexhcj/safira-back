@@ -12,6 +12,8 @@ async function bootstrap() {
     prefix: '/assets',
   });
 
+  app.enableCors();
+
   await app.listen(process.env.PORT || 3000, () =>
     console.log(`Server port: ${process.env.PORT}`),
   );
