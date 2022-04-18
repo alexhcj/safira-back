@@ -7,6 +7,7 @@ import {
   Delete,
   Controller,
   Logger,
+  ParamData,
 } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/product.dto';
@@ -27,6 +28,12 @@ export class ProductsController {
   read() {
     this.logger.log('Handling read() request...');
     return this.productsService.read();
+  }
+
+  @Get(':id')
+  readProduct(@Param('id') id: ParamData) {
+    this.logger.log('Handling readProduct() request...');
+    return this.productsService.readProduct(id);
   }
 
   @Put(':id')

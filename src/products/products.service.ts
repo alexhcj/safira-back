@@ -1,4 +1,9 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  ParamData,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Product, ProductDocument } from './schemes/product.scheme';
@@ -17,6 +22,10 @@ export class ProductsService {
 
   async read(): Promise<Product[]> {
     return this.productModel.find().exec();
+  }
+
+  async readProduct(id: ParamData): Promise<Product> {
+    return this.productModel.findById(id).exec();
   }
 
   async update(id: string, data: CreateProductDto): Promise<Product> {
