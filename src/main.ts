@@ -8,8 +8,8 @@ async function bootstrap() {
 
   app.setGlobalPrefix('api/v1');
 
-  app.useStaticAssets(join(__dirname, '..', 'assets'), {
-    prefix: '/assets',
+  app.useStaticAssets(join(__dirname, '..', 'public'), {
+    prefix: '/public',
   });
 
   app.enableCors();
