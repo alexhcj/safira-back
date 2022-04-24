@@ -1,17 +1,28 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, SchemaTypes } from 'mongoose';
-import { Product } from '../../products/schemes/product.scheme';
+import { Document, Types, SchemaTypes } from 'mongoose';
 
 export type ReviewDocument = Review & Document;
+
+enum ReviewType {
+  Product = 'Product',
+  Post = 'Post',
+}
 
 @Schema({ collection: 'reviews', timestamps: true })
 export class Review {
   @Prop({
+    required: true,
+    type: String,
+    enum: ReviewType,
+  })
+  readonly reviewType: string;
+
+  @Prop({
     type: SchemaTypes.ObjectId,
-    ref: 'Product',
+    refPath: 'reviewType',
     required: true,
   })
-  readonly productId: Product;
+  readonly objectId: Types.ObjectId;
 
   @Prop()
   readonly author: string;
