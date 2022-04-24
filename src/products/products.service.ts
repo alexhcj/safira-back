@@ -8,6 +8,9 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Product, ProductDocument } from './schemes/product.scheme';
 import { CreateProductDto } from './dto/product.dto';
+import { ProductRO } from './product.interface';
+import { Price, PriceDocument } from '../prices/schemes/price.scheme';
+const slug = require('slug');
 
 @Injectable()
 export class ProductsService {
@@ -16,7 +19,11 @@ export class ProductsService {
   ) {}
 
   async create(data: CreateProductDto): Promise<Product> {
-    const createdProduct = new this.productModel(data);
+    const newProduct = {
+      slug: this.slugify(data.name),
+      ...data,
+    };
+    const createdProduct = new this.productModel(newProduct);
     return createdProduct.save();
   }
 
@@ -54,5 +61,13 @@ export class ProductsService {
     }
 
     return this.productModel.findByIdAndDelete(id).exec();
+  }
+
+  slugify(title: string) {
+    return (
+      slug(title, { lower: true }) +
+      '-' +
+      ((Math.random() * Math.pow(36, 6)) | 0).toString(36)
+    );
   }
 }

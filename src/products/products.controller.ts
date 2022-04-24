@@ -11,6 +11,7 @@ import {
 } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/product.dto';
+import { ProductRO } from './product.interface';
 
 @Controller('products')
 export class ProductsController {
@@ -30,10 +31,10 @@ export class ProductsController {
     return this.productsService.read();
   }
 
-  @Get(':id')
-  readProduct(@Param('id') id: ParamData) {
-    this.logger.log('Handling readProduct() request...');
-    return this.productsService.readProduct(id);
+  @Get(':slug')
+  findOne(@Param('slug') slug: ParamData): Promise<ProductRO> {
+    this.logger.log('Handling findOne() request...');
+    return this.productsService.findOne({ slug });
   }
 
   @Put(':id')
