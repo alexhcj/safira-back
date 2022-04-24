@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Document, SchemaTypes } from 'mongoose';
+import { Price } from '../../prices/schemes/price.scheme';
 
 export type ProductDocument = Product & Document;
 
@@ -8,11 +9,14 @@ export class Product {
   @Prop({ required: true })
   readonly name: string;
 
-  @Prop({ required: true })
-  readonly description: string;
+  @Prop()
+  readonly slug: string;
+
+  @Prop({ type: SchemaTypes.ObjectId, ref: 'Price' })
+  readonly price: Price;
 
   @Prop({ required: true })
-  readonly price: number;
+  readonly description: string;
 
   @Prop({ default: '' })
   readonly img: string;
