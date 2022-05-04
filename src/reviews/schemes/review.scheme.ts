@@ -23,16 +23,13 @@ export class Review {
     refPath: 'reviewType',
     required: true,
   })
-  readonly objectId: Types.ObjectId;
+  readonly reviewObjectId: Types.ObjectId;
 
   @Prop()
   readonly reviews: IReview[];
 
   @Prop()
-  readonly text: string;
-
-  @Prop()
-  readonly rating: number;
+  total: number;
 }
 
 export const ReviewScheme = SchemaFactory.createForClass(Review);

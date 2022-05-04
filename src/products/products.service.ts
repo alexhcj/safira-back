@@ -57,7 +57,11 @@ export class ProductsService {
     const product = await this.productModel
       .findOne(where)
       .populate('price')
+      .populate('reviews')
       .exec();
+
+    // reviews length
+    product.reviews.total = product.reviews.reviews.length;
 
     return { product };
   }

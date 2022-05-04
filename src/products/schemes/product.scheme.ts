@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, SchemaTypes } from 'mongoose';
 import { Price } from '../../prices/schemes/price.scheme';
+import { Review } from '../../reviews/schemes/review.scheme';
 
 export type ProductDocument = Product & Document;
 
@@ -51,9 +52,8 @@ export class Product {
   @Prop()
   readonly productTags: string[];
 
-  // TODO: change to objectId
-  @Prop()
-  readonly reviews: string;
+  @Prop({ type: SchemaTypes.ObjectId, ref: 'Review' })
+  readonly reviews: Review;
 }
 
 export const ProductScheme = SchemaFactory.createForClass(Product);
