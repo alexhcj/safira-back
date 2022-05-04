@@ -3,7 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Product, ProductDocument } from './schemes/product.scheme';
 import { CreateProductDto } from './dto/product.dto';
-import { ProductRO } from './product.interface';
+import { IProductFilter, IProductRO, IProductsRO } from './product.interface';
 import { Price, PriceDocument } from '../prices/schemes/price.scheme';
 const slug = require('slug');
 
@@ -27,7 +27,7 @@ export class ProductsService {
     return this.productModel.find().exec();
   }
 
-  async findOne(where): Promise<ProductRO> {
+  async findOne(where): Promise<IProductRO> {
     const product = await this.productModel
       .findOne(where)
       .populate('price')

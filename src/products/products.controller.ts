@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/product.dto';
-import { ProductRO } from './product.interface';
+import { IProductRO, IProductsRO } from './product.interface';
 
 @Controller('products')
 export class ProductsController {
@@ -32,7 +32,7 @@ export class ProductsController {
   }
 
   @Get(':slug')
-  findOne(@Param('slug') slug: ParamData): Promise<ProductRO> {
+  findOne(@Param('slug') slug: ParamData): Promise<IProductRO> {
     this.logger.log('Handling findOne() request...');
     return this.productsService.findOne({ slug });
   }
