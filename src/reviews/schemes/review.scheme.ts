@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types, SchemaTypes } from 'mongoose';
+import { IReview } from '../review.interface';
 
 export type ReviewDocument = Review & Document;
 
@@ -25,7 +26,7 @@ export class Review {
   readonly objectId: Types.ObjectId;
 
   @Prop()
-  readonly author: string;
+  readonly reviews: IReview[];
 
   @Prop()
   readonly text: string;
