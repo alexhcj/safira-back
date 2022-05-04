@@ -23,8 +23,34 @@ export class ProductsService {
     return createdProduct.save();
   }
 
-  async read(): Promise<Product[]> {
-    return this.productModel.find().exec();
+  async getAll(query): Promise<IProductsRO> {
+    const { filter, sort, limit } = query;
+    const find: IProductFilter = {};
+
+    if (filter) {
+      const filters = JSON.parse(filter);
+
+      if (filters.tags) {
+        find.tags = filters.tags;
+      }
+    }
+
+    const products = await this.productModel
+      .find(find)
+      .sort(sort)
+      .limit(limit)
+      .populate('price')
+      .populate('reviews')
+      .exec();
+
+    const productsCount = await this.productModel
+      .find()
+      .sort(sort)
+      .limit(limit)
+      .populate('price')
+      .countDocuments({ query });
+
+    return { products, productsCount };
   }
 
   async findOne(where): Promise<IProductRO> {

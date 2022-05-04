@@ -3,6 +3,7 @@ import {
   Put,
   Body,
   Post,
+  Query,
   Param,
   Delete,
   Controller,
@@ -26,9 +27,9 @@ export class ProductsController {
   }
 
   @Get('list')
-  read() {
-    this.logger.log('Handling read() request...');
-    return this.productsService.read();
+  getAll(@Query() query): Promise<IProductsRO> {
+    this.logger.log('Handling getAll() request...');
+    return this.productsService.getAll(query);
   }
 
   @Get(':slug')
