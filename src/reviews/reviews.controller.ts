@@ -6,11 +6,13 @@ import {
   Post,
   Param,
   Delete,
+  UseGuards,
   Controller,
   Logger,
 } from '@nestjs/common';
 import { ReviewDto } from './dto/review.dto';
 import { ReviewsService } from './reviews.service';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Controller('reviews')
 export class ReviewsController {
@@ -18,6 +20,7 @@ export class ReviewsController {
 
   constructor(private reviewsService: ReviewsService) {}
 
+  @UseGuards(JwtAuthGuard)
   @Post('create')
   create(@Body() data: ReviewDto, @Req() req: any) {
     this.logger.log('Handling create() request...');
