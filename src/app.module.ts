@@ -5,6 +5,7 @@ import { AppService } from './app.service';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ProductsModule } from './products/products.module';
 import { ReviewsModule } from './reviews/reviews.module';
+import { AuthModule } from './auth/auth.module';
 import { PostsModule } from './posts/posts.module';
 import { PricesModule } from './prices/prices.module';
 import { UsersModule } from './users/users.module';
@@ -20,6 +21,7 @@ import { UsersModule } from './users/users.module';
     ProductsModule,
     ReviewsModule,
     PostsModule,
+    AuthModule,
     PricesModule,
     UsersModule,
   ],
