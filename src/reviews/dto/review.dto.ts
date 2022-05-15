@@ -1,10 +1,6 @@
 import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
-export class CreateReviewDto {
-  @IsString()
-  @IsNotEmpty()
-  readonly author: string;
-
+export class ReviewDto {
   @IsString()
   @IsNotEmpty()
   readonly text: string;
@@ -12,4 +8,7 @@ export class CreateReviewDto {
   @IsNumber()
   @IsNotEmpty()
   readonly rating: number;
+
+  @IsNotEmpty()
+  readonly reviewObjectSlug: string;
 }

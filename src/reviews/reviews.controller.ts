@@ -1,6 +1,7 @@
 import {
   Get,
   Put,
+  Req,
   Body,
   Post,
   Param,
@@ -8,7 +9,7 @@ import {
   Controller,
   Logger,
 } from '@nestjs/common';
-import { CreateReviewDto } from './dto/review.dto';
+import { ReviewDto } from './dto/review.dto';
 import { ReviewsService } from './reviews.service';
 
 @Controller('reviews')
@@ -18,9 +19,9 @@ export class ReviewsController {
   constructor(private reviewsService: ReviewsService) {}
 
   @Post('create')
-  create(@Body() data: CreateReviewDto) {
+  create(@Body() data: ReviewDto, @Req() req: any) {
     this.logger.log('Handling create() request...');
-    return this.reviewsService.create(data);
+    return this.reviewsService.create(data, req.user.userId);
   }
 
   @Get('list')
@@ -30,7 +31,7 @@ export class ReviewsController {
   }
 
   @Put(':id')
-  update(@Param('id') id: string, @Body() data: CreateReviewDto) {
+  update(@Param('id') id: string, @Body() data: ReviewDto) {
     this.logger.log('Handling update() request with id=' + id + '...');
     return this.reviewsService.update(id, data);
   }
