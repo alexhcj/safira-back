@@ -43,12 +43,7 @@ export class ProductsService {
       .populate('reviews')
       .exec();
 
-    const productsCount = await this.productModel
-      .find()
-      .sort(sort)
-      .limit(limit)
-      .populate('price')
-      .countDocuments({ query });
+    const productsCount = products.length;
 
     return { products, productsCount };
   }
@@ -59,9 +54,6 @@ export class ProductsService {
       .populate('price')
       .populate('reviews')
       .exec();
-
-    // reviews length
-    product.reviews.total = product.reviews.reviews.length;
 
     return { product };
   }
