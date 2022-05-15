@@ -3,14 +3,14 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 import { User, UserDocument } from './schemes/user.scheme';
-import { UserDBDto, UserDto } from './dto/user.dto';
+import { UserHashedDto, UserDto } from './dto/user.dto';
 
 @Injectable()
 export class UsersService {
   constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {}
 
   async create(userDto: UserDto): Promise<User> {
-    const user = await this.userModel.findOne({ email: userDto.email }).exec();
+    const user = await this.findByEmail(userDto.email);
 
     if (user) {
       throw new HttpException(
@@ -19,10 +19,10 @@ export class UsersService {
       );
     }
 
-    const salt = await bcrypt.genSalt(10);
+    const salt = await bcrypt.genSalt();
     const ph = await bcrypt.hash(userDto.password, salt);
 
-    const userDBDto: UserDBDto = {
+    const userDBDto: UserHashedDto = {
       email: userDto.email,
       passwordHash: ph,
     };
@@ -32,5 +32,9 @@ export class UsersService {
 
   async findAll(): Promise<User[]> {
     return await this.userModel.find().exec();
+  }
+
+  async findByEmail(email: string): Promise<UserDocument> {
+    return await this.userModel.findOne({ email }).exec();
   }
 }

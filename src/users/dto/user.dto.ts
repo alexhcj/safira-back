@@ -11,7 +11,7 @@ export class UserDto {
   readonly password: string;
 }
 
-export class UserDBDto {
+export class UserHashedDto {
   readonly email: string;
   readonly passwordHash: string;
 }
