@@ -52,7 +52,10 @@ export class ProductsService {
     const product = await this.productModel
       .findOne(where)
       .populate('price')
-      .populate('reviews')
+      .populate({
+        path: 'reviews',
+        populate: { path: 'comments.userId', select: 'fullName' },
+      })
       .exec();
 
     return { product };

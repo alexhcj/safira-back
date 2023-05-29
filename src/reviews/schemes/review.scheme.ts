@@ -5,10 +5,12 @@ import { IReview } from '../review.interface';
 
 export type ReviewDocument = Review & Document;
 
-@Schema({ timestamps: true })
+@Schema({
+  timestamps: true,
+})
 export class ReviewItem {
-  @Prop({ type: SchemaTypes.ObjectId, ref: 'User' })
-  readonly userId: User;
+  @Prop({ type: SchemaTypes.ObjectId, ref: User.name })
+  readonly userId: User; // TODO: return only fullName when populate
 
   @Prop()
   readonly text: string;
@@ -25,7 +27,15 @@ export class Review {
   readonly reviewObjectSlug: string;
 
   @Prop({ type: [ReviewItemScheme], default: [] })
-  readonly reviews: IReview[];
+  readonly comments: IReview[];
 }
 
 export const ReviewScheme = SchemaFactory.createForClass(Review);
+
+ReviewScheme.set('toJSON', {
+  virtuals: true,
+  transform: function (doc, ret) {
+    delete ret['_id'];
+    return ret;
+  },
+});

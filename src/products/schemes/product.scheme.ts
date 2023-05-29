@@ -5,7 +5,10 @@ import { Review } from '../../reviews/schemes/review.scheme';
 
 export type ProductDocument = Product & Document;
 
-@Schema({ collection: 'products', timestamps: true })
+@Schema({
+  collection: 'products',
+  timestamps: true,
+})
 export class Product {
   @Prop({ required: true })
   readonly name: string;
@@ -13,14 +16,11 @@ export class Product {
   @Prop()
   readonly slug: string;
 
-  @Prop({ type: SchemaTypes.ObjectId, ref: 'Price' })
+  @Prop({ type: SchemaTypes.ObjectId, ref: Price.name })
   readonly price: Price;
 
   @Prop({ required: true })
   readonly description: string;
-
-  @Prop({ default: '' })
-  readonly img: string;
 
   @Prop({ default: 0 })
   readonly quantity: number;
@@ -52,8 +52,16 @@ export class Product {
   @Prop()
   readonly productTags: string[];
 
-  @Prop({ type: SchemaTypes.ObjectId, ref: 'Review' })
+  @Prop({ type: SchemaTypes.ObjectId, ref: Review.name })
   readonly reviews: Review;
 }
 
 export const ProductScheme = SchemaFactory.createForClass(Product);
+
+ProductScheme.set('toJSON', {
+  virtuals: true,
+  transform: function (doc, ret) {
+    delete ret['_id'];
+    return ret;
+  },
+});

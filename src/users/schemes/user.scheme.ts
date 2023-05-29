@@ -10,6 +10,19 @@ export class User {
 
   @Prop({ required: true })
   readonly passwordHash: string;
+
+  @Prop()
+  readonly fullName: string;
 }
 
 export const UserScheme = SchemaFactory.createForClass(User);
+
+UserScheme.set('toJSON', {
+  virtuals: true,
+  transform: function (doc, ret) {
+    delete ret['passwordHash'];
+    delete ret['_id'];
+    delete ret['__v'];
+    return ret;
+  },
+});
