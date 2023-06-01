@@ -1,5 +1,5 @@
 import { IsNotEmpty, IsString } from 'class-validator';
-import { PostCategory } from '../enum/post.enum';
+import { PostCategoryEnum } from '../enums/post-category.enum';
 
 export class CreatePostDto {
   @IsString()
@@ -16,5 +16,5 @@ export class CreatePostDto {
 
   @IsString()
   @IsNotEmpty()
-  readonly category: PostCategory;
+  readonly category: PostCategoryEnum;
 }
