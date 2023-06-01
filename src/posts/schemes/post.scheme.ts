@@ -1,17 +1,8 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
+import { PostCategoryEnum } from '../enums/post-category.enum';
 
 export type PostDocument = Post & Document;
-
-enum PostCategory {
-  sale = 'sale',
-  special = 'special',
-  free = 'free',
-  holidays = 'holidays',
-  recipes = 'recipes',
-  ecommerce = 'ecommerce',
-  other = 'other',
-}
 
 @Schema({ collection: 'posts', timestamps: true })
 export class Post {
@@ -24,8 +15,8 @@ export class Post {
   @Prop({ required: true })
   readonly img: string;
 
-  @Prop({ required: true, default: PostCategory.other })
-  readonly category: PostCategory;
+  @Prop({ required: true })
+  readonly category: PostCategoryEnum;
 
   @Prop()
   readonly tags: [];

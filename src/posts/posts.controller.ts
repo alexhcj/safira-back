@@ -7,6 +7,7 @@ import {
   Delete,
   Controller,
   Logger,
+  Query,
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/post.dto';
@@ -24,9 +25,9 @@ export class PostsController {
   }
 
   @Get('list')
-  read() {
+  getAll(@Query() query) {
     this.logger.log('Handling read() request...');
-    return this.postsService.read();
+    return this.postsService.getAll(query);
   }
 
   @Put(':id')
