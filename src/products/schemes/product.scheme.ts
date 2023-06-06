@@ -2,6 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, SchemaTypes } from 'mongoose';
 import { Price } from '../../prices/schemes/price.scheme';
 import { Review } from '../../reviews/schemes/review.scheme';
+import { Tag } from '../../tags/schemes/tag.scheme';
 
 export type ProductDocument = Product & Document;
 
@@ -46,8 +47,8 @@ export class Product {
   @Prop()
   readonly shelfLife: Date;
 
-  @Prop()
-  readonly tags: string[];
+  @Prop({ type: [SchemaTypes.ObjectId], ref: Tag.name })
+  readonly tags: Tag[];
 
   @Prop()
   readonly productTags: string[];

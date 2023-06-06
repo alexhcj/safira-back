@@ -41,6 +41,11 @@ export class ProductsService {
       .limit(limit)
       .populate('price')
       .populate('reviews')
+      .populate({
+        path: 'tags',
+        select: 'tag',
+        transform: (doc) => (doc === null ? null : doc.tag),
+      })
       .exec();
 
     const productsCount = products.length;

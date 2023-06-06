@@ -6,4 +6,5 @@ export enum ProductTagsEnum {
   FRESH = 'FRESH',
   MEAT = 'MEAT',
   VEGETERIAN = 'VEGETERIAN',
+  NEW = 'NEW',
 }
