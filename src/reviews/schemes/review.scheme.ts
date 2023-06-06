@@ -10,7 +10,7 @@ export type ReviewDocument = Review & Document;
 })
 export class ReviewItem {
   @Prop({ type: SchemaTypes.ObjectId, ref: User.name })
-  readonly userId: User; // TODO: return only fullName when populate
+  readonly user: User;
 
   @Prop()
   readonly text: string;

@@ -59,7 +59,15 @@ export class ProductsService {
       .populate('price')
       .populate({
         path: 'reviews',
-        populate: { path: 'comments.userId', select: 'fullName' },
+        populate: {
+          path: 'comments.user',
+          select: 'fullName',
+        },
+      })
+      .populate({
+        path: 'tags',
+        select: 'tag',
+        transform: (doc) => (doc === null ? null : doc.tag),
       })
       .exec();
 
