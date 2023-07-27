@@ -2,9 +2,16 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Product, ProductDocument } from './schemes/product.scheme';
-import { CreateProductDto } from './dto/product.dto';
-import { IProductFilter, IProductRO, IProductsRO } from './product.interface';
+import { CreateProductDto } from './dto/create-product.dto';
+import {
+  IProductFilter,
+  IProductQuery,
+  IProductRO,
+  IProductsBySlugRO,
+  IProductsRO,
+} from './product.interface';
 import { Price, PriceDocument } from '../prices/schemes/price.scheme';
+import { UpdateProductDto } from './dto/update-product.dto';
 const slug = require('slug');
 
 @Injectable()
@@ -23,34 +30,120 @@ export class ProductsService {
     return createdProduct.save();
   }
 
-  async getAll(query): Promise<IProductsRO> {
-    const { filter, sort, limit } = query;
+  async getAllBySlug(query): Promise<IProductsBySlugRO> {
+    const { slug }: IProductQuery = query;
+
     const find: IProductFilter = {};
 
-    if (filter) {
-      const filters = JSON.parse(filter);
-
-      if (filters.tags) {
-        find.tags = filters.tags;
-      }
-    }
+    if (slug) find.slug = { $regex: `${slug}`, $options: 'i' };
 
     const products = await this.productModel
       .find(find)
-      .sort(sort)
-      .limit(limit)
-      .populate('price')
-      .populate('reviews')
-      .populate({
-        path: 'tags',
-        select: 'tag',
-        transform: (doc) => (doc === null ? null : doc.tag),
-      })
+      .select({ name: 1, slug: 1 })
       .exec();
 
-    const productsCount = products.length;
+    return { products };
+  }
 
-    return { products, productsCount };
+  async getAll(query): Promise<IProductsRO> {
+    const {
+      slug,
+      minPrice = '0',
+      maxPrice,
+      sort,
+      limit = '10',
+      offset = '0',
+      order,
+    }: IProductQuery = query;
+
+    // TODO: check sort key of SortEnum type?
+    const [{ products, total, highestPrice, lowestPrice }] =
+      await this.productModel.aggregate([
+        {
+          $match: {
+            slug: { $regex: `${slug ? slug : ''}`, $options: 'i' },
+          },
+        },
+        {
+          $lookup: {
+            from: 'prices',
+            localField: 'price',
+            foreignField: '_id',
+            as: 'price',
+          },
+        },
+        { $unwind: '$price' },
+        {
+          $addFields: {
+            sortPrice: {
+              $cond: {
+                if: '$price.discount_price',
+                then: '$price.discount_price',
+                else: '$price.price',
+              },
+            },
+          },
+        },
+        {
+          $match: {
+            sortPrice: {
+              $gte: minPrice ? +minPrice : 0, // TODO: replace 0 & 500 to dynamic value. It shoudl be highest and lowest product price. Values should appear on front even if no value received from start query
+              $lte: maxPrice ? +maxPrice : 500,
+            },
+          },
+        },
+        { $sort: { [`${sort}`]: order === 'desc' ? 1 : -1 } },
+        {
+          $lookup: {
+            from: 'reviews',
+            localField: 'reviews',
+            foreignField: '_id',
+            as: 'reviews',
+          },
+        },
+        {
+          $lookup: {
+            from: 'tags',
+            localField: 'tags',
+            foreignField: '_id',
+            as: 'tags',
+            pipeline: [
+              {
+                $project: {
+                  tag: '$tag',
+                  _id: 0,
+                },
+              },
+            ],
+          },
+        },
+        {
+          $facet: {
+            products: [{ $skip: +offset }, { $limit: +limit }],
+            total: [{ $count: 'total' }],
+            highestPrice: [
+              { $group: { _id: null, price: { $max: '$sortPrice' } } },
+            ],
+            lowestPrice: [
+              { $group: { _id: null, price: { $min: '$sortPrice' } } },
+            ],
+          },
+        },
+      ]);
+
+    const page: number = +limit !== 0 ? +offset / +limit + 1 : 1;
+    const isLastPage = page * +limit === total || page * +limit > total;
+
+    return {
+      products,
+      meta: {
+        total: total[0].total,
+        page,
+        isLastPage,
+        maxPrice: +highestPrice[0].price,
+        minPrice: +lowestPrice[0].price,
+      },
+    };
   }
 
   async findOne(where): Promise<IProductRO> {
@@ -71,10 +164,16 @@ export class ProductsService {
       })
       .exec();
 
+    const newViews: UpdateProductDto = {
+      views: product.views + 1,
+    };
+
+    await this.update(product.id, newViews);
+
     return { product };
   }
 
-  async update(id: string, data: CreateProductDto): Promise<Product> {
+  async update(id: string, data: UpdateProductDto): Promise<Product> {
     const product = await this.productModel.findById(id);
 
     if (!product) {
