@@ -11,8 +11,13 @@ import {
   ParamData,
 } from '@nestjs/common';
 import { ProductsService } from './products.service';
-import { CreateProductDto } from './dto/product.dto';
-import { IProductRO, IProductsRO } from './product.interface';
+import { CreateProductDto } from './dto/create-product.dto';
+import {
+  IProductRO,
+  IProductsBySlugRO,
+  IProductsRO,
+} from './product.interface';
+import { UpdateProductDto } from './dto/update-product.dto';
 
 @Controller('products')
 export class ProductsController {
@@ -29,7 +34,14 @@ export class ProductsController {
   @Get('list')
   getAll(@Query() query): Promise<IProductsRO> {
     this.logger.log('Handling getAll() request...');
+    // TODO: add transform query to indeed formats (number, string)
     return this.productsService.getAll(query);
+  }
+
+  @Get('list-by-slug')
+  getAllBySlug(@Query() query): Promise<IProductsBySlugRO> {
+    this.logger.log('Handling getAllByName() request...');
+    return this.productsService.getAllBySlug(query);
   }
 
   @Get(':slug')
@@ -39,7 +51,7 @@ export class ProductsController {
   }
 
   @Put(':id')
-  update(@Param('id') id: string, @Body() data: CreateProductDto) {
+  update(@Param('id') id: string, @Body() data: UpdateProductDto) {
     this.logger.log('Handling update() request with id=' + id + '...');
     return this.productsService.update(id, data);
   }
