@@ -13,9 +13,6 @@ export class Offer {
   readonly type: OfferEnum;
 
   @Prop({ required: true })
-  readonly img: string;
-
-  @Prop({ required: true })
   readonly description: string;
 }
 

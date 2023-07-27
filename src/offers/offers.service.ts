@@ -30,7 +30,6 @@ export class OffersService {
 
     const newOffer: OfferDto = {
       type: data.type,
-      img: data.img,
       description: data.description,
     };
 
@@ -49,7 +48,6 @@ export class OffersService {
 
     const newOffer: OfferDto = {
       type: data.type,
-      img: data.img,
       description: data.description,
     };
 

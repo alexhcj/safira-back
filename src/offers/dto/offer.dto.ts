@@ -7,9 +7,5 @@ export class OfferDto {
 
   @IsString()
   @IsNotEmpty()
-  readonly img: string;
-
-  @IsString()
-  @IsNotEmpty()
   readonly description;
 }
