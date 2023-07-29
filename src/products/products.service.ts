@@ -132,7 +132,8 @@ export class ProductsService {
       ]);
 
     const page: number = +limit !== 0 ? +offset / +limit + 1 : 1;
-    const isLastPage = page * +limit === total || page * +limit > total;
+    const isLastPage =
+      page * +limit === total[0].total || page * +limit > total[0].total;
 
     return {
       products,
