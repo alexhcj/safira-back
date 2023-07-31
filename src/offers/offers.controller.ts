@@ -8,8 +8,8 @@ import {
   Put,
 } from '@nestjs/common';
 import { OffersService } from './offers.service';
-import { OfferDto } from './dto/offer.dto';
-import { Offer } from './schemes/offer.scheme';
+import { CreateOfferDto } from './dto/create-offer.dto';
+import { HeroSlider, Promo, Shop, Special } from './schemes/offer.scheme';
 import { OfferEnum } from './enums/offer.enum';
 
 @Controller('offers')
@@ -19,19 +19,26 @@ export class OffersController {
   constructor(private readonly offersService: OffersService) {}
 
   @Get(':type')
-  getOfferByType(@Param('type') type: OfferEnum): Promise<Offer> {
+  getOfferByType(
+    @Param('type') type: OfferEnum,
+  ): Promise<HeroSlider | Shop | Promo | Special> {
     this.logger.log('Handling get() request...');
     return this.offersService.getOfferByType(type);
   }
 
   @Post('create')
-  create(@Body() data: OfferDto): Promise<Offer> {
+  create(
+    @Body() data: CreateOfferDto,
+  ): Promise<HeroSlider | Shop | Promo | Special> {
     this.logger.log('Handling create() request...');
     return this.offersService.create(data);
   }
 
   @Put(':id')
-  update(@Param('id') id: string, @Body() data: OfferDto): Promise<Offer> {
+  update(
+    @Param('id') id: string,
+    @Body() data: CreateOfferDto,
+  ): Promise<HeroSlider | Shop | Promo | Special> {
     this.logger.log('Handling update() request...');
     return this.offersService.update(id, data);
   }

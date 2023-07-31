@@ -1,18 +1,36 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Offer, OfferDocument } from './schemes/offer.scheme';
-import { OfferDto } from './dto/offer.dto';
+import {
+  HeroSlider,
+  HeroSliderDocument,
+  Promo,
+  PromoDocument,
+  Shop,
+  ShopDocument,
+  Special,
+  SpecialDocument,
+} from './schemes/offer.scheme';
+import { CreateOfferDto } from './dto/create-offer.dto';
 import { OfferEnum } from './enums/offer.enum';
+import { UpdateOfferDto } from './dto/update-offer.dto';
 
 @Injectable()
 export class OffersService {
   constructor(
-    @InjectModel(Offer.name) private offerModel: Model<OfferDocument>,
+    @InjectModel(HeroSlider.name)
+    private offerModel: Model<
+      HeroSliderDocument | PromoDocument | SpecialDocument | ShopDocument
+    >,
   ) {}
 
-  async getOfferByType(type: OfferEnum): Promise<Offer> {
-    const offer = await this.byType(type.toUpperCase());
+  async getOfferByType(
+    type: OfferEnum,
+  ): Promise<HeroSlider | Promo | Special | Shop> {
+    const searchType = type.includes('-')
+      ? type.split('-').join('_').toUpperCase()
+      : type.toUpperCase();
+    const offer = await this.byType(searchType);
 
     if (!offer)
       throw new HttpException(
@@ -23,21 +41,26 @@ export class OffersService {
     return offer;
   }
 
-  async create(data: OfferDto): Promise<Offer> {
-    const offer = await this.byType(data.type);
-
-    if (offer) throw new Error('This offer already exists');
-
-    const newOffer: OfferDto = {
+  async create(
+    data: CreateOfferDto,
+  ): Promise<HeroSlider | Promo | Special | Shop> {
+    const newOffer: CreateOfferDto = {
       type: data.type,
-      description: data.description,
+      text: data.text,
+      img: data.img,
     };
+
+    if (data.title) newOffer.title = data.title;
+    if (data.upTitle) newOffer.upTitle = data.upTitle;
 
     const createdOffer = new this.offerModel(newOffer);
     return createdOffer.save();
   }
 
-  async update(id: string, data: OfferDto): Promise<Offer> {
+  async update(
+    id: string,
+    data: UpdateOfferDto,
+  ): Promise<HeroSlider | Promo | Special | Shop> {
     const offer = await this.offerModel.findById(id);
 
     if (!offer)
@@ -46,17 +69,19 @@ export class OffersService {
         HttpStatus.BAD_REQUEST,
       );
 
-    const newOffer: OfferDto = {
-      type: data.type,
-      description: data.description,
-    };
+    const newOffer: UpdateOfferDto = {};
+
+    if (data.title) newOffer.title = data.title;
+    if (data.upTitle) newOffer.upTitle = data.upTitle;
+    if (data.text) newOffer.text = data.text;
+    if (data.img) newOffer.img = data.img;
 
     return this.offerModel
       .findByIdAndUpdate(id, newOffer)
       .setOptions({ new: true });
   }
 
-  async byType(type: string): Promise<Offer> {
+  async byType(type: string): Promise<HeroSlider | Promo | Special | Shop> {
     return this.offerModel.findOne({ type });
   }
 }
