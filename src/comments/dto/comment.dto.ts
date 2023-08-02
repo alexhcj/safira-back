@@ -8,4 +8,8 @@ export class CommentDto {
   @IsString()
   @IsNotEmpty()
   readonly text: string;
+
+  @IsString()
+  @IsNotEmpty()
+  readonly postSlug: string;
 }

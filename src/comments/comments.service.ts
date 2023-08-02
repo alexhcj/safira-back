@@ -7,6 +7,7 @@ import { CommentDto } from './dto/comment.dto';
 import { PostDocument } from '../posts/schemes/post.scheme';
 import { UpdatePostDto } from '../posts/dto/udpate-post.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
+import { ICommentQuery } from './interfaces/comment.interface';
 
 @Injectable()
 export class CommentsService {
@@ -27,6 +28,7 @@ export class CommentsService {
     const comment: CommentDto = {
       userId,
       text: data.text,
+      postSlug,
     };
 
     const createdComment = await new this.commentModel(comment).save();
@@ -44,8 +46,26 @@ export class CommentsService {
     return await this.postService.update(post.id, newPostCommnets);
   }
 
-  async read(): Promise<CommentDocument[]> {
-    return this.commentModel.find().exec();
+  async read(query): Promise<any> {
+    const { limit, offset = '0', sort, order }: ICommentQuery = query;
+    return this.commentModel
+      .find()
+      .sort({ [sort]: order === 'desc' ? 1 : -1 })
+      .skip(+offset)
+      .limit(+limit)
+      .populate({
+        path: 'userId',
+        select: 'fullName',
+      })
+      .transform((doc) => {
+        return doc.map((item) => {
+          return {
+            name: item.userId.fullName.split(' ')[0],
+            text: item.text,
+          };
+        });
+      })
+      .exec();
   }
 
   async update(id: string, data: UpdateCommentDto): Promise<CommentDocument> {

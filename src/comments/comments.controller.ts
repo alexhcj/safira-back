@@ -7,6 +7,7 @@ import {
   Param,
   Post,
   Put,
+  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -21,9 +22,9 @@ export class CommentsController {
   constructor(private readonly commentsService: CommentsService) {}
 
   @Get()
-  read() {
+  read(@Query() query) {
     this.logger.log('Handling read() request...');
-    return this.commentsService.read();
+    return this.commentsService.read(query);
   }
 
   @UseGuards(JwtAuthGuard)
