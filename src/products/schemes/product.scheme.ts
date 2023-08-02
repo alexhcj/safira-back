@@ -53,7 +53,7 @@ export class Product {
   @Prop()
   readonly productTags: string[];
 
-  @Prop({ type: SchemaTypes.ObjectId, ref: Review.name })
+  @Prop({ type: SchemaTypes.ObjectId, ref: Review.name, default: [] })
   readonly reviews: Review;
 }
 
