@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Document, SchemaTypes } from 'mongoose';
 import { PostCategoryEnum } from '../enums/post-category.enum';
+import { Comment } from '../../comments/schemes/comment.scheme';
 
 export type PostDocument = Post & Document;
 
@@ -8,6 +9,9 @@ export type PostDocument = Post & Document;
 export class Post {
   @Prop({ required: true })
   readonly title: string;
+
+  @Prop({ required: true })
+  readonly slug: string;
 
   @Prop({ required: true })
   readonly text: string;
@@ -20,6 +24,9 @@ export class Post {
 
   @Prop()
   readonly tags: [];
+
+  @Prop({ type: [SchemaTypes.ObjectId], ref: Comment.name, default: [] })
+  readonly comments: Comment[];
 }
 
 export const PostScheme = SchemaFactory.createForClass(Post);

@@ -2,8 +2,9 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Post, PostDocument } from './schemes/post.scheme';
-import { CreatePostDto } from './dto/post.dto';
+import { CreatePostDto } from './dto/create-post.dto';
 import { IPostQuery, IPostsRO } from './interfaces/posts.interface';
+import { UpdatePostDto } from './dto/udpate-post.dto';
 
 @Injectable()
 export class PostsService {
@@ -16,7 +17,7 @@ export class PostsService {
 
   async getAll(query): Promise<IPostsRO> {
     // TODO: extend with (tags, category) fields
-    const { search, sort, order, limit, offset }: IPostQuery = query;
+    const { search, sort, order, limit, offset = '0' }: IPostQuery = query;
 
     const [{ posts, total }] = await this.postModel.aggregate([
       {
@@ -44,7 +45,7 @@ export class PostsService {
     return { posts, meta: { total: total[0].total, page, isLastPage } };
   }
 
-  async update(id: string, data: CreatePostDto): Promise<Post> {
+  async update(id: string, data: UpdatePostDto): Promise<PostDocument> {
     const post = await this.postModel.findById(id);
 
     if (!post) {
@@ -68,5 +69,13 @@ export class PostsService {
     }
 
     return this.postModel.findByIdAndDelete(id).exec();
+  }
+
+  async getBySlug(slug: string): Promise<PostDocument> {
+    const post = await this.postModel.findOne({ slug }).exec();
+
+    if (!post) throw new HttpException('Post not found', HttpStatus.NOT_FOUND);
+
+    return post;
   }
 }
