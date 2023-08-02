@@ -11,6 +11,7 @@ import { PricesModule } from './prices/prices.module';
 import { UsersModule } from './users/users.module';
 import { TagsModule } from './tags/tags.module';
 import { OffersModule } from './offers/offers.module';
+import { CommentsModule } from './comments/comments.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { OffersModule } from './offers/offers.module';
     UsersModule,
     TagsModule,
     OffersModule,
+    CommentsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
