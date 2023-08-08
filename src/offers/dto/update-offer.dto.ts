@@ -1,19 +1,23 @@
 import { IsOptional, IsString } from 'class-validator';
 
 export class UpdateOfferDto {
-  @IsString()
   @IsOptional()
+  @IsString()
   title?: string;
 
-  @IsString()
   @IsOptional()
+  @IsString()
   upTitle?: string;
 
-  @IsString()
   @IsOptional()
+  @IsString()
   text?: string;
 
-  @IsString()
   @IsOptional()
+  @IsString()
   img?: string;
+
+  @IsOptional()
+  @IsString()
+  deal?: string;
 }
