@@ -6,19 +6,23 @@ export class CreateOfferDto {
   @IsNotEmpty()
   readonly type: OfferEnum;
 
-  @IsString()
   @IsOptional()
+  @IsString()
   title?: string;
 
-  @IsString()
   @IsOptional()
+  @IsString()
   upTitle?: string;
 
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  readonly text: string;
+  text?: string;
 
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  readonly img: string;
+  img?: string;
+
+  @IsOptional()
+  @IsString()
+  deals?: string;
 }

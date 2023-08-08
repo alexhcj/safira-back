@@ -3,4 +3,5 @@ export enum OfferEnum {
   SHOP = 'SHOP',
   HERO_SLIDER = 'HERO_SLIDER',
   PROMO = 'PROMO',
+  DEALS_OF_WEEK = 'DEALS_OF_WEEK',
 }

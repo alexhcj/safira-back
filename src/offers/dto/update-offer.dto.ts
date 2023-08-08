@@ -1,19 +1,32 @@
-import { IsOptional, IsString } from 'class-validator';
+import {
+  ArrayMaxSize,
+  ArrayMinSize,
+  IsArray,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 
 export class UpdateOfferDto {
-  @IsString()
   @IsOptional()
+  @IsString()
   title?: string;
 
-  @IsString()
   @IsOptional()
+  @IsString()
   upTitle?: string;
 
-  @IsString()
   @IsOptional()
+  @IsString()
   text?: string;
 
-  @IsString()
   @IsOptional()
+  @IsString()
   img?: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  @ArrayMaxSize(5)
+  @ArrayMinSize(3)
+  deals?: string[];
 }
