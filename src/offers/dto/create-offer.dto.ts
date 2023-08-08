@@ -6,6 +6,9 @@ export class CreateOfferDto {
   @IsNotEmpty()
   readonly type: OfferEnum;
 
+  @IsString()
+  readonly expiresDate: string;
+
   @IsOptional()
   @IsString()
   title?: string;
@@ -24,5 +27,5 @@ export class CreateOfferDto {
 
   @IsOptional()
   @IsString()
-  deals?: string;
+  deal?: string;
 }

@@ -6,6 +6,7 @@ import {
   Param,
   Post,
   Put,
+  Query,
 } from '@nestjs/common';
 import { OffersService } from './offers.service';
 import { CreateOfferDto } from './dto/create-offer.dto';
@@ -18,6 +19,12 @@ export class OffersController {
   private readonly logger = new Logger(OffersController.name);
 
   constructor(private readonly offersService: OffersService) {}
+
+  @Get('list')
+  getAll(@Query() query): Promise<OfferDocument[]> {
+    this.logger.log('Handling get() request...');
+    return this.offersService.getAll(query);
+  }
 
   @Get(':type')
   getOfferByType(@Param('type') type: OfferEnum): Promise<OfferDocument> {

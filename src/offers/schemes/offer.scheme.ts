@@ -13,6 +13,9 @@ export class Offer {
   @Prop({ required: true, enum: OfferEnum, type: String })
   readonly type: OfferEnum;
 
+  @Prop({ required: true, type: Date })
+  readonly expiresDate: string;
+
   @Prop()
   readonly title?: string;
 
@@ -25,8 +28,8 @@ export class Offer {
   @Prop()
   readonly img?: string;
 
-  @Prop({ type: [SchemaTypes.ObjectId], ref: Product.name, default: undefined })
-  readonly deals?: Product[];
+  @Prop({ type: SchemaTypes.ObjectId, ref: Product.name })
+  readonly deal?: Product;
 }
 
 export const OfferScheme = SchemaFactory.createForClass(Offer);

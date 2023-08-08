@@ -5,6 +5,7 @@ import { Offer, OfferDocument } from './schemes/offer.scheme';
 import { CreateOfferDto } from './dto/create-offer.dto';
 import { OfferEnum } from './enums/offer.enum';
 import { UpdateOfferDto } from './dto/update-offer.dto';
+import { IOfferFilter, IOfferQuery } from './interfaces/offer.interface';
 
 @Injectable()
 export class OffersService {
@@ -12,6 +13,20 @@ export class OffersService {
     @InjectModel(Offer.name)
     private offerModel: Model<OfferDocument>,
   ) {}
+
+  async getAll({ type }: IOfferQuery): Promise<OfferDocument[]> {
+    const searchType = type.includes('-')
+      ? type.split('-').join('_').toUpperCase()
+      : type.toUpperCase();
+    const find: IOfferFilter = {};
+
+    if (type) find.type = { $regex: `${searchType}`, $options: 'i' };
+
+    return this.offerModel.find(find).populate({
+      path: 'deal',
+      populate: [{ path: 'price' }, { path: 'tags' }],
+    });
+  }
 
   async getOfferByType(type: OfferEnum): Promise<OfferDocument> {
     const searchType = type.includes('-')
@@ -31,13 +46,14 @@ export class OffersService {
   async create(data: CreateOfferDto): Promise<OfferDocument> {
     const newOffer: CreateOfferDto = {
       type: data.type,
+      expiresDate: data.expiresDate,
     };
 
     if (data.text) newOffer.text = data.text;
     if (data.img) newOffer.img = data.img;
     if (data.title) newOffer.title = data.title;
     if (data.upTitle) newOffer.upTitle = data.upTitle;
-    if (data.deals) newOffer.deals = data.deals;
+    if (data.deal) newOffer.deal = data.deal;
 
     const createdOffer = new this.offerModel(newOffer);
     return createdOffer.save();
@@ -66,7 +82,7 @@ export class OffersService {
 
   async byType(type: string): Promise<OfferDocument> {
     return this.offerModel.findOne({ type }).populate({
-      path: 'deals',
+      path: 'deal',
       populate: [{ path: 'price' }, { path: 'tags' }],
     });
   }
