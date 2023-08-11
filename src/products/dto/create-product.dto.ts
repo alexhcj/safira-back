@@ -27,6 +27,10 @@ export class CreateProductDto {
 
   @IsString()
   @IsNotEmpty()
+  readonly subCategory: string;
+
+  @IsString()
+  @IsNotEmpty()
   readonly popularity: string;
 
   @IsNumber()

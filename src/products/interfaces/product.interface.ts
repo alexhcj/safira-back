@@ -1,4 +1,5 @@
-import { Product } from './schemes/product.scheme';
+import { Product } from '../schemes/product.scheme';
+import { CategoryEnum, SubCategoryEnum } from '../enums/category.enum';
 
 interface IProductMeta {
   total: number;
@@ -36,6 +37,8 @@ export interface IProductQuery {
   limit?: string;
   offset?: string;
   slug?: string;
+  category?: CategoryEnum;
+  subCategory?: SubCategoryEnum;
 }
 
 export interface IProductFilter {

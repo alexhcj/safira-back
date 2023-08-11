@@ -29,6 +29,9 @@ export class Product {
   @Prop()
   readonly category: string;
 
+  @Prop()
+  readonly subCategory: string;
+
   @Prop({ default: 0 })
   readonly popularity: string;
 
