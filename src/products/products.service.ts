@@ -9,9 +9,10 @@ import {
   IProductRO,
   IProductsBySlugRO,
   IProductsRO,
-} from './product.interface';
+} from './interfaces/product.interface';
 import { Price, PriceDocument } from '../prices/schemes/price.scheme';
 import { UpdateProductDto } from './dto/update-product.dto';
+
 const slug = require('slug');
 
 @Injectable()
@@ -54,13 +55,19 @@ export class ProductsService {
       limit = '10',
       offset = '0',
       order,
+      category,
+      subCategory,
     }: IProductQuery = query;
 
     // TODO: check sort key of SortEnum type?
+    // TODO: check CategoryEnum item?
     const [{ products, total, highestPrice, lowestPrice }] =
       await this.productModel.aggregate([
         {
           $match: {
+            // TODO: refactor to common methods (find, sort...). hearts performance
+            category: category || /.*/,
+            subCategory: subCategory || /.*/,
             slug: { $regex: `${slug ? slug : ''}`, $options: 'i' },
           },
         },

@@ -1,4 +1,4 @@
-import { IsOptional, IsNumber, IsString, IsObject } from 'class-validator';
+import { IsNumber, IsObject, IsOptional, IsString } from 'class-validator';
 
 export class UpdateProductDto {
   @IsOptional()
@@ -27,6 +27,10 @@ export class UpdateProductDto {
   @IsOptional()
   @IsString()
   readonly category?: string;
+
+  @IsOptional()
+  @IsString()
+  readonly subCategory?: string;
 
   @IsOptional()
   @IsString()

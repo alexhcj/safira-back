@@ -1,14 +1,14 @@
 import {
-  Get,
-  Put,
   Body,
-  Post,
-  Query,
-  Param,
-  Delete,
   Controller,
+  Delete,
+  Get,
   Logger,
+  Param,
   ParamData,
+  Post,
+  Put,
+  Query,
 } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
@@ -16,7 +16,7 @@ import {
   IProductRO,
   IProductsBySlugRO,
   IProductsRO,
-} from './product.interface';
+} from './interfaces/product.interface';
 import { UpdateProductDto } from './dto/update-product.dto';
 
 @Controller('products')
