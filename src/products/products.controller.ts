@@ -38,6 +38,12 @@ export class ProductsController {
     return this.productsService.getAll(query);
   }
 
+  @Get('list-brands')
+  getQueryBrands(@Query() query): Promise<any> {
+    this.logger.log('Handling getQueryBrands() request...');
+    return this.productsService.getQueryBrands(query);
+  }
+
   @Get('list-by-slug')
   getAllBySlug(@Query() query): Promise<IProductsBySlugRO> {
     this.logger.log('Handling getAllByName() request...');

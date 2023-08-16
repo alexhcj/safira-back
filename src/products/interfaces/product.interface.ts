@@ -39,6 +39,7 @@ export interface IProductQuery {
   slug?: string;
   category?: CategoryEnum;
   subCategory?: SubCategoryEnum;
+  brand?: string;
 }
 
 export interface IProductFilter {

@@ -57,8 +57,8 @@ export class ProductsService {
       order,
       category,
       subCategory,
+      brand,
     }: IProductQuery = query;
-
     // TODO: check sort key of SortEnum type?
     // TODO: check CategoryEnum item?
     const [{ products, total, highestPrice, lowestPrice }] =
@@ -68,6 +68,14 @@ export class ProductsService {
             // TODO: refactor to common methods (find, sort...). hearts performance
             category: category || /.*/,
             subCategory: subCategory || /.*/,
+            'specifications.company': brand
+              ? {
+                  $regex: brand
+                    .split('+')
+                    .map((b) => b.replace(/-/g, ' '))
+                    .join('|'),
+                }
+              : /.*/,
             slug: { $regex: `${slug ? slug : ''}`, $options: 'i' },
           },
         },
@@ -151,6 +159,77 @@ export class ProductsService {
         maxPrice: +highestPrice[0].price,
         minPrice: +lowestPrice[0].price,
       },
+    };
+  }
+
+  async getQueryBrands(query): Promise<any> {
+    const {
+      slug,
+      minPrice = '0',
+      maxPrice,
+      category,
+      subCategory,
+      brand,
+    }: IProductQuery = query;
+    const brands = await this.productModel.aggregate([
+      {
+        $match: {
+          category: category || /.*/,
+          subCategory: subCategory || /.*/,
+          'specifications.company': brand
+            ? {
+                $regex: brand
+                  .split('+')
+                  .map((b) => b.replace(/-/g, ' '))
+                  .join('|'),
+              }
+            : /.*/,
+          slug: { $regex: `${slug ? slug : ''}`, $options: 'i' },
+        },
+      },
+      {
+        $lookup: {
+          from: 'prices',
+          localField: 'price',
+          foreignField: '_id',
+          as: 'price',
+        },
+      },
+      { $unwind: '$price' },
+      {
+        $addFields: {
+          sortPrice: {
+            $cond: {
+              if: '$price.discount_price',
+              then: '$price.discount_price',
+              else: '$price.price',
+            },
+          },
+        },
+      },
+      {
+        $match: {
+          sortPrice: {
+            $gte: minPrice ? +minPrice : 0, // TODO: replace 0 & 500 to dynamic value. It shoudl be highest and lowest product price. Values should appear on front even if no value received from start query
+            $lte: maxPrice ? +maxPrice : 500,
+          },
+        },
+      },
+      {
+        $group: {
+          _id: '$specifications.company',
+          brand: { $addToSet: '$specifications.company' },
+          popularity: {
+            $sum: '$popularity',
+          },
+          quantity: { $sum: 1 },
+        },
+      },
+      { $unwind: '$brand' },
+    ]);
+
+    return {
+      brands,
     };
   }
 
