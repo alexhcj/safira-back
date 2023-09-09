@@ -242,6 +242,74 @@ export class ProductsService {
     };
   }
 
+  async getQueryPriceRange(query): Promise<any> {
+    const {
+      slug,
+      minPrice = '0',
+      maxPrice,
+      category,
+      subCategory,
+      brand,
+    }: IProductQuery = query;
+    const res = await this.productModel.aggregate([
+      {
+        $match: {
+          category: category || /.*/,
+          subCategory: subCategory || /.*/,
+          'specifications.company': brand
+            ? {
+                $regex: brand
+                  .split('+')
+                  .map((b) => b.replace(/-/g, ' '))
+                  .join('|'),
+              }
+            : /.*/,
+          slug: { $regex: `${slug ? slug : ''}`, $options: 'i' },
+        },
+      },
+      {
+        $lookup: {
+          from: 'prices',
+          localField: 'price',
+          foreignField: '_id',
+          as: 'price',
+        },
+      },
+      { $unwind: '$price' },
+      {
+        $addFields: {
+          sortPrice: {
+            $cond: {
+              if: '$price.discount_price',
+              then: '$price.discount_price',
+              else: '$price.price',
+            },
+          },
+        },
+      },
+      {
+        $match: {
+          sortPrice: {
+            $gte: minPrice ? +minPrice : 0, // TODO: replace 0 & 500 to dynamic value. It shoudl be highest and lowest product price. Values should appear on front even if no value received from start query
+            $lte: maxPrice ? +maxPrice : 500,
+          },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          maxPrice: { $max: '$sortPrice' },
+          minPrice: { $min: '$sortPrice' },
+        },
+      },
+    ]);
+
+    return {
+      maxPrice: res[0].maxPrice,
+      minPrice: res[0].minPrice,
+    };
+  }
+
   async findOne(where): Promise<IProductRO> {
     const product = await this.productModel
       .findOne(where)

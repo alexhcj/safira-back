@@ -44,6 +44,12 @@ export class ProductsController {
     return this.productsService.getQueryBrands(query);
   }
 
+  @Get('price-range')
+  getQueryPriceRange(@Query() query): Promise<any> {
+    this.logger.log('Handling getQueryPriceRange() request...');
+    return this.productsService.getQueryPriceRange(query);
+  }
+
   @Get('list-by-slug')
   getAllBySlug(@Query() query): Promise<IProductsBySlugRO> {
     this.logger.log('Handling getAllByName() request...');
