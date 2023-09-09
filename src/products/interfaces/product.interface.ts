@@ -40,6 +40,7 @@ export interface IProductQuery {
   category?: CategoryEnum;
   subCategory?: SubCategoryEnum;
   brand?: string;
+  dietary?: string;
 }
 
 export interface IProductFilter {

@@ -1,10 +1,4 @@
 export enum ProductTagsEnum {
+  NEW = 'NEW', // TODO: remove/research. Caclulates on front
   SALE = 'SALE',
-  SPECIAL = 'SPECIAL',
-  HOLIDAYS = 'HOLIDAYS',
-  FREE = 'FREE',
-  FRESH = 'FRESH',
-  MEAT = 'MEAT',
-  VEGETERIAN = 'VEGETERIAN',
-  NEW = 'NEW',
 }

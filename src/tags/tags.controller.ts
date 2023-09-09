@@ -1,6 +1,15 @@
-import { Body, Controller, Get, Logger, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Logger,
+  Param,
+  Post,
+  Put,
+  Query,
+} from '@nestjs/common';
 import { TagsService } from './tags.service';
-import { CreateTagDto } from './dto/tag.dto';
+import { CreateTagDto, UpdateTagDto } from './dto/tag.dto';
 
 @Controller('tags')
 export class TagsController {
@@ -8,16 +17,22 @@ export class TagsController {
 
   constructor(private readonly tagsService: TagsService) {}
 
-  @Post('create')
-  create(@Body() dto: CreateTagDto) {
+  @Post()
+  create(@Body() data: CreateTagDto) {
     this.logger.log('Handling create() request...');
-    return this.tagsService.create(dto);
+    return this.tagsService.create(data);
   }
 
   @Get()
-  getAll() {
-    this.logger.log('Handling getAll() request...');
-    return this.tagsService.getAll();
+  findAll() {
+    this.logger.log('Handling findAll() request...');
+    return this.tagsService.findAll();
+  }
+
+  @Put(':id')
+  update(@Param('id') id: string, @Body() data: UpdateTagDto) {
+    this.logger.log('Handling update() request with id=' + id + '...');
+    return this.tagsService.update(id, data);
   }
 
   @Get()

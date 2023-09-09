@@ -32,10 +32,10 @@ export class ProductsController {
   }
 
   @Get('list')
-  getAll(@Query() query): Promise<IProductsRO> {
-    this.logger.log('Handling getAll() request...');
+  findAll(@Query() query): Promise<IProductsRO> {
+    this.logger.log('Handling findAll() request...');
     // TODO: add transform query to indeed formats (number, string)
-    return this.productsService.getAll(query);
+    return this.productsService.findAll(query);
   }
 
   @Get('list-brands')

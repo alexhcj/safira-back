@@ -46,7 +46,7 @@ export class ProductsService {
     return { products };
   }
 
-  async getAll(query): Promise<IProductsRO> {
+  async findAll(query): Promise<IProductsRO> {
     const {
       slug,
       minPrice = '0',
@@ -58,6 +58,7 @@ export class ProductsService {
       category,
       subCategory,
       brand,
+      dietary,
     }: IProductQuery = query;
     // TODO: check sort key of SortEnum type?
     // TODO: check CategoryEnum item?
@@ -107,6 +108,29 @@ export class ProductsService {
             },
           },
         },
+        {
+          $lookup: {
+            from: 'tags',
+            localField: 'tags',
+            foreignField: '_id',
+            as: 'tags',
+          },
+        },
+        {
+          $addFields: {
+            tags: {
+              $arrayElemAt: ['$tags.tags', 0],
+            },
+          },
+        },
+        {
+          $match: {
+            'tags.dietaries': {
+              // TODO: fix error when not existed tag in db. should return empty array
+              $in: dietary ? dietary.split('+') : [null, /.*/],
+            },
+          },
+        },
         { $sort: { [`${sort}`]: order === 'desc' ? 1 : -1 } },
         {
           $lookup: {
@@ -116,22 +140,7 @@ export class ProductsService {
             as: 'reviews',
           },
         },
-        {
-          $lookup: {
-            from: 'tags',
-            localField: 'tags',
-            foreignField: '_id',
-            as: 'tags',
-            pipeline: [
-              {
-                $project: {
-                  tag: '$tag',
-                  _id: 0,
-                },
-              },
-            ],
-          },
-        },
+        { $unwind: { path: '$reviews', preserveNullAndEmptyArrays: true } },
         {
           $facet: {
             products: [{ $skip: +offset }, { $limit: +limit }],
@@ -246,8 +255,8 @@ export class ProductsService {
       })
       .populate({
         path: 'tags',
-        select: 'tag',
-        transform: (doc) => (doc === null ? null : doc.tag),
+        select: 'tags',
+        transform: (doc) => (doc === null ? null : doc.tags),
       })
       .exec();
 
@@ -270,9 +279,10 @@ export class ProductsService {
       );
     }
 
-    return this.productModel
-      .findByIdAndUpdate(id, data)
-      .setOptions({ new: true });
+    if (data.tags)
+      return this.productModel
+        .findByIdAndUpdate(id, data)
+        .setOptions({ new: true });
   }
 
   async delete(id: string) {
