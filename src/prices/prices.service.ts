@@ -11,7 +11,7 @@ export class PricesService {
     @InjectModel(Price.name) private priceModel: Model<PriceDocument>,
   ) {}
 
-  async create(data: CreatePriceDto): Promise<Price> {
+  async create(data: CreatePriceDto): Promise<PriceDocument> {
     const createdPrice = new this.priceModel(data);
     return createdPrice.save();
   }

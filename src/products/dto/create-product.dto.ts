@@ -1,63 +1,73 @@
-import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import {
+  IsEnum,
+  IsNotEmpty,
+  IsNumber,
+  IsObject,
+  IsOptional,
+  IsString,
+} from 'class-validator';
+import { PrimeCategoryEnum, SubCategoryEnum } from '../enums/categories.enum';
+import { BasicCategoryType } from '../interfaces/category.interface';
 
 export class CreateProductDto {
   @IsString()
   @IsNotEmpty()
   readonly name: string;
 
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  readonly description: string;
+  readonly description?: string;
 
-  @IsNumber()
+  @IsObject()
   @IsNotEmpty()
-  readonly price: number;
-
-  @IsString()
-  @IsNotEmpty()
-  readonly img: string;
+  readonly price: {
+    price: number;
+    discount_price?: number;
+  };
 
   @IsNumber()
   @IsNotEmpty()
   readonly quantity: number;
 
-  @IsString()
+  @IsOptional()
+  @IsEnum(PrimeCategoryEnum)
   @IsNotEmpty()
-  readonly category: string;
+  readonly primeCategory?: PrimeCategoryEnum;
+
+  @IsOptional()
+  @IsEnum(SubCategoryEnum)
+  @IsNotEmpty()
+  readonly subCategory?: SubCategoryEnum;
 
   @IsString()
   @IsNotEmpty()
-  readonly subCategory: string;
+  readonly basicCategory: BasicCategoryType;
 
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
   readonly popularity: string;
 
+  @IsOptional()
   @IsNumber()
-  @IsNotEmpty()
   readonly views: number;
 
+  @IsOptional()
   @IsNumber()
-  @IsNotEmpty()
   readonly rating: number;
 
   @IsString()
   @IsNotEmpty()
   readonly company: string;
 
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  readonly importCountry: string;
+  readonly producingCountry: string;
 
   @IsString()
   @IsNotEmpty()
   readonly shelfLife: string;
 
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  readonly tags: string[];
-
-  @IsString()
-  @IsNotEmpty()
-  readonly productTags: string[];
+  readonly tags?: string;
 }

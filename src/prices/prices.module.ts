@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { PricesController } from './prices.controller';
 import { PricesService } from './prices.service';
 import { MongooseModule } from '@nestjs/mongoose';
-import { PriceScheme, Price } from './schemes/price.scheme';
+import { Price, PriceScheme } from './schemes/price.scheme';
 
 @Module({
   imports: [
@@ -10,5 +10,6 @@ import { PriceScheme, Price } from './schemes/price.scheme';
   ],
   controllers: [PricesController],
   providers: [PricesService],
+  exports: [PricesService],
 })
 export class PricesModule {}

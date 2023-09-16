@@ -1,11 +1,11 @@
-import { IsNotEmpty, IsNumber } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsOptional } from 'class-validator';
 
 export class CreatePriceDto {
-  @IsNumber()
   @IsNotEmpty()
+  @IsNumber()
   readonly price: number;
 
+  @IsOptional()
   @IsNumber()
-  @IsNotEmpty()
-  readonly discount_price: number;
+  readonly discount_price?: number;
 }
