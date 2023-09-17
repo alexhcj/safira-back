@@ -13,3 +13,12 @@ export class Price {
 }
 
 export const PriceScheme = SchemaFactory.createForClass(Price);
+
+PriceScheme.set('toJSON', {
+  virtuals: true,
+  transform: function (doc, ret) {
+    delete ret['_id'];
+    delete ret['__v'];
+    return ret;
+  },
+});

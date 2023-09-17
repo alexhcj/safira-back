@@ -58,9 +58,5 @@ export class UpdateProductDto {
 
   @IsOptional()
   @IsString()
-  readonly tags?: string[];
-
-  @IsOptional()
-  @IsString()
-  readonly productTags?: string[];
+  readonly tags?: string;
 }

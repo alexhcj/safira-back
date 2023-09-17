@@ -1,11 +1,19 @@
-import { ProductTagsEnum } from '../enum/product-tags.enum';
 import { TagTypeEnum } from '../enum/tag-type.enum';
-import { IsEnum } from 'class-validator';
+import { IsEnum, IsOptional } from 'class-validator';
+import { Tags } from '../schemes/tag.scheme';
 
 export class CreateTagDto {
-  @IsEnum(ProductTagsEnum)
-  readonly tag: ProductTagsEnum;
-
   @IsEnum(TagTypeEnum)
   readonly type: TagTypeEnum;
+
+  // TODO: add validation
+  readonly tags: Tags;
+}
+
+export class UpdateTagDto {
+  @IsOptional()
+  type?: TagTypeEnum;
+
+  @IsOptional()
+  tags?: Tags;
 }
