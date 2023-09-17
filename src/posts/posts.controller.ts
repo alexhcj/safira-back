@@ -1,16 +1,16 @@
 import {
-  Get,
-  Put,
   Body,
-  Post,
-  Param,
-  Delete,
   Controller,
+  Delete,
+  Get,
   Logger,
+  Param,
+  Post,
+  Put,
   Query,
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
-import { CreatePostDto } from './dto/post.dto';
+import { CreatePostDto } from './dto/create-post.dto';
 
 @Controller('posts')
 export class PostsController {
@@ -28,6 +28,12 @@ export class PostsController {
   getAll(@Query() query) {
     this.logger.log('Handling read() request...');
     return this.postsService.getAll(query);
+  }
+
+  @Get(':slug')
+  getBySlug(@Param('slug') slug: string) {
+    this.logger.log('Handling getBySlug() request...');
+    return this.postsService.getBySlug(slug);
   }
 
   @Put(':id')

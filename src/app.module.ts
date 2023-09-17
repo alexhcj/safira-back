@@ -10,6 +10,8 @@ import { PostsModule } from './posts/posts.module';
 import { PricesModule } from './prices/prices.module';
 import { UsersModule } from './users/users.module';
 import { TagsModule } from './tags/tags.module';
+import { OffersModule } from './offers/offers.module';
+import { CommentsModule } from './comments/comments.module';
 
 @Module({
   imports: [
@@ -26,6 +28,8 @@ import { TagsModule } from './tags/tags.module';
     PricesModule,
     UsersModule,
     TagsModule,
+    OffersModule,
+    CommentsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

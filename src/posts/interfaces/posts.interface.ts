@@ -16,8 +16,9 @@ export interface IPostQuery {
   tags?: string | [];
   category?: string | [];
   sort?: IPostSort;
-  limit?: number;
-  offset?: number;
+  limit?: string;
+  offset?: string;
+  order?: string;
 }
 
 export interface IPostFilter {

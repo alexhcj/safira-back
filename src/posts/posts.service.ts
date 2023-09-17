@@ -2,12 +2,9 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Post, PostDocument } from './schemes/post.scheme';
-import { CreatePostDto } from './dto/post.dto';
-import {
-  IPostFilter,
-  IPostQuery,
-  IPostsRO,
-} from './interfaces/posts.interface';
+import { CreatePostDto } from './dto/create-post.dto';
+import { IPostQuery, IPostsRO } from './interfaces/posts.interface';
+import { UpdatePostDto } from './dto/udpate-post.dto';
 
 @Injectable()
 export class PostsService {
@@ -20,32 +17,35 @@ export class PostsService {
 
   async getAll(query): Promise<IPostsRO> {
     // TODO: extend with (tags, category) fields
-    const { search, sort, limit, offset }: IPostQuery = query;
+    const { search, sort, order, limit, offset = '0' }: IPostQuery = query;
 
-    const find: IPostFilter = {};
+    const [{ posts, total }] = await this.postModel.aggregate([
+      {
+        $match: {
+          title: { $regex: `${search ? search : ''}`, $options: 'i' },
+        },
+      },
+      {
+        $sort: {
+          [`${sort}`]: order === 'desc' ? 1 : -1,
+        },
+      },
+      {
+        $facet: {
+          posts: [{ $skip: +offset }, { $limit: +limit }],
+          total: [{ $count: 'total' }],
+        },
+      },
+    ]);
 
-    if (search) find.title = { $regex: `${search}`, $options: 'i' };
-
-    const postLimit = limit ? +limit : 0;
-    const postOffset = offset ? +offset : 0;
-
-    const posts = await this.postModel
-      .find(find)
-      .sort(sort)
-      .skip(offset)
-      .limit(limit)
-      .exec();
-
-    // meta info about posts res
-    const total = posts.length;
-    const page: number = postLimit !== 0 ? postOffset / postLimit + 1 : 1;
+    const page: number = +limit !== 0 ? +offset / +limit + 1 : 1;
     const isLastPage =
-      (total / page) * postLimit === 0 || total - page * postLimit === 1;
+      page * +limit === total[0].total || page * +limit > total[0].total;
 
-    return { posts, meta: { total, page, isLastPage } };
+    return { posts, meta: { total: total[0].total, page, isLastPage } };
   }
 
-  async update(id: string, data: CreatePostDto): Promise<Post> {
+  async update(id: string, data: UpdatePostDto): Promise<PostDocument> {
     const post = await this.postModel.findById(id);
 
     if (!post) {
@@ -69,5 +69,13 @@ export class PostsService {
     }
 
     return this.postModel.findByIdAndDelete(id).exec();
+  }
+
+  async getBySlug(slug: string): Promise<PostDocument> {
+    const post = await this.postModel.findOne({ slug }).exec();
+
+    if (!post) throw new HttpException('Post not found', HttpStatus.NOT_FOUND);
+
+    return post;
   }
 }

@@ -1,18 +1,23 @@
 import {
-  Get,
-  Put,
   Body,
-  Post,
-  Query,
-  Param,
-  Delete,
   Controller,
+  Delete,
+  Get,
   Logger,
+  Param,
   ParamData,
+  Post,
+  Put,
+  Query,
 } from '@nestjs/common';
 import { ProductsService } from './products.service';
-import { CreateProductDto } from './dto/product.dto';
-import { IProductRO, IProductsRO } from './product.interface';
+import { CreateProductDto } from './dto/create-product.dto';
+import {
+  IProductRO,
+  IProductsBySlugRO,
+  IProductsRO,
+} from './interfaces/product.interface';
+import { UpdateProductDto } from './dto/update-product.dto';
 
 @Controller('products')
 export class ProductsController {
@@ -27,9 +32,28 @@ export class ProductsController {
   }
 
   @Get('list')
-  getAll(@Query() query): Promise<IProductsRO> {
-    this.logger.log('Handling getAll() request...');
-    return this.productsService.getAll(query);
+  findAll(@Query() query): Promise<IProductsRO> {
+    this.logger.log('Handling findAll() request...');
+    // TODO: add transform query to indeed formats (number, string)
+    return this.productsService.findAll(query);
+  }
+
+  @Get('list-brands')
+  getQueryBrands(@Query() query): Promise<any> {
+    this.logger.log('Handling getQueryBrands() request...');
+    return this.productsService.getQueryBrands(query);
+  }
+
+  @Get('price-range')
+  getQueryPriceRange(@Query() query): Promise<any> {
+    this.logger.log('Handling getQueryPriceRange() request...');
+    return this.productsService.getQueryPriceRange(query);
+  }
+
+  @Get('list-by-slug')
+  getAllBySlug(@Query() query): Promise<IProductsBySlugRO> {
+    this.logger.log('Handling getAllByName() request...');
+    return this.productsService.getAllBySlug(query);
   }
 
   @Get(':slug')
@@ -39,7 +63,7 @@ export class ProductsController {
   }
 
   @Put(':id')
-  update(@Param('id') id: string, @Body() data: CreateProductDto) {
+  update(@Param('id') id: string, @Body() data: UpdateProductDto) {
     this.logger.log('Handling update() request with id=' + id + '...');
     return this.productsService.update(id, data);
   }
