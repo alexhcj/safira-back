@@ -9,7 +9,7 @@ import { UserHashedDto, UserDto } from './dto/user.dto';
 export class UsersService {
   constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {}
 
-  async create(userDto: UserDto): Promise<User> {
+  async create(userDto: UserDto): Promise<UserDocument> {
     const user = await this.findByEmail(userDto.email);
 
     if (user) {

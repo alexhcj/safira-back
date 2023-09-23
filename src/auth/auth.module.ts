@@ -8,11 +8,17 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { User, UserScheme } from '../users/schemes/user.scheme';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { PassportModule } from '@nestjs/passport';
+import {
+  Verification,
+  VerificationScheme,
+} from '../verifications/schemes/verification.scheme';
+import { VerificationsModule } from '../verifications/verifications.module';
 
 @Module({
   imports: [
     UsersModule,
     PassportModule,
+    VerificationsModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async () => ({
@@ -21,7 +27,10 @@ import { PassportModule } from '@nestjs/passport';
       }),
       inject: [ConfigService],
     }),
-    MongooseModule.forFeature([{ name: User.name, schema: UserScheme }]),
+    MongooseModule.forFeature([
+      { name: User.name, schema: UserScheme },
+      { name: Verification.name, schema: VerificationScheme },
+    ]),
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy],

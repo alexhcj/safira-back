@@ -12,6 +12,7 @@ import { UsersModule } from './users/users.module';
 import { TagsModule } from './tags/tags.module';
 import { OffersModule } from './offers/offers.module';
 import { CommentsModule } from './comments/comments.module';
+import { VerificationsModule } from './verifications/verifications.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { CommentsModule } from './comments/comments.module';
     TagsModule,
     OffersModule,
     CommentsModule,
+    VerificationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
