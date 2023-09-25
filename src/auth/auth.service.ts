@@ -2,15 +2,17 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { UsersService } from '../users/users.service';
 import { UserDocument } from '../users/schemes/user.scheme';
-import { UserDto } from '../users/dto/user.dto';
 import { JwtService } from '@nestjs/jwt';
 import { AuthLoginRO } from './interfaces/auth.interface';
+import { LoginUserDto, RegisterUserDto } from './dto/auth.dto';
+import { VerificationsService } from '../verifications/verifications.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
+    private verificationService: VerificationsService,
   ) {}
 
   async validateUser(email: string, password: string): Promise<UserDocument> {
@@ -21,7 +23,7 @@ export class AuthService {
     throw new HttpException('Wrong email or password', HttpStatus.NOT_FOUND);
   }
 
-  async login(user: UserDto): Promise<AuthLoginRO> {
+  async login(user: LoginUserDto): Promise<AuthLoginRO> {
     const validatedUser = await this.validateUser(user.email, user.password);
 
     if (!validatedUser) {
@@ -35,11 +37,22 @@ export class AuthService {
     return { userId: validatedUser.id, accessToken };
   }
 
-  async register(user: UserDto): Promise<any> {
+  async register(user: RegisterUserDto): Promise<any> {
+    if (!user.isPrivacyConfirmed)
+      throw new HttpException(
+        'User not confirmed terms and policies',
+        HttpStatus.BAD_REQUEST,
+      );
+
     const newUser = await this.usersService.create({
       email: user.email,
       password: user.password,
     });
+
+    await this.verificationService.createVerification(
+      newUser.id,
+      user.isPrivacyConfirmed,
+    );
 
     return this.login({
       email: newUser.email,
