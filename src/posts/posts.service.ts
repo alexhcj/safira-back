@@ -75,8 +75,12 @@ export class PostsService {
     const post = await this.postModel
       .findOne({ slug })
       .populate({
-        path: 'user',
+        path: 'userId',
         select: 'fullName',
+      })
+      .populate({
+        path: 'comments',
+        populate: { path: 'userId', select: 'fullName' },
       })
       .exec();
 

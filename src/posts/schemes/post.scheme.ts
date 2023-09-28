@@ -9,7 +9,7 @@ export type PostDocument = Post & Document;
 @Schema({ collection: 'posts', timestamps: true })
 export class Post {
   @Prop({ required: true, type: SchemaTypes.ObjectId, ref: User.name })
-  readonly user: User;
+  readonly userId: User;
 
   @Prop({ required: true })
   readonly title: string;
@@ -26,11 +26,21 @@ export class Post {
   @Prop({ required: true })
   readonly category: PostCategoryEnum;
 
-  @Prop()
+  @Prop({ default: undefined })
   readonly tags: [];
 
-  @Prop({ type: [SchemaTypes.ObjectId], ref: Comment.name, default: [] })
+  @Prop({ type: [SchemaTypes.ObjectId], ref: Comment.name, default: undefined })
   readonly comments: Comment[];
 }
 
 export const PostScheme = SchemaFactory.createForClass(Post);
+
+PostScheme.set('toJSON', {
+  virtuals: true,
+  transform: function (doc, ret) {
+    delete ret['userId'];
+    delete ret['_id'];
+    delete ret['__v'];
+    return { ...ret, author: doc.userId };
+  },
+});
