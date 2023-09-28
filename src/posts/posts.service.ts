@@ -72,7 +72,13 @@ export class PostsService {
   }
 
   async getBySlug(slug: string): Promise<PostDocument> {
-    const post = await this.postModel.findOne({ slug }).exec();
+    const post = await this.postModel
+      .findOne({ slug })
+      .populate({
+        path: 'user',
+        select: 'fullName',
+      })
+      .exec();
 
     if (!post) throw new HttpException('Post not found', HttpStatus.NOT_FOUND);
 
