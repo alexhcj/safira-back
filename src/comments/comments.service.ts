@@ -40,7 +40,9 @@ export class CommentsService {
       );
 
     const newPostCommnets: UpdatePostDto = {
-      comments: [...post.comments, createdComment.id],
+      comments: !post.comments
+        ? [createdComment.id]
+        : [...post.comments, createdComment.id],
     };
 
     return await this.postService.update(post.id, newPostCommnets);
@@ -56,14 +58,6 @@ export class CommentsService {
       .populate({
         path: 'userId',
         select: 'fullName',
-      })
-      .transform((doc) => {
-        return doc.map((item) => {
-          return {
-            name: item.userId.fullName.split(' ')[0],
-            text: item.text,
-          };
-        });
       })
       .exec();
   }
