@@ -1,85 +1,131 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { Comment, CommentDocument } from './schemes/comment.scheme';
 import { PostsService } from '../posts/posts.service';
-import { CommentDto } from './dto/comment.dto';
-import { PostDocument } from '../posts/schemes/post.scheme';
-import { UpdatePostDto } from '../posts/dto/udpate-post.dto';
+import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
-import { ICommentQuery } from './interfaces/comment.interface';
+import {
+  IComment,
+  ICommentEntity,
+  ICommentQuery,
+  ICommentUpdateQuery,
+} from './interfaces/comment.interface';
+import { deepCountComments } from '../helpers';
+import { UpdatePostDto } from '../posts/dto/udpate-post.dto';
 
 @Injectable()
 export class CommentsService {
   constructor(
-    @InjectModel(Comment.name) private commentModel: Model<CommentDocument>,
+    @InjectModel(Comment.name)
+    private commentModel: Model<CommentDocument>,
     private postService: PostsService,
   ) {}
 
   async create(
-    data: CommentDto,
-    postSlug: string,
+    slug: string,
     userId: string,
-  ): Promise<PostDocument> {
-    const post = await this.postService.getBySlug(postSlug);
+    data: CreateCommentDto,
+  ): Promise<CommentDocument> {
+    const post = await this.postService.getBySlug(slug);
 
     if (!post) throw new HttpException('Post not found', HttpStatus.NOT_FOUND);
 
-    const comment: CommentDto = {
-      userId,
+    const commentEntity = await this.commentModel.findOne({ postSlug: slug });
+
+    if (commentEntity)
+      throw new HttpException('Comment already exists', HttpStatus.BAD_REQUEST);
+
+    const comment: IComment = {
+      user: {
+        _id: new Types.ObjectId(userId),
+        fullName: 'John Been',
+      },
       text: data.text,
-      postSlug,
     };
 
-    const createdComment = await new this.commentModel(comment).save();
-
-    if (!createdComment)
-      throw new HttpException(
-        'Comment wasn`t created',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-
-    const newPostCommnets: UpdatePostDto = {
-      comments: [...post.comments, createdComment.id],
+    const newCommentEntity: ICommentEntity = {
+      postSlug: slug,
+      comments: [comment],
     };
 
-    return await this.postService.update(post.id, newPostCommnets);
+    const createdComment = await new this.commentModel(newCommentEntity).save();
+
+    const postWithComments: UpdatePostDto = {
+      comments: createdComment._id,
+    };
+
+    await this.postService.update(post._id, postWithComments);
+
+    return createdComment;
   }
 
-  async read(query): Promise<any> {
+  async read(query): Promise<CommentDocument[]> {
     const { limit, offset = '0', sort, order }: ICommentQuery = query;
     return this.commentModel
       .find()
       .sort({ [sort]: order === 'desc' ? 1 : -1 })
       .skip(+offset)
       .limit(+limit)
-      .populate({
-        path: 'userId',
-        select: 'fullName',
-      })
-      .transform((doc) => {
-        return doc.map((item) => {
-          return {
-            name: item.userId.fullName.split(' ')[0],
-            text: item.text,
-          };
-        });
-      })
       .exec();
   }
 
-  async update(id: string, data: UpdateCommentDto): Promise<CommentDocument> {
-    const comment = await this.commentModel.findById(id);
+  async findRecentComments(query): Promise<any> {
+    const { limit }: ICommentQuery = query;
+    const comments = await this.commentModel.find().exec();
+    const allComments = comments.reduce(
+      (acc, cur) => [...acc, ...cur.comments],
+      [],
+    );
+    const commentsArr = deepCountComments(allComments);
+    const sortedComments: IComment[] = commentsArr.sort(
+      (a, b) =>
+        new Date(b.createdAt).valueOf() - new Date(a.createdAt).valueOf(),
+    );
+    return sortedComments.slice(0, +limit);
+  }
 
-    if (!comment) {
+  async update(
+    postSlug: string,
+    data: UpdateCommentDto,
+    { nestedLvl }: ICommentUpdateQuery,
+  ): Promise<CommentDocument> {
+    const commentEntity = await this.commentModel.findOne({ postSlug });
+
+    // generates path to replied comment replies.0.replies.2.replies...
+    const commentPath =
+      nestedLvl === ''
+        ? 'comments'
+        : 'comments' +
+          nestedLvl
+            .split('|')
+            .map((item) => {
+              return `.${item}.comments`;
+            })
+            .join('');
+
+    if (!commentEntity) {
       throw new HttpException(
         `That comment doesn't exist`,
         HttpStatus.BAD_REQUEST,
       );
     }
 
+    // TODO: fix manually created timestamps. Find why timestamps won't create on sublvl (in nested replies array)
+    const comment: IComment = {
+      user: {
+        _id: new Types.ObjectId(data.userId),
+        fullName: 'John Been',
+      },
+      text: data.text,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
     return this.commentModel
-      .findByIdAndUpdate(id, data)
+      .findByIdAndUpdate(commentEntity.id, {
+        $push: { [`${commentPath}`]: comment },
+      })
       .setOptions({ new: true });
   }
 

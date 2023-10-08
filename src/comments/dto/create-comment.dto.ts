@@ -1,10 +1,6 @@
 import { IsNotEmpty, IsString } from 'class-validator';
 
-export class UpdateCommentDto {
-  @IsString()
-  @IsNotEmpty()
-  readonly userId: string;
-
+export class CreateCommentDto {
   @IsString()
   @IsNotEmpty()
   readonly text: string;
