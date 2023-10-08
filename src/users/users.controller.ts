@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Logger, Post } from '@nestjs/common';
+import { Body, Controller, Get, Logger, Param, Post } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UserDto } from './dto/user.dto';
 
@@ -8,7 +8,7 @@ export class UsersController {
 
   constructor(private userService: UsersService) {}
 
-  @Post('create')
+  @Post()
   create(@Body() user: UserDto) {
     this.logger.log('Handling create() request');
     return this.userService.create(user);
@@ -18,5 +18,11 @@ export class UsersController {
   findAll() {
     this.logger.log('Handling findAll() request');
     return this.userService.findAll();
+  }
+
+  @Get(':id')
+  findById(@Param('id') id: string) {
+    this.logger.log('Handling findAll() request');
+    return this.userService.findById(id);
   }
 }

@@ -13,7 +13,8 @@ import {
 } from '@nestjs/common';
 import { CommentsService } from './comments.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { CommentDto } from './dto/comment.dto';
+import { CreateCommentDto } from './dto/create-comment.dto';
+import { UpdateCommentDto } from './dto/update-comment.dto';
 
 @Controller('comments')
 export class CommentsController {
@@ -27,22 +28,31 @@ export class CommentsController {
     return this.commentsService.read(query);
   }
 
-  @UseGuards(JwtAuthGuard)
-  @Post(':slug')
-  // TODO: replace any
-  create(
-    @Body() data: CommentDto,
-    @Param('slug') slug: string,
-    @Req() req: any,
-  ) {
-    this.logger.log('Handling create() request...');
-    return this.commentsService.create(data, slug, req.user.userId);
+  @Get('recent-comments')
+  findRecentComments(@Query() query) {
+    this.logger.log('Handling findRecentComments() request...');
+    return this.commentsService.findRecentComments(query);
   }
 
-  @Put(':id')
-  update(@Param('id') id: string, @Body() data: CommentDto) {
-    this.logger.log('Handling update() request with id=' + id + '...');
-    return this.commentsService.update(id, data);
+  @UseGuards(JwtAuthGuard)
+  @Post(':slug')
+  create(
+    @Param('slug') slug: string,
+    @Req() req,
+    @Body() data: CreateCommentDto,
+  ) {
+    this.logger.log('Handling create() request...');
+    return this.commentsService.create(slug, req.user.userId, data);
+  }
+
+  @Put(':postSlug')
+  update(
+    @Param('postSlug') postSlug: string,
+    @Body() data: UpdateCommentDto,
+    @Query() query,
+  ) {
+    this.logger.log('Handling update() request with id=' + postSlug + '...');
+    return this.commentsService.update(postSlug, data, query);
   }
 
   @Delete(':id')
