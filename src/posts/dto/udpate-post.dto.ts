@@ -1,5 +1,6 @@
 import { IsOptional, IsString } from 'class-validator';
 import { PostCategoryEnum } from '../enums/post-category.enum';
+import { Types } from 'mongoose';
 
 export class UpdatePostDto {
   @IsString()
@@ -18,7 +19,6 @@ export class UpdatePostDto {
   @IsOptional()
   readonly category?: PostCategoryEnum;
 
-  @IsString()
   @IsOptional()
-  comments?: string[];
+  comments?: Types.ObjectId;
 }

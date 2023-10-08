@@ -29,8 +29,12 @@ export class Post {
   @Prop({ default: undefined })
   readonly tags: [];
 
-  @Prop({ type: [SchemaTypes.ObjectId], ref: Comment.name, default: undefined })
-  readonly comments: Comment[];
+  @Prop({
+    type: SchemaTypes.ObjectId,
+    ref: Comment.name,
+    default: undefined,
+  })
+  comments: Comment;
 }
 
 export const PostScheme = SchemaFactory.createForClass(Post);

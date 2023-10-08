@@ -80,7 +80,6 @@ export class PostsService {
       })
       .populate({
         path: 'comments',
-        populate: { path: 'userId', select: 'fullName' },
       })
       .exec();
 
