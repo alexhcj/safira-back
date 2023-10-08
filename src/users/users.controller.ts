@@ -19,4 +19,10 @@ export class UsersController {
     this.logger.log('Handling findAll() request');
     return this.userService.findAll();
   }
+
+  @Get(':id')
+  findById(@Param('id') id: string) {
+    this.logger.log('Handling findAll() request');
+    return this.userService.findById(id);
+  }
 }
