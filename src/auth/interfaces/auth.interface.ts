@@ -1,4 +1,4 @@
 export interface AuthLoginRO {
-  userId: string;
+  id: string;
   accessToken: string;
 }

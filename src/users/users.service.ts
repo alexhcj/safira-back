@@ -3,31 +3,31 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 import { User, UserDocument } from './schemes/user.scheme';
-import { UserHashedDto, UserDto } from './dto/user.dto';
+import { UserDto, UserHashedDto } from './dto/user.dto';
 
 @Injectable()
 export class UsersService {
   constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {}
 
-  async create(userDto: UserDto): Promise<UserDocument> {
-    const user = await this.findByEmail(userDto.email);
+  async create(data: UserDto): Promise<UserDocument> {
+    const user = await this.findByEmail(data.email);
 
-    if (user) {
+    if (user && user.email === data.email) {
       throw new HttpException(
-        `Email ${userDto.email} already taken`,
-        HttpStatus.BAD_REQUEST,
+        `Email ${data.email} is already taken`,
+        HttpStatus.CONFLICT,
       );
     }
 
     const salt = await bcrypt.genSalt();
-    const ph = await bcrypt.hash(userDto.password, salt);
+    const ph = await bcrypt.hash(data.password, salt);
 
-    const userDBDto: UserHashedDto = {
-      email: userDto.email,
+    const userDto: UserHashedDto = {
+      email: data.email,
       passwordHash: ph,
     };
 
-    return new this.userModel(userDBDto).save();
+    return new this.userModel(userDto).save();
   }
 
   async findAll(): Promise<User[]> {
