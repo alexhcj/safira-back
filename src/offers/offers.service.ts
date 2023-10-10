@@ -24,7 +24,10 @@ export class OffersService {
 
     return this.offerModel.find(find).populate({
       path: 'deal',
-      populate: [{ path: 'price' }, { path: 'tags' }],
+      populate: [
+        { path: 'price' },
+        { path: 'tags', transform: (doc) => doc.tags },
+      ],
     });
   }
 
