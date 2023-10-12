@@ -3,15 +3,22 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module';
 import { join } from 'path';
 import { ValidationPipe } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  const configService = app.get(ConfigService);
+  const port = configService.get<number>('port');
+  const node_env = configService.get<string>('node_env');
+  const apiUrl = configService.get<string>('api.apiUrl');
+  const globalPrefix = configService.get<string>('api.globalPrefix');
+
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,
     }),
   );
-  app.setGlobalPrefix('api/v1');
+  app.setGlobalPrefix(globalPrefix);
 
   app.useStaticAssets(join(__dirname, '..', 'public'), {
     prefix: '/public',
@@ -19,8 +26,14 @@ async function bootstrap() {
 
   app.enableCors();
 
-  await app.listen(process.env.PORT || 5000, () =>
-    console.log(`Server port: ${process.env.PORT}`),
+  await app.listen(port || 5000, () =>
+    console.log(
+      `Server port: ${port}`,
+      '\n',
+      `Env mode: ${node_env && `${node_env}`}`,
+      '\n',
+      `App url: ${apiUrl}/${globalPrefix}`,
+    ),
   );
 }
 
