@@ -42,9 +42,8 @@ export const PostScheme = SchemaFactory.createForClass(Post);
 PostScheme.set('toJSON', {
   virtuals: true,
   transform: function (doc, ret) {
-    delete ret['userId'];
     delete ret['_id'];
     delete ret['__v'];
-    return { ...ret, author: doc.userId };
+    return ret;
   },
 });

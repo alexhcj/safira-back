@@ -34,6 +34,8 @@ lerna-debug.log*
 !.vscode/launch.json
 !.vscode/extensions.json
 
-# Files
-.env
+# env
+**/*.env
+
+# files
 react-shop.txt

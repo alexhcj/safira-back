@@ -38,6 +38,17 @@ export class PostsService {
       },
     ]);
 
+    if (posts.length === 0) {
+      return {
+        posts: [],
+        meta: {
+          total: 0,
+          page: 0,
+          isLastPage: null,
+        },
+      };
+    }
+
     const page: number = +limit !== 0 ? +offset / +limit + 1 : 1;
     const isLastPage =
       page * +limit === total[0].total || page * +limit > total[0].total;
