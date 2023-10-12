@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { MongooseModule } from '@nestjs/mongoose';
@@ -13,15 +13,24 @@ import { TagsModule } from './tags/tags.module';
 import { OffersModule } from './offers/offers.module';
 import { CommentsModule } from './comments/comments.module';
 import { VerificationsModule } from './verifications/verifications.module';
+import { validationSchema } from './config/validation';
+import configuration from './config/configuration';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath: `src/config/env/${process.env.NODE_ENV}.env`,
+      load: [configuration],
+      validationSchema,
     }),
-    MongooseModule.forRoot(
-      `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_SERVER}?retryWrites=true&w=majority`,
-    ),
+    MongooseModule.forRootAsync({
+      useFactory: async (configService: ConfigService) => ({
+        uri: configService.get<string>('mongodb.database.connectionString'),
+        dbName: configService.get<string>('mongodb.database.databaseName'),
+      }),
+      inject: [ConfigService],
+    }),
     ProductsModule,
     ReviewsModule,
     PostsModule,

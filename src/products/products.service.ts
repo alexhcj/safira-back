@@ -375,7 +375,7 @@ export class ProductsService {
       .exec();
 
     const newViews: UpdateProductDto = {
-      views: product.views + 1,
+      views: (product.views ? product.views : 0) + 1,
     };
 
     await this.update(product.id, newViews);
