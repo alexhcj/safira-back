@@ -1,6 +1,6 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Aggregate, Model } from 'mongoose';
 import { Product, ProductDocument } from './schemes/product.scheme';
 import { CreateProductDto } from './dto/create-product.dto';
 import {
@@ -204,6 +204,10 @@ export class ProductsService {
         minPrice: +lowestPrice[0].price,
       },
     };
+  }
+
+  async findRandom({ size = 1 }): Promise<Aggregate<ProductDocument[]>> {
+    return this.productModel.aggregate([{ $sample: { size } }]);
   }
 
   async getQueryBrands(query): Promise<any> {
