@@ -1,4 +1,17 @@
-import { Post } from '../schemes/post.scheme';
+import { PostCategoryEnum } from '../enums/post-category.enum';
+import { Types } from 'mongoose';
+
+interface IPost {
+  id: string;
+  userId: Types.ObjectId;
+  title: string;
+  slug: string;
+  text: string;
+  img: string;
+  category: PostCategoryEnum;
+  createdAt: Date;
+  tags: string[];
+}
 
 interface IPostMeta {
   total: number;
@@ -7,7 +20,7 @@ interface IPostMeta {
 }
 
 export interface IPostsRO {
-  posts: Post[];
+  posts: IPost[];
   meta: IPostMeta;
 }
 

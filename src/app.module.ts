@@ -14,6 +14,7 @@ import { OffersModule } from './offers/offers.module';
 import { CommentsModule } from './comments/comments.module';
 import { VerificationsModule } from './verifications/verifications.module';
 import { validationSchema } from './config/validation';
+import { SearchModule } from './search/search.module';
 import configuration from './config/configuration';
 
 @Module({
@@ -41,6 +42,7 @@ import configuration from './config/configuration';
     OffersModule,
     CommentsModule,
     VerificationsModule,
+    SearchModule,
   ],
   controllers: [AppController],
   providers: [AppService],

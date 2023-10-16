@@ -17,7 +17,13 @@ export class PostsService {
 
   async getAll(query): Promise<IPostsRO> {
     // TODO: extend with (tags, category) fields
-    const { search, sort, order, limit, offset = '0' }: IPostQuery = query;
+    const {
+      search,
+      sort,
+      order,
+      limit = '10',
+      offset = '0',
+    }: IPostQuery = query;
 
     const [{ posts, total }] = await this.postModel.aggregate([
       {

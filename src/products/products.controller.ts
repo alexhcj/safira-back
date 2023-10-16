@@ -18,6 +18,8 @@ import {
   IProductsRO,
 } from './interfaces/product.interface';
 import { UpdateProductDto } from './dto/update-product.dto';
+import { ProductDocument } from './schemes/product.scheme';
+import { Aggregate } from 'mongoose';
 
 @Controller('products')
 export class ProductsController {
@@ -36,6 +38,12 @@ export class ProductsController {
     this.logger.log('Handling findAll() request...');
     // TODO: add transform query to indeed formats (number, string)
     return this.productsService.findAll(query);
+  }
+
+  @Get('random')
+  findRandom(@Query() query): Promise<Aggregate<ProductDocument[]>> {
+    this.logger.log('Handling findRandom() request...');
+    return this.productsService.findRandom(query);
   }
 
   @Get('list-brands')
