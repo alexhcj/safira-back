@@ -75,5 +75,5 @@ export interface IProductFilter {
 }
 
 export type IProductSort = {
-  [sort: string]: number | any; // TODO: replace any with price type (price & discount_price)
+  [sort: string]: number | any;
 };
