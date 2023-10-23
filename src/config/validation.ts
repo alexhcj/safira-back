@@ -18,4 +18,9 @@ export const validationSchema = Joi.object<IConfig>({
       databaseName: Joi.string().required(),
     },
   },
+  files: {
+    uploads: {
+      destination: Joi.string().required(),
+    },
+  },
 });

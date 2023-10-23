@@ -10,9 +10,6 @@ export class User {
 
   @Prop({ required: true })
   readonly passwordHash: string;
-
-  @Prop()
-  readonly fullName: string;
 }
 
 export const UserScheme = SchemaFactory.createForClass(User);
