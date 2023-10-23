@@ -17,4 +17,9 @@ export default (): IConfig => ({
       databaseName: process.env.DB_NAME,
     },
   },
+  files: {
+    uploads: {
+      destination: process.env.UPLOADED_FILES_DESTINATION,
+    },
+  },
 });

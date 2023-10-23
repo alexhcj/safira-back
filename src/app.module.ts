@@ -15,6 +15,8 @@ import { CommentsModule } from './comments/comments.module';
 import { VerificationsModule } from './verifications/verifications.module';
 import { validationSchema } from './config/validation';
 import { SearchModule } from './search/search.module';
+import { ProfilesModule } from './profiles/profiles.module';
+import { FilesModule } from './files/files.module';
 import configuration from './config/configuration';
 
 @Module({
@@ -43,6 +45,8 @@ import configuration from './config/configuration';
     CommentsModule,
     VerificationsModule,
     SearchModule,
+    ProfilesModule,
+    FilesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

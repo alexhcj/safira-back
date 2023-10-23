@@ -21,4 +21,9 @@ export interface IConfig {
   api: IApi;
   jwt: IJwt;
   mongodb: IMongodb;
+  files: {
+    uploads: {
+      destination: string;
+    };
+  };
 }

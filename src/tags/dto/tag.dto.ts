@@ -6,7 +6,6 @@ export class CreateTagDto {
   @IsEnum(TagTypeEnum)
   readonly type: TagTypeEnum;
 
-  // TODO: add validation
   readonly tags: Tags;
 }
 

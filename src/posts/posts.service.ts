@@ -16,7 +16,6 @@ export class PostsService {
   }
 
   async getAll(query): Promise<IPostsRO> {
-    // TODO: extend with (tags, category) fields
     const {
       search,
       sort,

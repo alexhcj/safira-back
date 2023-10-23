@@ -111,7 +111,6 @@ export class CommentsService {
       );
     }
 
-    // TODO: fix manually created timestamps. Find why timestamps won't create on sublvl (in nested replies array)
     const comment: IComment = {
       user: {
         _id: new Types.ObjectId(data.userId),

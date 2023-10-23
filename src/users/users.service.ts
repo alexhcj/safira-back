@@ -4,10 +4,14 @@ import { Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 import { User, UserDocument } from './schemes/user.scheme';
 import { UserDto, UserHashedDto } from './dto/user.dto';
+import { ProfilesService } from '../profiles/profiles.service';
 
 @Injectable()
 export class UsersService {
-  constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {}
+  constructor(
+    @InjectModel(User.name) private userModel: Model<UserDocument>,
+    private profileService: ProfilesService,
+  ) {}
 
   async create(data: UserDto): Promise<UserDocument> {
     const user = await this.findByEmail(data.email);
@@ -27,7 +31,10 @@ export class UsersService {
       passwordHash: ph,
     };
 
-    return new this.userModel(userDto).save();
+    const newUser = await new this.userModel(userDto).save();
+    await this.profileService.create(newUser.id);
+
+    return newUser;
   }
 
   async findAll(): Promise<User[]> {
