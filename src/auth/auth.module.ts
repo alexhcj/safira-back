@@ -3,7 +3,7 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { UsersModule } from '../users/users.module';
 import { JwtModule } from '@nestjs/jwt';
-import { ConfigService } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { User, UserScheme } from '../users/schemes/user.scheme';
 import { JwtStrategy } from './strategies/jwt.strategy';
@@ -20,6 +20,7 @@ import { VerificationsModule } from '../verifications/verifications.module';
     PassportModule,
     VerificationsModule,
     JwtModule.registerAsync({
+      imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
         secretOrPrivateKey: configService.get<string>('jwt.secret'),
         signOptions: { expiresIn: configService.get<string>('jwt.expiresIn') },

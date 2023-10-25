@@ -28,6 +28,7 @@ import configuration from './config/configuration';
       validationSchema,
     }),
     MongooseModule.forRootAsync({
+      imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
         uri: configService.get<string>('mongodb.database.connectionString'),
         dbName: configService.get<string>('mongodb.database.databaseName'),

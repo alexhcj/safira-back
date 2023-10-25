@@ -87,15 +87,21 @@ export class PostsService {
     return this.postModel.findByIdAndDelete(id).exec();
   }
 
-  async getBySlug(slug: string): Promise<PostDocument> {
+  public async getBySlug(slug: string): Promise<PostDocument> {
     const post = await this.postModel
       .findOne({ slug })
       .populate({
-        path: 'userId',
-        select: 'fullName',
+        path: 'user',
+        foreignField: 'userId',
+        select: 'firstName lastName avatarId -userId',
       })
       .populate({
         path: 'comments',
+        populate: {
+          path: 'comments.user',
+          foreignField: 'userId',
+          select: 'firstName avatarId -userId',
+        },
       })
       .exec();
 

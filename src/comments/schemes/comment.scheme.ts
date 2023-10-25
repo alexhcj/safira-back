@@ -1,16 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, SchemaTypes } from 'mongoose';
-import { User } from '../../users/schemes/user.scheme';
-
-export type CommentUserDocument = CommentUser & Document;
-
-class CommentUser {
-  @Prop({ required: true, type: SchemaTypes.ObjectId, ref: User.name })
-  readonly _id: User;
-
-  @Prop({ required: true, type: String })
-  readonly fullName: string;
-}
+import { Profile } from '../../profiles/schemes/profile.scheme';
 
 export type CommentItemDocument = CommentItem & Document;
 
@@ -18,8 +8,8 @@ export type CommentItemDocument = CommentItem & Document;
   timestamps: true,
 })
 export class CommentItem {
-  @Prop({ objectType: CommentUser })
-  readonly user: CommentUser;
+  @Prop({ required: true, type: SchemaTypes.ObjectId, ref: Profile.name })
+  readonly user: Profile;
 
   @Prop({ type: String })
   readonly text: string;

@@ -2,7 +2,7 @@ import { IConfig } from './config.interface';
 
 export default (): IConfig => ({
   node_env: process.env.NODE_ENV,
-  port: parseInt(process.env.PORT, 10) || 5000,
+  port: parseInt(process.env.PORT, 10) || 9090,
   api: {
     apiUrl: process.env.API_URL,
     globalPrefix: process.env.GLOBAL_PREFIX,
