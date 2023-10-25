@@ -367,8 +367,9 @@ export class ProductsService {
       .populate({
         path: 'reviews',
         populate: {
-          path: 'comments.user',
-          select: 'fullName',
+          path: 'reviews.user',
+          foreignField: 'userId',
+          select: 'firstName avatarId -userId',
         },
       })
       .populate({

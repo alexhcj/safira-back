@@ -1,5 +1,7 @@
+import { Types } from 'mongoose';
+
 export interface IReview {
-  userId: string;
+  user: Types.ObjectId;
   text?: string;
   rating?: number;
 }
