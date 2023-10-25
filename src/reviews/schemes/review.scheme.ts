@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, SchemaTypes } from 'mongoose';
-import { User } from '../../users/schemes/user.scheme';
 import { IReview } from '../review.interface';
+import { Profile } from '../../profiles/schemes/profile.scheme';
 
 export type ReviewDocument = Review & Document;
 
@@ -9,8 +9,8 @@ export type ReviewDocument = Review & Document;
   timestamps: true,
 })
 export class ReviewItem {
-  @Prop({ type: SchemaTypes.ObjectId, ref: User.name })
-  readonly user: User;
+  @Prop({ type: SchemaTypes.ObjectId, ref: Profile.name })
+  readonly user: Profile;
 
   @Prop()
   readonly text: string;
@@ -24,10 +24,10 @@ export const ReviewItemScheme = SchemaFactory.createForClass(ReviewItem);
 @Schema({ collection: 'reviews' })
 export class Review {
   @Prop({ required: true })
-  readonly reviewObjectSlug: string;
+  readonly reviewProductSlug: string;
 
   @Prop({ type: [ReviewItemScheme], default: [] })
-  readonly comments: IReview[];
+  readonly reviews: IReview[];
 }
 
 export const ReviewScheme = SchemaFactory.createForClass(Review);

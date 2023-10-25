@@ -1,11 +1,12 @@
 import { InjectModel } from '@nestjs/mongoose';
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { ReviewDto } from './dto/review.dto';
 import { Review, ReviewDocument } from './schemes/review.scheme';
 import { Product, ProductDocument } from '../products/schemes/product.scheme';
 import { User, UserDocument } from '../users/schemes/user.scheme';
 import { IReview } from './review.interface';
+import { IReviewCreateRO } from './interfaces/review.interface';
 
 @Injectable()
 export class ReviewsService {
@@ -15,39 +16,45 @@ export class ReviewsService {
     @InjectModel(User.name) private userModel: Model<UserDocument>,
   ) {}
 
-  async create(data: ReviewDto, userId: string): Promise<any> {
+  async create(data: ReviewDto, userId: string): Promise<IReviewCreateRO> {
     const product = await this.productModel.findOne({
-      slug: data.reviewObjectSlug,
+      slug: data.reviewProductSlug,
     });
 
     const reviewToDB: IReview = {
-      userId: userId,
+      user: new Types.ObjectId(userId),
       text: data.text,
       rating: data.rating,
     };
 
     if (!product.reviews) {
       const newObjectReview = {
-        reviewObjectSlug: data.reviewObjectSlug,
+        reviewProductSlug: data.reviewProductSlug,
         reviews: [reviewToDB],
       };
 
       const createdReview = await new this.reviewModel(newObjectReview).save();
 
-      this.productModel.findOneAndUpdate(
+      await this.productModel.findOneAndUpdate(
         { slug: product.slug },
         { reviews: createdReview._id },
         { new: true },
       );
 
-      return createdReview;
+      return {
+        status: HttpStatus.CREATED,
+      };
     }
 
-    return this.reviewModel.findOneAndUpdate(
-      { reviewObjectSlug: product.slug },
+    await this.reviewModel.findOneAndUpdate(
+      { reviewProductSlug: product.slug },
       { $push: { reviews: reviewToDB } },
       { new: true },
     );
+
+    return {
+      status: HttpStatus.CREATED,
+    };
   }
 
   async read(): Promise<Review[]> {
