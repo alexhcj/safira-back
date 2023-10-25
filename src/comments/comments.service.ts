@@ -72,7 +72,15 @@ export class CommentsService {
 
   async findRecentComments(query): Promise<any> {
     const { limit }: ICommentQuery = query;
-    const comments = await this.commentModel.find().exec();
+    const comments = await this.commentModel
+      .find()
+      .populate('comments')
+      .populate({
+        path: 'comments.user',
+        foreignField: 'userId',
+        select: 'firstName avatarId -userId',
+      })
+      .exec();
     const allComments = comments.reduce(
       (acc, cur) => [...acc, ...cur.comments],
       [],
