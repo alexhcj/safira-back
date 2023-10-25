@@ -3,7 +3,7 @@ import { IConfig } from './config.interface';
 
 export const validationSchema = Joi.object<IConfig>({
   node_env: Joi.string().valid('development', 'production'),
-  port: Joi.number().default(5000),
+  port: Joi.number().default(9090),
   api: {
     apiUrl: Joi.string().required(),
     globalPrefix: Joi.string().required(),
