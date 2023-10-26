@@ -3,6 +3,17 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { OfferEnum } from '../enums/offer.enum';
 import { Product } from '../../products/schemes/product.scheme';
 
+class Link {
+  @Prop()
+  readonly page: string;
+
+  @Prop()
+  readonly categoryType: string;
+
+  @Prop()
+  readonly categoryValue: string;
+}
+
 export type OfferDocument = Offer & Document;
 
 @Schema({
@@ -16,20 +27,23 @@ export class Offer {
   @Prop({ required: true, type: Date })
   readonly expiresDate: string;
 
-  @Prop()
-  readonly title?: string;
+  @Prop({ type: Link, default: undefined })
+  readonly link: Link;
 
-  @Prop()
-  readonly upTitle?: string;
+  @Prop({ default: undefined })
+  readonly title: string;
 
-  @Prop()
-  readonly text?: string;
+  @Prop({ default: undefined })
+  readonly upTitle: string;
 
-  @Prop()
-  readonly img?: string;
+  @Prop({ default: undefined })
+  readonly text: string;
 
-  @Prop({ type: SchemaTypes.ObjectId, ref: Product.name })
-  readonly deal?: Product;
+  @Prop({ default: undefined })
+  readonly img: string;
+
+  @Prop({ default: undefined, type: SchemaTypes.ObjectId, ref: Product.name })
+  readonly deal: Product;
 }
 
 export const OfferScheme = SchemaFactory.createForClass(Offer);

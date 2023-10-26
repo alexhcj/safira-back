@@ -50,13 +50,19 @@ export class OffersService {
     const newOffer: CreateOfferDto = {
       type: data.type,
       expiresDate: data.expiresDate,
+      text: data.text,
+      img: data.img,
+      title: data.title,
+      upTitle: data.upTitle,
+      deal: data.deal,
+      link: data.link
+        ? {
+            page: data.link.page,
+            categoryType: data.link.categoryType,
+            categoryValue: data.link.categoryValue,
+          }
+        : undefined,
     };
-
-    if (data.text) newOffer.text = data.text;
-    if (data.img) newOffer.img = data.img;
-    if (data.title) newOffer.title = data.title;
-    if (data.upTitle) newOffer.upTitle = data.upTitle;
-    if (data.deal) newOffer.deal = data.deal;
 
     const createdOffer = new this.offerModel(newOffer);
     return createdOffer.save();

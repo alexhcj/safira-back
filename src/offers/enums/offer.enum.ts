@@ -2,6 +2,7 @@ export enum OfferEnum {
   SPECIAL = 'SPECIAL',
   SHOP = 'SHOP',
   HERO_SLIDER = 'HERO_SLIDER',
+  OFFER_LINK = 'OFFER_LINK',
   PROMO = 'PROMO',
   DEALS_OF_WEEK = 'DEALS_OF_WEEK',
 }

@@ -1,3 +1,9 @@
+export enum CategotyTypeEnum {
+  PRIME_CATEGORY = 'PRIME_CATEGORY',
+  SUB_CATEGORY = 'SUB_CATEGORY',
+  BASIC_CATEGORY = 'BASIC_CATEGORY',
+}
+
 export enum PrimeCategoryEnum {
   FRUITS_VEGETABLES = 'FRUITS_VEGETABLES',
   DRINKS = 'DRINKS',

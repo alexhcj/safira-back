@@ -1,5 +1,6 @@
 import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { OfferEnum } from '../enums/offer.enum';
+import { ILink } from '../interfaces/link.interface';
 
 export class CreateOfferDto {
   @IsEnum(OfferEnum)
@@ -10,22 +11,25 @@ export class CreateOfferDto {
   readonly expiresDate: string;
 
   @IsOptional()
-  @IsString()
-  title?: string;
+  readonly link?: ILink;
 
   @IsOptional()
   @IsString()
-  upTitle?: string;
+  readonly title?: string;
 
   @IsOptional()
   @IsString()
-  text?: string;
+  readonly upTitle?: string;
 
   @IsOptional()
   @IsString()
-  img?: string;
+  readonly text?: string;
 
   @IsOptional()
   @IsString()
-  deal?: string;
+  readonly img?: string;
+
+  @IsOptional()
+  @IsString()
+  readonly deal?: string;
 }
