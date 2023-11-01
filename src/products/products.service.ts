@@ -1,6 +1,6 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Aggregate, Model } from 'mongoose';
+import { Aggregate, Model, Types } from 'mongoose';
 import { Product, ProductDocument } from './schemes/product.scheme';
 import { CreateProductDto } from './dto/create-product.dto';
 import {
@@ -40,11 +40,14 @@ export class ProductsService {
       primeCategory: data.primeCategory,
       subCategory: data.subCategory,
       basicCategory: data.basicCategory,
+      popularity: data.popularity,
+      views: data.views,
+      tags: data.tags.map((tag) => new Types.ObjectId(tag)),
       specifications: {
-        company: data.company,
-        shelfLife: new Date(data.shelfLife),
-        quantity: data.quantity,
-        producingCountry: data.producingCountry,
+        company: data.specifications.company,
+        shelfLife: new Date(data.specifications.shelfLife),
+        quantity: data.specifications.quantity,
+        producingCountry: data.specifications.producingCountry,
       },
     };
     const createdProduct = new this.productModel(newProduct);
@@ -360,9 +363,9 @@ export class ProductsService {
     };
   }
 
-  async findOne(where): Promise<IProductRO> {
+  public async findBySlug(slug: string): Promise<IProductRO> {
     const product = await this.productModel
-      .findOne(where)
+      .findOne({ slug })
       .populate('price')
       .populate({
         path: 'reviews',
@@ -383,25 +386,59 @@ export class ProductsService {
       views: (product.views ? product.views : 0) + 1,
     };
 
+    const totalRating = product.reviews.reviews.reduce(
+      (acc, cur) => acc + +cur.rating,
+      0,
+    );
+    const reviewsLength = product.reviews.reviews.length;
+
+    product.rating = totalRating / reviewsLength;
+
     await this.update(product.id, newViews);
 
     return { product };
   }
 
   async update(id: string, data: UpdateProductDto): Promise<Product> {
-    const product = await this.productModel.findById(id);
+    const product = await this.findById(new Types.ObjectId(id));
 
     if (!product) {
-      throw new HttpException(
-        `Такого продукта не существует`,
-        HttpStatus.BAD_REQUEST,
-      );
+      throw new HttpException(`Product doesn't exist`, HttpStatus.BAD_REQUEST);
     }
 
-    if (data.tags)
-      return this.productModel
-        .findByIdAndUpdate(id, data)
-        .setOptions({ new: true });
+    if (data.price)
+      await this.pricesService.update(product.price._id, data.price);
+
+    const updatedProduct: UpdateProductDto = {
+      name: data.name,
+      slug: data.slug,
+      description: data.description,
+      primeCategory: data.primeCategory,
+      subCategory: data.subCategory,
+      basicCategory: data.basicCategory,
+      popularity: data.popularity,
+      views: data.views,
+      tags: data.tags,
+      reviews: data.reviews,
+      specifications: {
+        company: data.specifications
+          ? data.specifications.company
+          : product.specifications.company,
+        producingCountry: data.specifications
+          ? data.specifications.producingCountry
+          : product.specifications.company,
+        quantity: data.specifications
+          ? data.specifications.quantity
+          : product.specifications.quantity,
+        shelfLife: data.specifications
+          ? data.specifications.shelfLife
+          : product.specifications.shelfLife,
+      },
+    };
+
+    return this.productModel
+      .findByIdAndUpdate(id, updatedProduct)
+      .setOptions({ new: true });
   }
 
   async delete(id: string) {
@@ -423,5 +460,25 @@ export class ProductsService {
       '-' +
       ((Math.random() * Math.pow(36, 6)) | 0).toString(36)
     );
+  }
+
+  private async findById(id: Types.ObjectId): Promise<ProductDocument> {
+    return this.productModel
+      .findById(id)
+      .populate('price')
+      .populate({
+        path: 'reviews',
+        populate: {
+          path: 'reviews.user',
+          foreignField: 'userId',
+          select: 'firstName avatarId -userId',
+        },
+      })
+      .populate({
+        path: 'tags',
+        select: 'tags',
+        transform: (doc) => (doc === null ? null : doc.tags),
+      })
+      .exec();
   }
 }

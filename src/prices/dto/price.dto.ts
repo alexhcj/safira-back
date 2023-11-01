@@ -9,3 +9,13 @@ export class CreatePriceDto {
   @IsNumber()
   readonly discount_price?: number;
 }
+
+export class UpdatePriceDto {
+  @IsOptional()
+  @IsNumber()
+  readonly price?: number;
+
+  @IsOptional()
+  @IsNumber()
+  readonly discount_price?: number;
+}

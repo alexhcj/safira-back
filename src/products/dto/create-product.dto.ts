@@ -1,13 +1,17 @@
 import {
+  IsArray,
   IsEnum,
   IsNotEmpty,
   IsNumber,
   IsObject,
   IsOptional,
   IsString,
+  ValidateNested,
 } from 'class-validator';
 import { PrimeCategoryEnum, SubCategoryEnum } from '../enums/categories.enum';
 import { BasicCategoryType } from '../interfaces/category.interface';
+import { CreateSpecificationsDto } from './specifications.dto';
+import { Type } from 'class-transformer';
 
 export class CreateProductDto {
   @IsString()
@@ -45,15 +49,11 @@ export class CreateProductDto {
 
   @IsOptional()
   @IsString()
-  readonly popularity: string;
+  readonly popularity: number;
 
   @IsOptional()
   @IsNumber()
   readonly views: number;
-
-  @IsOptional()
-  @IsNumber()
-  readonly rating: number;
 
   @IsString()
   @IsNotEmpty()
@@ -63,11 +63,12 @@ export class CreateProductDto {
   @IsString()
   readonly producingCountry: string;
 
-  @IsString()
-  @IsNotEmpty()
-  readonly shelfLife: string;
-
   @IsOptional()
-  @IsString()
-  readonly tags?: string;
+  @IsArray()
+  @IsString({ each: true })
+  readonly tags?: string[];
+
+  @ValidateNested()
+  @Type(() => CreateSpecificationsDto)
+  readonly specifications: CreateSpecificationsDto;
 }

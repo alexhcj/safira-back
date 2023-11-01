@@ -1,7 +1,14 @@
-import { Product } from '../schemes/product.scheme';
+import { Product, ProductDocument } from '../schemes/product.scheme';
 import { PrimeCategoryEnum, SubCategoryEnum } from '../enums/categories.enum';
 import { BasicCategoryType } from './category.interface';
 import { Types } from 'mongoose';
+
+interface ISpecifications {
+  company: string;
+  producingCountry?: string;
+  quantity: number;
+  shelfLife: Date;
+}
 
 export interface IProduct {
   name: string;
@@ -14,14 +21,9 @@ export interface IProduct {
   popularity?: number;
   views?: number;
   rating?: number;
-  specifications: {
-    company: string;
-    producingCountry?: string;
-    quantity: number;
-    shelfLife: Date;
-  };
-  reviews?: Types.ObjectId[];
   tags?: Types.ObjectId[];
+  reviews?: Types.ObjectId[];
+  specifications: ISpecifications;
 }
 
 interface IProductMeta {
@@ -39,7 +41,7 @@ interface IProductBySlug {
 }
 
 export interface IProductRO {
-  product: Product;
+  product: ProductDocument;
 }
 
 export interface IProductsRO {
