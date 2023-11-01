@@ -386,13 +386,15 @@ export class ProductsService {
       views: (product.views ? product.views : 0) + 1,
     };
 
-    const totalRating = product.reviews.reviews.reduce(
-      (acc, cur) => acc + +cur.rating,
-      0,
-    );
-    const reviewsLength = product.reviews.reviews.length;
+    if (product.reviews) {
+      const totalRating = product.reviews.reviews.reduce(
+        (acc, cur) => acc + +cur.rating,
+        0,
+      );
+      const reviewsLength = product.reviews.reviews.length;
 
-    product.rating = totalRating / reviewsLength;
+      product.rating = totalRating / reviewsLength;
+    }
 
     await this.update(product.id, newViews);
 
