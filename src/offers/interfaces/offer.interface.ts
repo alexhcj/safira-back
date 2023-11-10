@@ -1,5 +1,7 @@
+import { OfferEnum } from '../enums/offer.enum';
+
 export interface IOfferQuery {
-  type?: string;
+  type?: OfferEnum;
 }
 
 export interface IOfferFilter {
