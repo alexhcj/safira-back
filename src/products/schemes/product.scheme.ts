@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, SchemaTypes } from 'mongoose';
-import { Price } from '../../prices/schemes/price.scheme';
+import { Price, PriceDocument } from '../../prices/schemes/price.scheme';
 import { Review } from '../../reviews/schemes/review.scheme';
 import { Tag } from '../../tags/schemes/tag.scheme';
 import { PrimeCategoryEnum, SubCategoryEnum } from '../enums/categories.enum';
@@ -12,7 +12,7 @@ class Specifications {
   readonly company: string;
 
   @Prop()
-  readonly importCountry: string;
+  readonly producingCountry: string;
 
   @Prop({ required: true })
   readonly shelfLife: Date;
@@ -35,7 +35,7 @@ export class Product {
   readonly slug: string;
 
   @Prop({ required: true, type: SchemaTypes.ObjectId, ref: Price.name })
-  price: Price;
+  price: PriceDocument;
 
   @Prop()
   readonly description: string;
@@ -56,7 +56,7 @@ export class Product {
   readonly views: number;
 
   @Prop({ default: 0 })
-  readonly rating: number;
+  rating: number;
 
   @Prop({ type: SchemaTypes.ObjectId, ref: Tag.name, default: undefined })
   readonly tags: Tag;
@@ -65,7 +65,7 @@ export class Product {
   readonly reviews: Review;
 
   @Prop({ type: Specifications })
-  specifications: Specifications;
+  readonly specifications: Specifications;
 }
 
 export const ProductScheme = SchemaFactory.createForClass(Product);

@@ -1,4 +1,14 @@
-import { IsNumber, IsObject, IsOptional, IsString } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsNumber,
+  IsObject,
+  IsOptional,
+  IsString,
+  ValidateNested,
+} from 'class-validator';
+import { Type } from 'class-transformer';
+import { UpdateSpecificationsDto } from './specifications.dto';
+import { Types } from 'mongoose';
 
 export class UpdateProductDto {
   @IsOptional()
@@ -7,7 +17,7 @@ export class UpdateProductDto {
 
   @IsOptional()
   @IsString()
-  readonly description?: string;
+  readonly slug?: string;
 
   @IsOptional()
   @IsObject()
@@ -18,19 +28,19 @@ export class UpdateProductDto {
 
   @IsOptional()
   @IsString()
-  readonly img?: string;
-
-  @IsOptional()
-  @IsNumber()
-  readonly quantity?: number;
+  readonly description?: string;
 
   @IsOptional()
   @IsString()
-  readonly category?: string;
+  readonly primeCategory?: string;
 
   @IsOptional()
   @IsString()
   readonly subCategory?: string;
+
+  @IsOptional()
+  @IsString()
+  readonly basicCategory?: string;
 
   @IsOptional()
   @IsString()
@@ -41,22 +51,15 @@ export class UpdateProductDto {
   readonly views?: number;
 
   @IsOptional()
-  @IsNumber()
-  readonly rating?: number;
-
-  @IsOptional()
-  @IsString()
-  readonly company?: string;
-
-  @IsOptional()
-  @IsString()
-  readonly importCountry?: string;
-
-  @IsOptional()
-  @IsString()
-  readonly shelfLife?: string;
-
-  @IsOptional()
   @IsString()
   readonly tags?: string;
+
+  @IsOptional()
+  @IsNotEmpty()
+  readonly reviews?: Types.ObjectId;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => UpdateSpecificationsDto)
+  readonly specifications?: UpdateSpecificationsDto;
 }

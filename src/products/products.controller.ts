@@ -5,7 +5,6 @@ import {
   Get,
   Logger,
   Param,
-  ParamData,
   Post,
   Put,
   Query,
@@ -65,9 +64,9 @@ export class ProductsController {
   }
 
   @Get(':slug')
-  findOne(@Param('slug') slug: ParamData): Promise<IProductRO> {
+  findBySlug(@Param('slug') slug: string): Promise<IProductRO> {
     this.logger.log('Handling findOne() request...');
-    return this.productsService.findOne({ slug });
+    return this.productsService.findBySlug(slug);
   }
 
   @Put(':id')
