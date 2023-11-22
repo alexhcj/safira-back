@@ -2,16 +2,25 @@ import { Document, SchemaTypes } from 'mongoose';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { OfferEnum } from '../enums/offer.enum';
 import { Product } from '../../products/schemes/product.scheme';
+import {
+  CategotyTypeEnum,
+  PrimeCategoryEnum,
+  SubCategoryEnum,
+} from '../../products/enums/categories.enum';
+import { BasicCategoryType } from '../../products/interfaces/category.interface';
 
 class Link {
   @Prop()
   readonly page: string;
 
-  @Prop()
-  readonly categoryType: string;
+  @Prop({ enum: CategotyTypeEnum, type: String })
+  readonly categoryType: CategotyTypeEnum;
 
-  @Prop()
-  readonly categoryValue: string;
+  @Prop({ type: String })
+  readonly categoryValue:
+    | PrimeCategoryEnum
+    | SubCategoryEnum
+    | BasicCategoryType;
 }
 
 export type OfferDocument = Offer & Document;
