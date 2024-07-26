@@ -67,8 +67,8 @@ export enum BasicCannedFoodSubCategoryEnum {
   CANNED_VEGETABLES = 'CANNED_VEGETABLES',
 }
 
-export enum BasicBeadAndLambSubCategoryEnum {
-  BEANS_SEEDS_NUTS = 'BEANS_SEEDS_NUTS',
+export enum BasicBeefAndLambSubCategoryEnum {
+  FRESH_BEEF_LAMB = 'FRESH_BEEF_LAMB',
 }
 
 export enum BasicFishAndSeaFoodSubCategoryEnum {
@@ -80,7 +80,7 @@ export enum BasicDriedFoodSubCategoryEnum {
 }
 
 export enum BasicOilSubCategoryEnum {
-  BEANS_SEEDS_NUTS = 'BEANS_SEEDS_NUTS',
+  OLIVE_OIL = 'OLIVE_OIL',
 }
 
 export enum BasicFrozenFoodSubCategoryEnum {
