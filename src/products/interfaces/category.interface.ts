@@ -1,5 +1,5 @@
 import {
-  BasicBeadAndLambSubCategoryEnum,
+  BasicBeefAndLambSubCategoryEnum,
   BasicBeerWineSpiritsSubCategoryEnum,
   BasicCannedFoodSubCategoryEnum,
   BasicDairyChilledAndEggsSubCategoryEnum,
@@ -19,7 +19,7 @@ export type BasicCategoryType =
   | BasicFruitsSubCategoryEnum
   | BasicVegetablesSubCategoryEnum
   | BasicCannedFoodSubCategoryEnum
-  | BasicBeadAndLambSubCategoryEnum
+  | BasicBeefAndLambSubCategoryEnum
   | BasicFishAndSeaFoodSubCategoryEnum
   | BasicDriedFoodSubCategoryEnum
   | BasicOilSubCategoryEnum
