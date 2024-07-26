@@ -1,5 +1,6 @@
 import {
   BasicBeadAndLambSubCategoryEnum,
+  BasicBeerWineSpiritsSubCategoryEnum,
   BasicCannedFoodSubCategoryEnum,
   BasicDairyChilledAndEggsSubCategoryEnum,
   BasicDriedFoodSubCategoryEnum,
@@ -12,6 +13,7 @@ import {
 } from '../enums/categories.enum';
 
 export type BasicCategoryType =
+  | BasicBeerWineSpiritsSubCategoryEnum
   | BasicDrinksSubCategoryEnum
   | BasicDairyChilledAndEggsSubCategoryEnum
   | BasicFruitsSubCategoryEnum

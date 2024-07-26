@@ -27,6 +27,11 @@ export enum SubCategoryEnum {
   DRIED_FOOD = 'DRIED_FOOD',
   OIL = 'OIL',
   FROZEN_FOOD = 'FROZEN_FOOD',
+  BEER = 'BEER',
+}
+
+export enum BasicBeerWineSpiritsSubCategoryEnum {
+  LAGER_AND_PILSNER = 'LAGER_AND_PILSNER',
 }
 
 export enum BasicDrinksSubCategoryEnum {
