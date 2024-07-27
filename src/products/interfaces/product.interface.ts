@@ -53,6 +53,11 @@ export interface IProductsBySlugRO {
   products: IProductBySlug[];
 }
 
+export interface IBrandsRO {
+  name: string;
+  brands: string[];
+}
+
 export interface IProductQuery {
   name?: string;
   sort?: IProductSort;

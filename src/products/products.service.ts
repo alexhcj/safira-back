@@ -4,6 +4,7 @@ import { Aggregate, Model, Types } from 'mongoose';
 import { Product, ProductDocument } from './schemes/product.scheme';
 import { CreateProductDto } from './dto/create-product.dto';
 import {
+  IBrandsRO,
   IProduct,
   IProductFilter,
   IProductQuery,
@@ -399,6 +400,31 @@ export class ProductsService {
     await this.update(product.id, newViews);
 
     return { product };
+  }
+
+  async findAllBrands(): Promise<IBrandsRO[]> {
+    return this.productModel.aggregate([
+      {
+        $group: {
+          _id: {
+            company: { $substr: ['$specifications.company', 0, 1] },
+          },
+          brands: {
+            $addToSet: '$specifications.company',
+          },
+        },
+      },
+      {
+        $sort: { _id: 1 },
+      },
+      {
+        $project: {
+          name: '$_id.company',
+          _id: 0,
+          brands: 1,
+        },
+      },
+    ]);
   }
 
   async update(id: string, data: UpdateProductDto): Promise<Product> {

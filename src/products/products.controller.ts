@@ -12,6 +12,7 @@ import {
 import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import {
+  IBrandsRO,
   IProductRO,
   IProductsBySlugRO,
   IProductsRO,
@@ -61,6 +62,12 @@ export class ProductsController {
   getAllBySlug(@Query() query): Promise<IProductsBySlugRO> {
     this.logger.log('Handling getAllByName() request...');
     return this.productsService.getAllBySlug(query);
+  }
+
+  @Get('all-brands')
+  findAllBrands(): Promise<IBrandsRO[]> {
+    this.logger.log('Handling findAllBrands() request...');
+    return this.productsService.findAllBrands();
   }
 
   @Get(':slug')
