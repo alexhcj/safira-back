@@ -23,4 +23,10 @@ export const validationSchema = Joi.object<IConfig>({
       destination: Joi.string().required(),
     },
   },
+  emailer: {
+    host: Joi.string().required(),
+    port: Joi.number().default(787).required(),
+    user: Joi.string().required(),
+    pass: Joi.string().required(),
+  },
 });

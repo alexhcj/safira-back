@@ -17,6 +17,7 @@ import { validationSchema } from './config/validation';
 import { SearchModule } from './search/search.module';
 import { ProfilesModule } from './profiles/profiles.module';
 import { FilesModule } from './files/files.module';
+import { EmailerModule } from './emailer/emailer.module';
 import configuration from './config/configuration';
 
 @Module({
@@ -48,6 +49,7 @@ import configuration from './config/configuration';
     SearchModule,
     ProfilesModule,
     FilesModule,
+    EmailerModule,
   ],
   controllers: [AppController],
   providers: [AppService],

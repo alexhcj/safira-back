@@ -22,4 +22,10 @@ export default (): IConfig => ({
       destination: process.env.UPLOADED_FILES_DESTINATION,
     },
   },
+  emailer: {
+    host: process.env.EMAIL_HOST,
+    port: parseInt(process.env.EMAIL_PORT),
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
 });

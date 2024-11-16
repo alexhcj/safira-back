@@ -38,4 +38,4 @@ lerna-debug.log*
 **/*.env
 
 # files
-react-shop.txt
+info.md

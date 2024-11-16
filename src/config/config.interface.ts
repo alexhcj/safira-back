@@ -15,6 +15,13 @@ interface IMongodb {
   };
 }
 
+interface IEmailer {
+  host: string;
+  port: number;
+  user: string;
+  pass: string;
+}
+
 export interface IConfig {
   node_env: string;
   port: number;
@@ -26,4 +33,5 @@ export interface IConfig {
       destination: string;
     };
   };
+  emailer: IEmailer;
 }
