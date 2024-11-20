@@ -24,9 +24,8 @@ export const validationSchema = Joi.object<IConfig>({
     },
   },
   emailer: {
-    host: Joi.string().required(),
-    port: Joi.number().default(787).required(),
-    user: Joi.string().required(),
-    pass: Joi.string().required(),
+    brevoApiKey: Joi.string().required(),
+    brevoSenderName: Joi.string().required(),
+    brevoSenderEmail: Joi.string().required(),
   },
 });

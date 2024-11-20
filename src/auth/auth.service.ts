@@ -51,6 +51,7 @@ export class AuthService {
 
     await this.verificationService.createVerification(
       newUser.id,
+      newUser.email,
       user.isPrivacyConfirmed,
     );
 

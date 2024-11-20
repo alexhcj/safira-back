@@ -1,6 +1,4 @@
-export class TestEmailDto {
-  email: string;
-}
 export class VerifyEmailDto {
-  code: string;
+  email: string;
+  code: number;
 }

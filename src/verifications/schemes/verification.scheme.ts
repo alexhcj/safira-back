@@ -4,7 +4,7 @@ import { User } from '../../users/schemes/user.scheme';
 
 export type VerificationDocument = Verification & Document;
 
-@Schema({ collection: 'verifications' })
+@Schema({ collection: 'verifications', timestamps: false })
 export class Verification {
   @Prop({
     type: SchemaTypes.ObjectId,
@@ -15,6 +15,15 @@ export class Verification {
 
   @Prop({ required: true, default: false })
   isPrivacyConfirmed: boolean;
+
+  @Prop({ required: true, default: false })
+  isEmailVerified: boolean;
+
+  @Prop({ maxlength: 6, minlength: 6 })
+  code: number;
+
+  @Prop({ type: Date })
+  codeCreatedAt: Date;
 }
 
 export const VerificationScheme = SchemaFactory.createForClass(Verification);

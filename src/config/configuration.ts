@@ -23,9 +23,8 @@ export default (): IConfig => ({
     },
   },
   emailer: {
-    host: process.env.EMAIL_HOST,
-    port: parseInt(process.env.EMAIL_PORT),
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
+    brevoApiKey: process.env.BREVO_API_KEY,
+    senderName: process.env.BREVO_SENDER_NAME,
+    senderEmail: process.env.BREVO_SENDER_EMAIL,
   },
 });

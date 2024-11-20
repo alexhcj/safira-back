@@ -16,10 +16,9 @@ interface IMongodb {
 }
 
 interface IEmailer {
-  host: string;
-  port: number;
-  user: string;
-  pass: string;
+  brevoApiKey: string;
+  senderName: string;
+  senderEmail: string;
 }
 
 export interface IConfig {
