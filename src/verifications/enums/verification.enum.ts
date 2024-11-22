@@ -1,3 +1,7 @@
-export enum VerificationEnum {
-  CODE_EXPIRATION_LIMIT = 86400,
+// milliseconds
+export enum VerificationCodeEnum {
+  VERIFY_EMAIL_CODE_EXPIRATION = 3600000, // 1 hr
+  VERIFY_EMAIL_CODE_RESEND_TIMEOUT = 60000, // 1 min
+  PASSWORD_CHANGE_CODE_EXPIRATION = 300000, // 5 min
+  PASSWORD_CHANGE_CODE_RESEND_TIMEOUT = 120000, // 2 min
 }

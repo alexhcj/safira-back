@@ -22,7 +22,7 @@ import {
 } from './dto/verification.dto';
 import { EmailerService } from '../emailer/emailer.service';
 import { UsersService } from '../users/users.service';
-import { VerificationEnum } from './enums/verification.enum';
+import { VerificationCodeEnum } from './enums/verification.enum';
 import { AuthService } from '../auth/auth.service';
 
 @Injectable()
@@ -83,6 +83,16 @@ export class VerificationsService {
       );
 
     if (
+      +new Date(verification.codeCreatedAt) +
+        +VerificationCodeEnum.VERIFY_EMAIL_CODE_RESEND_TIMEOUT >
+      +new Date()
+    )
+      throw new HttpException(
+        `${HttpStatus.BAD_REQUEST}. Try later`,
+        HttpStatus.BAD_REQUEST,
+      );
+
+    if (
       new Date().getTime() <
       +new Date(verification.codeCreatedAt) + 1000 * 60
     )
@@ -121,7 +131,7 @@ export class VerificationsService {
 
     if (
       +new Date(verification.codeCreatedAt) +
-        +VerificationEnum.CODE_EXPIRATION_LIMIT <
+        +VerificationCodeEnum.VERIFY_EMAIL_CODE_EXPIRATION <
       +new Date()
     )
       throw new HttpException(
