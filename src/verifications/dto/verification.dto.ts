@@ -44,3 +44,38 @@ export class VerifyEmailDto {
   @IsNumber()
   code: number;
 }
+
+export class VerifyEmailRO {
+  message: HttpStatus;
+}
+
+export class ChangeEmailDto {
+  @IsNotEmpty()
+  @IsString()
+  @IsEmail()
+  email: string;
+}
+
+export class CheckEmailAndUserExistenceRO {
+  message: HttpStatus;
+}
+
+export class VerifyNewEmailDto {
+  @IsNotEmpty()
+  @IsNumber()
+  code: number;
+}
+
+export class VerifyNewEmailRO {
+  message: HttpStatus;
+}
+
+export class ValidatePasswordDto {
+  @IsNotEmpty()
+  @IsString()
+  password: string;
+}
+
+export class ValidatePasswordRO {
+  message: HttpStatus;
+}

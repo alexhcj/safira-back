@@ -19,6 +19,12 @@ export class Verification {
   @Prop({ required: true, default: false })
   isEmailVerified: boolean;
 
+  @Prop()
+  isNewEmailVerified: boolean;
+
+  @Prop({ type: String })
+  newEmail: string;
+
   @Prop({ maxlength: 6, minlength: 6 })
   code: number;
 

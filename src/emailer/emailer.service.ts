@@ -57,6 +57,29 @@ export class EmailerService implements IEmailer {
     }
   }
 
+  public async sendSuccessChangeEmail(email: string): Promise<void> {
+    const apiInstance = this._createEmailApiInstance();
+
+    try {
+      const smtpEmail = new brevo.SendSmtpEmail();
+
+      smtpEmail.sender = {
+        name: this.configService.get<string>('emailer.senderName'),
+        email: this.configService.get<string>('emailer.senderEmail'),
+      };
+      smtpEmail.to = [{ email: email }];
+      smtpEmail.replyTo = {
+        email: this.configService.get<string>('emailer.senderEmail'),
+        name: this.configService.get<string>('emailer.senderName'),
+      };
+      smtpEmail.templateId = 10;
+
+      await apiInstance.sendTransacEmail(smtpEmail);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
   private _createEmailApiInstance() {
     const apiInstance = new brevo.TransactionalEmailsApi();
 

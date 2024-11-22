@@ -1,4 +1,10 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+  forwardRef,
+  HttpException,
+  HttpStatus,
+  Inject,
+  Injectable,
+} from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { UsersService } from '../users/users.service';
 import { UserDocument } from '../users/schemes/user.scheme';
@@ -12,10 +18,14 @@ export class AuthService {
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
+    @Inject(forwardRef(() => VerificationsService))
     private verificationService: VerificationsService,
   ) {}
 
-  async validateUser(email: string, password: string): Promise<UserDocument> {
+  public async validateUser(
+    email: string,
+    password: string,
+  ): Promise<UserDocument> {
     const user = await this.usersService.findByEmail(email);
     if (user && AuthService.comparePassword(password, user.passwordHash)) {
       return user;
