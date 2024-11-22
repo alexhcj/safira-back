@@ -3,6 +3,7 @@ import { VerificationsService } from './verifications.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import {
   ChangeEmailDto,
+  ChangePasswordDto,
   ValidatePasswordDto,
   VerifyNewEmailDto,
 } from './dto/verification.dto';

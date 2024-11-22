@@ -12,7 +12,7 @@ import {
 } from './schemes/verification.scheme';
 import { Model, Types } from 'mongoose';
 import {
-  CheckEmailAndUserExistenceRO,
+  ChangeEmailRO,
   CreateVerificationRO,
   ValidatePasswordRO,
   VerificationDto,
@@ -145,7 +145,7 @@ export class VerificationsService {
   public async changeEmail(
     userId: string,
     email: string,
-  ): Promise<CheckEmailAndUserExistenceRO> {
+  ): Promise<ChangeEmailRO> {
     const user = await this.usersService.findById(userId);
 
     if (!user) throw new HttpException('User not found', HttpStatus.NOT_FOUND);

@@ -56,7 +56,7 @@ export class ChangeEmailDto {
   email: string;
 }
 
-export class CheckEmailAndUserExistenceRO {
+export class ChangeEmailRO {
   message: HttpStatus;
 }
 
