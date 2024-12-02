@@ -6,7 +6,7 @@ export type UserDocument = User & Document;
 @Schema({ collection: 'users', timestamps: true })
 export class User {
   @Prop({ required: true, unique: true })
-  email: string;
+  readonly email: string;
 
   @Prop({ required: true })
   readonly passwordHash: string;

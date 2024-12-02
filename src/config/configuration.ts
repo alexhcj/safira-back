@@ -7,6 +7,9 @@ export default (): IConfig => ({
     apiUrl: process.env.API_URL,
     globalPrefix: process.env.GLOBAL_PREFIX,
   },
+  client: {
+    clientUrl: process.env.CLIENT_URL,
+  },
   jwt: {
     secret: process.env.JWT_SECRET,
     expiresIn: process.env.JWT_EXPIRES_IN,

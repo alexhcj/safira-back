@@ -11,11 +11,16 @@ import {
   VerificationDocument,
 } from './schemes/verification.scheme';
 import { Model, Types } from 'mongoose';
+import * as bcrypt from 'bcrypt';
 import {
   ChangeEmailRO,
+  ChangePasswordRO,
   CreateVerificationRO,
+  ResetPasswordDto,
+  ResetPasswordRO,
   ValidatePasswordRO,
   VerificationDto,
+  VerifyCodeRO,
   VerifyEmailDto,
   VerifyEmailRO,
   VerifyNewEmailRO,
@@ -24,6 +29,8 @@ import { EmailerService } from '../emailer/emailer.service';
 import { UsersService } from '../users/users.service';
 import { VerificationCodeEnum } from './enums/verification.enum';
 import { AuthService } from '../auth/auth.service';
+import { VerifyEmailTemplateIdEnum } from '../emailer/enum/emailer.enum';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class VerificationsService {
@@ -34,6 +41,7 @@ export class VerificationsService {
     private readonly usersService: UsersService,
     @Inject(forwardRef(() => AuthService))
     private readonly authService: AuthService,
+    private readonly configService: ConfigService,
   ) {}
 
   public async createVerification(
@@ -62,14 +70,21 @@ export class VerificationsService {
     };
 
     await new this.verificationModel(verificationDto).save();
-    await this._sendVerifyEmail(email, code);
+    await this.emailerService.sendVerifyEmail({
+      email,
+      code,
+      type: VerifyEmailTemplateIdEnum.SIGN_UP,
+    });
 
     return {
       message: HttpStatus.OK,
     };
   }
 
-  public async resendVerifyEmail(userId: string) {
+  public async resendVerifyEmail(
+    type: VerifyEmailTemplateIdEnum,
+    userId: string,
+  ) {
     const verification = await this._findByUserId(userId);
 
     if (!verification)
@@ -113,7 +128,11 @@ export class VerificationsService {
 
     await verification.save();
 
-    await this._sendVerifyEmail(user.email, code);
+    await this.emailerService.sendVerifyEmail({
+      email: user.email,
+      code,
+      type,
+    });
   }
 
   public async verifyEmail({
@@ -144,7 +163,7 @@ export class VerificationsService {
     verification.codeCreatedAt = undefined;
 
     await verification.save();
-    await this.emailerService.sendSuccessVerifyEmail(email);
+    await this.emailerService.sendVerifyEmailSuccess(email);
 
     return {
       message: HttpStatus.OK,
@@ -182,7 +201,11 @@ export class VerificationsService {
 
     await verification.save();
 
-    await this.emailerService.sendVerifyEmail({ email, code });
+    await this.emailerService.sendVerifyEmail({
+      email,
+      code,
+      type: VerifyEmailTemplateIdEnum.CHANGE_EMAIL,
+    });
 
     return {
       message: HttpStatus.OK,
@@ -226,11 +249,13 @@ export class VerificationsService {
     if (!verification)
       throw new HttpException('Verification not found.', HttpStatus.NOT_FOUND);
 
-    user.email = verification.newEmail;
+    await this.usersService.findByIdAndUpdate(user._id, {
+      email: verification.newEmail,
+    });
 
     await user.save();
 
-    await this.emailerService.sendSuccessChangeEmail(user.email);
+    await this.emailerService.sendChangeEmailSuccess(user.email);
 
     verification.code = undefined;
     verification.codeCreatedAt = undefined;
@@ -244,14 +269,149 @@ export class VerificationsService {
     };
   }
 
+  // checks user existence & email equals => generate code & send to email
+  public async changePassword(
+    userId: string,
+    email: string,
+  ): Promise<ChangePasswordRO> {
+    const user = await this.usersService.findById(userId);
+    const userByEmail = await this.usersService.findByEmail(email);
+
+    if (
+      !user ||
+      !userByEmail ||
+      email !== user.email ||
+      email !== userByEmail.email
+    ) {
+      console.log('Email || user validation error');
+
+      await this.emailerService.sendChangePasswordError(email);
+
+      return {
+        message: HttpStatus.OK,
+      };
+    }
+
+    const verification = await this._findByUserId(userId);
+
+    if (!verification)
+      throw new HttpException('Verification not found.', HttpStatus.NOT_FOUND);
+
+    const code = this._generateCode();
+
+    verification.code = code;
+    verification.codeCreatedAt = new Date();
+
+    await verification.save();
+
+    await this.emailerService.sendVerifyEmail({
+      email,
+      code,
+      type: VerifyEmailTemplateIdEnum.CHANGE_PASSWORD,
+    });
+
+    return {
+      message: HttpStatus.OK,
+    };
+  }
+
+  public async verifyCode(
+    userId: string,
+    clientIp: string,
+    userAgent: string,
+    email: string,
+    code: number,
+  ): Promise<VerifyCodeRO> {
+    const verification = await this._findByUserId(userId);
+
+    if (verification.resetPasswordTimeout > new Date())
+      throw new HttpException('Timeout error.', HttpStatus.BAD_REQUEST);
+    if (code !== verification.code)
+      throw new HttpException('Code is not valid.', HttpStatus.BAD_REQUEST);
+
+    const user = await this.usersService.findByIdWithProfile(userId);
+
+    const expirationTime: number = new Date().getTime() + 86400000;
+
+    verification.resetPasswordTimeout = new Date(expirationTime);
+    await verification.save();
+
+    const salt = await bcrypt.genSalt(15);
+    const token = await bcrypt.hash(
+      `${code}${email}${user.user.passwordHash}${expirationTime}${clientIp}${userAgent}`,
+      salt,
+    );
+    const link = `${this.configService.get<string>(
+      'client.clientUrl',
+    )}/reset-password?userId=${userId}&expirationTime=${expirationTime}&token=${token}`;
+
+    await this.emailerService.sendChangePasswordLink(
+      email,
+      user.profile.firstName ?? 'Dear Customer',
+      link,
+    );
+
+    return {
+      message: HttpStatus.OK,
+    };
+  }
+
+  public async resetPassword(
+    userId: string,
+    expirationTime: number,
+    token: string,
+    clientIp: string,
+    userAgent: string,
+    email: string,
+    data: ResetPasswordDto,
+  ): Promise<ResetPasswordRO> {
+    if (new Date().getTime() > expirationTime)
+      throw new HttpException('Token is expired', HttpStatus.BAD_REQUEST);
+
+    const user = await this.usersService.findById(userId);
+
+    if (!user) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+
+    if (data.password !== data.confirmPassword)
+      throw new HttpException(
+        'Passwords are not the same',
+        HttpStatus.BAD_REQUEST,
+      );
+
+    const verification = await this._findByUserId(userId);
+
+    const link = `${verification.code}${email}${user.passwordHash}${expirationTime}${clientIp}${userAgent}`;
+
+    const isEquals = bcrypt.compareSync(link, token);
+
+    if (!isEquals)
+      throw new HttpException(
+        'Internal severer error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+
+    const salt = await bcrypt.genSalt();
+    const ph = await bcrypt.hash(data.confirmPassword, salt);
+
+    await this.usersService.findByIdAndUpdate(userId, {
+      passwordHash: ph,
+    });
+    verification.code = undefined;
+    verification.codeCreatedAt = undefined;
+    verification.resetPasswordTimeout = undefined;
+    await verification.save();
+
+    await this.emailerService.sendChangePasswordSuccess(email);
+
+    return {
+      message: HttpStatus.OK,
+    };
+  }
+
   private _generateCode(length: number = 6): number {
     return +Array.from({ length }, () => Math.floor(Math.random() * 10)).join(
       '',
     );
-  }
-
-  private async _sendVerifyEmail(email: string, code: number) {
-    return this.emailerService.sendVerifyEmail({ email, code });
   }
 
   private async _findByUserId(userId: string): Promise<VerificationDocument> {

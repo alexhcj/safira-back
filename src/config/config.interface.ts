@@ -3,6 +3,10 @@ interface IApi {
   globalPrefix: string;
 }
 
+interface IClient {
+  clientUrl: string;
+}
+
 interface IJwt {
   secret: string;
   expiresIn: string;
@@ -25,6 +29,7 @@ export interface IConfig {
   node_env: string;
   port: number;
   api: IApi;
+  client: IClient;
   jwt: IJwt;
   mongodb: IMongodb;
   files: {

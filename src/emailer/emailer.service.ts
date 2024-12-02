@@ -3,11 +3,13 @@ import { ConfigService } from '@nestjs/config';
 import * as brevo from '@getbrevo/brevo';
 import { IEmailer } from './interfaces/emailer.interface';
 import { VerifyEmailDto } from './dto/emailer.dto';
+import { VerifyEmailTemplateIdEnum } from './enum/emailer.enum';
 
 @Injectable()
 export class EmailerService implements IEmailer {
   constructor(private readonly configService: ConfigService) {}
 
+  // sends verify code for one of template types: signup | change-email | change-passowrd
   public async sendVerifyEmail(data: VerifyEmailDto): Promise<void> {
     const apiInstance = this._createEmailApiInstance();
 
@@ -23,9 +25,10 @@ export class EmailerService implements IEmailer {
         email: this.configService.get<string>('emailer.senderEmail'),
         name: this.configService.get<string>('emailer.senderName'),
       };
-      smtpEmail.templateId = 7;
+      smtpEmail.templateId = data.type;
       smtpEmail.params = {
         CODE: data.code,
+        EMAIL: data.email,
       };
 
       await apiInstance.sendTransacEmail(smtpEmail);
@@ -34,7 +37,7 @@ export class EmailerService implements IEmailer {
     }
   }
 
-  public async sendSuccessVerifyEmail(email: string): Promise<void> {
+  public async sendVerifyEmailSuccess(email: string): Promise<void> {
     const apiInstance = this._createEmailApiInstance();
 
     try {
@@ -49,7 +52,7 @@ export class EmailerService implements IEmailer {
         email: this.configService.get<string>('emailer.senderEmail'),
         name: this.configService.get<string>('emailer.senderName'),
       };
-      smtpEmail.templateId = 9;
+      smtpEmail.templateId = VerifyEmailTemplateIdEnum.SIGN_UP_SUCCESS;
 
       await apiInstance.sendTransacEmail(smtpEmail);
     } catch (error) {
@@ -57,7 +60,7 @@ export class EmailerService implements IEmailer {
     }
   }
 
-  public async sendSuccessChangeEmail(email: string): Promise<void> {
+  public async sendChangeEmailSuccess(email: string): Promise<void> {
     const apiInstance = this._createEmailApiInstance();
 
     try {
@@ -72,7 +75,84 @@ export class EmailerService implements IEmailer {
         email: this.configService.get<string>('emailer.senderEmail'),
         name: this.configService.get<string>('emailer.senderName'),
       };
-      smtpEmail.templateId = 10;
+      smtpEmail.templateId = VerifyEmailTemplateIdEnum.CHANGE_EMAIL_SUCCESS;
+
+      await apiInstance.sendTransacEmail(smtpEmail);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  public async sendChangePasswordError(email: string): Promise<void> {
+    const apiInstance = this._createEmailApiInstance();
+
+    try {
+      const smtpEmail = new brevo.SendSmtpEmail();
+
+      smtpEmail.sender = {
+        name: this.configService.get<string>('emailer.senderName'),
+        email: this.configService.get<string>('emailer.senderEmail'),
+      };
+      smtpEmail.to = [{ email: email }];
+      smtpEmail.replyTo = {
+        email: this.configService.get<string>('emailer.senderEmail'),
+        name: this.configService.get<string>('emailer.senderName'),
+      };
+      smtpEmail.templateId = VerifyEmailTemplateIdEnum.CHANGE_PASSWORD_ERROR;
+
+      await apiInstance.sendTransacEmail(smtpEmail);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  public async sendChangePasswordLink(
+    email: string,
+    name: string,
+    link: string,
+  ): Promise<void> {
+    const apiInstance = this._createEmailApiInstance();
+
+    try {
+      const smtpEmail = new brevo.SendSmtpEmail();
+
+      smtpEmail.sender = {
+        name: this.configService.get<string>('emailer.senderName'),
+        email: this.configService.get<string>('emailer.senderEmail'),
+      };
+      smtpEmail.to = [{ email: email }];
+      smtpEmail.replyTo = {
+        email: this.configService.get<string>('emailer.senderEmail'),
+        name: this.configService.get<string>('emailer.senderName'),
+      };
+      smtpEmail.params = {
+        LINK: link,
+        NAME: name,
+      };
+      smtpEmail.templateId = VerifyEmailTemplateIdEnum.CHANGE_PASSWORD_LINK;
+
+      await apiInstance.sendTransacEmail(smtpEmail);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  public async sendChangePasswordSuccess(email: string): Promise<void> {
+    const apiInstance = this._createEmailApiInstance();
+
+    try {
+      const smtpEmail = new brevo.SendSmtpEmail();
+
+      smtpEmail.sender = {
+        name: this.configService.get<string>('emailer.senderName'),
+        email: this.configService.get<string>('emailer.senderEmail'),
+      };
+      smtpEmail.to = [{ email: email }];
+      smtpEmail.replyTo = {
+        email: this.configService.get<string>('emailer.senderEmail'),
+        name: this.configService.get<string>('emailer.senderName'),
+      };
+      smtpEmail.templateId = VerifyEmailTemplateIdEnum.CHANGE_PASSWORD_SUCCESS;
 
       await apiInstance.sendTransacEmail(smtpEmail);
     } catch (error) {

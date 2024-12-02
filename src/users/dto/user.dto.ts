@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class UserDto {
   @IsString()
@@ -14,4 +14,14 @@ export class UserDto {
 export class UserHashedDto {
   readonly email: string;
   readonly passwordHash: string;
+}
+
+export class UpdateUserDto {
+  @IsOptional()
+  @IsString()
+  email?: string;
+
+  @IsOptional()
+  @IsString()
+  passwordHash?: string;
 }

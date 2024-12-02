@@ -3,7 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 import { User, UserDocument } from './schemes/user.scheme';
-import { UserDto, UserHashedDto } from './dto/user.dto';
+import { UpdateUserDto, UserDto, UserHashedDto } from './dto/user.dto';
 import { ProfilesService } from '../profiles/profiles.service';
 
 @Injectable()
@@ -47,5 +47,21 @@ export class UsersService {
 
   async findById(id: string): Promise<UserDocument> {
     return await this.userModel.findById(id).exec();
+  }
+
+  public async findByIdWithProfile(id: string): Promise<any> {
+    const user = await this.findById(id);
+    const profile = await this.profileService.findByUserId(id);
+    return {
+      user,
+      profile,
+    };
+  }
+
+  public async findByIdAndUpdate(
+    id: string,
+    data: UpdateUserDto,
+  ): Promise<UserDocument> {
+    return this.userModel.findByIdAndUpdate(id, data).setOptions({ new: true });
   }
 }

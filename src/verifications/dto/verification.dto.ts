@@ -7,6 +7,7 @@ import {
   IsString,
 } from 'class-validator';
 import { HttpStatus } from '@nestjs/common';
+import { VerifyEmailTemplateIdEnum } from '../../emailer/enum/emailer.enum';
 
 export class VerificationDto {
   @IsNotEmpty()
@@ -49,6 +50,10 @@ export class VerifyEmailRO {
   message: HttpStatus;
 }
 
+export class ResendVerifyEmailDto {
+  type: VerifyEmailTemplateIdEnum;
+}
+
 export class ChangeEmailDto {
   @IsNotEmpty()
   @IsString()
@@ -77,5 +82,40 @@ export class ValidatePasswordDto {
 }
 
 export class ValidatePasswordRO {
+  message: HttpStatus;
+}
+
+export class ChangePasswordDto {
+  @IsNotEmpty()
+  @IsString()
+  @IsEmail()
+  email: string;
+}
+
+export class ChangePasswordRO {
+  message: HttpStatus;
+}
+
+export class VerifyCodeDto {
+  @IsNotEmpty()
+  @IsNumber()
+  code: number;
+}
+
+export class VerifyCodeRO {
+  message: HttpStatus;
+}
+
+export class ResetPasswordDto {
+  @IsNotEmpty()
+  @IsString()
+  password: string;
+
+  @IsNotEmpty()
+  @IsString()
+  confirmPassword: string;
+}
+
+export class ResetPasswordRO {
   message: HttpStatus;
 }

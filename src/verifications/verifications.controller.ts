@@ -1,10 +1,22 @@
-import { Body, Controller, Logger, Post, Req, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Ip,
+  Logger,
+  Post,
+  Query,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { VerificationsService } from './verifications.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import {
   ChangeEmailDto,
   ChangePasswordDto,
+  ResendVerifyEmailDto,
+  ResetPasswordDto,
   ValidatePasswordDto,
+  VerifyCodeDto,
   VerifyNewEmailDto,
 } from './dto/verification.dto';
 
@@ -27,9 +39,12 @@ export class VerificationsController {
 
   @UseGuards(JwtAuthGuard)
   @Post('resend-verify-email')
-  resendVerifyEmail(@Req() req) {
+  resendVerifyEmail(@Req() req, @Body() data: ResendVerifyEmailDto) {
     this.logger.log('Handling resendVerifyEmail() request');
-    return this.verificationsService.resendVerifyEmail(req.user.userId);
+    return this.verificationsService.resendVerifyEmail(
+      data.type,
+      req.user.userId,
+    );
   }
 
   @UseGuards(JwtAuthGuard)
@@ -53,6 +68,49 @@ export class VerificationsController {
     return this.verificationsService.validatePassword(
       req.user.email,
       data.password,
+    );
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('change-password')
+  changePassword(@Req() req, @Body() data: ChangePasswordDto) {
+    this.logger.log('Handling changePassword() request');
+    return this.verificationsService.changePassword(
+      req.user.userId,
+      data.email,
+    );
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('verify-code')
+  verifyCode(@Req() req, @Ip() ip, @Body() data: VerifyCodeDto) {
+    this.logger.log('Handling verifyCode() request');
+    return this.verificationsService.verifyCode(
+      req.user.userId,
+      ip,
+      req.headers['user-agent'],
+      req.user.email,
+      data.code,
+    );
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('reset-password')
+  resetPassword(
+    @Req() req,
+    @Query() query,
+    @Ip() ip,
+    @Body() data: ResetPasswordDto,
+  ) {
+    this.logger.log('Handling resetPassword() request');
+    return this.verificationsService.resetPassword(
+      query.userId,
+      +query.expirationTime,
+      query.token,
+      ip,
+      req.headers['user-agent'],
+      req.user.email,
+      data,
     );
   }
 }

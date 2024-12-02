@@ -25,4 +25,10 @@ export class UsersController {
     this.logger.log('Handling findAll() request');
     return this.userService.findById(id);
   }
+
+  @Get('/by-id-with-profile/:id')
+  findByIdWithProfile(@Param('id') id: string) {
+    this.logger.log('Handling findByIdWithProfile() request');
+    return this.userService.findByIdWithProfile(id);
+  }
 }

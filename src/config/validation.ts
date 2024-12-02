@@ -8,6 +8,9 @@ export const validationSchema = Joi.object<IConfig>({
     apiUrl: Joi.string().required(),
     globalPrefix: Joi.string().required(),
   },
+  client: {
+    clientUrl: Joi.string().required(),
+  },
   jwt: {
     secret: Joi.string().required(),
     expiresIn: Joi.string().required(),
