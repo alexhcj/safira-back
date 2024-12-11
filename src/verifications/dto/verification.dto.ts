@@ -7,7 +7,7 @@ import {
   IsString,
 } from 'class-validator';
 import { HttpStatus } from '@nestjs/common';
-import { VerifyEmailTemplateIdEnum } from '../../emailer/enum/emailer.enum';
+import { VerifyEmailTemplateIdEnum } from '../../emailer/enums/emailer.enum';
 
 export class VerificationDto {
   @IsNotEmpty()

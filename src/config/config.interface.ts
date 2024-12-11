@@ -25,6 +25,13 @@ interface IEmailer {
   senderEmail: string;
 }
 
+interface IRedis {
+  connection: {
+    host: string;
+    port: number;
+  };
+}
+
 export interface IConfig {
   node_env: string;
   port: number;
@@ -38,4 +45,5 @@ export interface IConfig {
     };
   };
   emailer: IEmailer;
+  redis: IRedis;
 }

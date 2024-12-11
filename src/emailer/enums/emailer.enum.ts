@@ -8,3 +8,9 @@ export enum VerifyEmailTemplateIdEnum {
   CHANGE_PASSWORD_ERROR = 14,
   CHANGE_PASSWORD_SUCCESS = 15,
 }
+
+export enum SubscriptionTemplateIdEnum {
+  SUBSCRIBED_SUCCESS = 16,
+  SUBSCRIBED_ONBOARD = 17,
+  SUBSCRIBED_AUTHOR = 18,
+}

@@ -30,4 +30,10 @@ export default (): IConfig => ({
     senderName: process.env.BREVO_SENDER_NAME,
     senderEmail: process.env.BREVO_SENDER_EMAIL,
   },
+  redis: {
+    connection: {
+      host: process.env.REDIS_HOST || 'redis',
+      port: parseInt(process.env.REDIS_PORT) || 6379,
+    },
+  },
 });

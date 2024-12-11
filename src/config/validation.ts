@@ -31,4 +31,10 @@ export const validationSchema = Joi.object<IConfig>({
     brevoSenderName: Joi.string().required(),
     brevoSenderEmail: Joi.string().required(),
   },
+  redis: {
+    connection: {
+      host: Joi.string().required(),
+      port: Joi.number().required(),
+    },
+  },
 });

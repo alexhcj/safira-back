@@ -3,6 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { MongooseModule } from '@nestjs/mongoose';
+import { BullModule } from '@nestjs/bullmq';
 import { ProductsModule } from './products/products.module';
 import { ReviewsModule } from './reviews/reviews.module';
 import { AuthModule } from './auth/auth.module';
@@ -33,6 +34,16 @@ import configuration from './config/configuration';
       useFactory: async (configService: ConfigService) => ({
         uri: configService.get<string>('mongodb.database.connectionString'),
         dbName: configService.get<string>('mongodb.database.databaseName'),
+      }),
+      inject: [ConfigService],
+    }),
+    BullModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => ({
+        connection: {
+          host: configService.get<string>('redis.connection.host'),
+          port: configService.get<number>('redis.connection.port'),
+        },
       }),
       inject: [ConfigService],
     }),

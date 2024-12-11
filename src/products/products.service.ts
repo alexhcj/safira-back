@@ -210,6 +210,11 @@ export class ProductsService {
     };
   }
 
+  public async findTopTenPopular(): Promise<ProductDocument[]> {
+    // TODO: change to popularity (buy countes)
+    return this.productModel.find().sort({ views: -1 }).limit(10).lean().exec();
+  }
+
   async findRandom({ size = 1 }): Promise<Aggregate<ProductDocument[]>> {
     return this.productModel.aggregate([{ $sample: { size } }]);
   }

@@ -26,9 +26,16 @@ export class UsersController {
     return this.userService.findById(id);
   }
 
+  // ADMIN
   @Get('/by-id-with-profile/:id')
   findByIdWithProfile(@Param('id') id: string) {
     this.logger.log('Handling findByIdWithProfile() request');
     return this.userService.findByIdWithProfile(id);
+  }
+
+  @Get('/by-email-with-profile/:email')
+  findByEmailWithProfile(@Param('email') email: string) {
+    this.logger.log('Handling findByEmailWithProfile() request');
+    return this.userService.findByEmailWithProfile(email);
   }
 }

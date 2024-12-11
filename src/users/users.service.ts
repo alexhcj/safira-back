@@ -58,6 +58,15 @@ export class UsersService {
     };
   }
 
+  public async findByEmailWithProfile(email: string): Promise<any> {
+    const user = await this.findByEmail(email);
+    const profile = await this.profileService.findByUserId(user.id);
+    return {
+      user,
+      profile,
+    };
+  }
+
   public async findByIdAndUpdate(
     id: string,
     data: UpdateUserDto,

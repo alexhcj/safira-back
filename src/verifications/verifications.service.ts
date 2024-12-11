@@ -29,7 +29,7 @@ import { EmailerService } from '../emailer/emailer.service';
 import { UsersService } from '../users/users.service';
 import { VerificationCodeEnum } from './enums/verification.enum';
 import { AuthService } from '../auth/auth.service';
-import { VerifyEmailTemplateIdEnum } from '../emailer/enum/emailer.enum';
+import { VerifyEmailTemplateIdEnum } from '../emailer/enums/emailer.enum';
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()

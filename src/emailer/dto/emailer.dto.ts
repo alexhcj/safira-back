@@ -1,4 +1,4 @@
-import { VerifyEmailTemplateIdEnum } from '../enum/emailer.enum';
+import { VerifyEmailTemplateIdEnum } from '../enums/emailer.enum';
 import {
   IsEmail,
   IsEnum,
