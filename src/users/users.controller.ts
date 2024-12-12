@@ -1,6 +1,16 @@
-import { Body, Controller, Get, Logger, Param, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Logger,
+  Param,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UserDto } from './dto/user.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Controller('users')
 export class UsersController {
@@ -18,6 +28,13 @@ export class UsersController {
   findAll() {
     this.logger.log('Handling findAll() request');
     return this.userService.findAll();
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('find-profile')
+  findProfile(@Req() req) {
+    this.logger.log('Handling findProfile() request');
+    return this.userService.findProfile(req.user.userId);
   }
 
   @Get(':id')

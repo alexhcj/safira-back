@@ -1,4 +1,10 @@
-import { IsEmail, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import {
+  IsEmail,
+  IsISO8601,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 
 export class UserDto {
   @IsString()
@@ -24,4 +30,31 @@ export class UpdateUserDto {
   @IsOptional()
   @IsString()
   passwordHash?: string;
+}
+
+export class FindProfileRO {
+  @IsNotEmpty()
+  @IsString()
+  @IsEmail()
+  email: string;
+
+  @IsNotEmpty()
+  @IsISO8601()
+  dateOfBirth: Date;
+
+  @IsNotEmpty()
+  @IsString()
+  firstName: string;
+
+  @IsNotEmpty()
+  @IsString()
+  lastName: string;
+
+  @IsNotEmpty()
+  @IsString()
+  location: string;
+
+  @IsNotEmpty()
+  @IsString()
+  avatarId: string;
 }

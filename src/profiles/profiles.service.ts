@@ -4,7 +4,10 @@ import { Profile, ProfileDocument } from './schemes/profile.scheme';
 import { Model, Types } from 'mongoose';
 import { CreateProfileDto } from './dto/create-profile.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
-import { IProfileUpdateRO } from './interfaces/profile.interfaces';
+import {
+  IPopulatedProfileDocumentRO,
+  IProfileUpdateRO,
+} from './interfaces/profile.interfaces';
 
 @Injectable()
 export class ProfilesService {
@@ -50,12 +53,16 @@ export class ProfilesService {
     };
   }
 
-  public async findByUserId(userId: string): Promise<ProfileDocument> {
+  public async findByUserId(
+    userId: string,
+  ): Promise<IPopulatedProfileDocumentRO> {
     return this.findOne(new Types.ObjectId(userId));
   }
 
-  private async findOne(userId: Types.ObjectId): Promise<ProfileDocument> {
-    return this.profileModel.findOne({ userId });
+  private async findOne(
+    userId: Types.ObjectId,
+  ): Promise<IPopulatedProfileDocumentRO> {
+    return this.profileModel.findOne({ userId }).populate('avatarId');
   }
 
   private async findByUserIdAndUpdate(
