@@ -146,7 +146,10 @@ export class VerificationsService {
       throw new HttpException('Verification not found.', HttpStatus.NOT_FOUND);
 
     if (code !== verification.code)
-      throw new HttpException('Code is not valid.', HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        "Code isn't valid. Try another.",
+        HttpStatus.BAD_REQUEST,
+      );
 
     if (
       +new Date(verification.codeCreatedAt) +
@@ -219,7 +222,10 @@ export class VerificationsService {
     const verification = await this._findByUserId(userId);
 
     if (code !== verification.code)
-      throw new HttpException('Code is not valid.', HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        "Code isn't valid. Try another.",
+        HttpStatus.BAD_REQUEST,
+      );
 
     verification.isNewEmailVerified = true;
     verification.code = undefined;
@@ -327,7 +333,10 @@ export class VerificationsService {
     if (verification.resetPasswordTimeout > new Date())
       throw new HttpException('Timeout error.', HttpStatus.BAD_REQUEST);
     if (code !== verification.code)
-      throw new HttpException('Code is not valid.', HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        "Code isn't valid. Try another.",
+        HttpStatus.BAD_REQUEST,
+      );
 
     const user = await this.usersService.findByIdWithProfile(userId);
 
