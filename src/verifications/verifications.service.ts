@@ -417,10 +417,8 @@ export class VerificationsService {
     };
   }
 
-  private _generateCode(length: number = 6): number {
-    return +Array.from({ length }, () => Math.floor(Math.random() * 10)).join(
-      '',
-    );
+  private _generateCode(): number {
+    return Math.floor(Math.random() * (999999 - 100000 + 1)) + 100000;
   }
 
   private async _findByUserId(userId: string): Promise<VerificationDocument> {
