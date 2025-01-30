@@ -133,6 +133,11 @@ export class VerificationsService {
       code,
       type,
     });
+
+    return {
+      statusCode: HttpStatus.CREATED,
+      createdAt: verification.codeCreatedAt,
+    };
   }
 
   public async verifyEmail({
@@ -169,7 +174,7 @@ export class VerificationsService {
     await this.emailerService.sendVerifyEmailSuccess(email);
 
     return {
-      message: HttpStatus.OK,
+      statusCode: HttpStatus.OK,
     };
   }
 

@@ -2,12 +2,14 @@ import {
   IsBoolean,
   IsDate,
   IsEmail,
+  IsEnum,
   IsNotEmpty,
   IsNumber,
   IsString,
 } from 'class-validator';
 import { HttpStatus } from '@nestjs/common';
 import { VerifyEmailTemplateIdEnum } from '../../emailer/enums/emailer.enum';
+import { Transform } from 'class-transformer';
 
 export class VerificationDto {
   @IsNotEmpty()
@@ -47,10 +49,13 @@ export class VerifyEmailDto {
 }
 
 export class VerifyEmailRO {
-  message: HttpStatus;
+  statusCode: HttpStatus;
 }
 
 export class ResendVerifyEmailDto {
+  @IsNotEmpty()
+  @Transform(({ value }) => VerifyEmailTemplateIdEnum[value])
+  @IsEnum(VerifyEmailTemplateIdEnum, { message: 'Enum should be correct.' })
   type: VerifyEmailTemplateIdEnum;
 }
 
