@@ -64,7 +64,7 @@ export class UsersService {
       lastName: profile.lastName,
       location: profile.location,
       dateOfBirth: profile.dateOfBirth,
-      avatarId: profile.avatarId.id,
+      avatarId: profile.avatarId && profile.avatarId.id,
     };
   }
 

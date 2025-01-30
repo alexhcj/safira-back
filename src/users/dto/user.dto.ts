@@ -38,23 +38,23 @@ export class FindProfileRO {
   @IsEmail()
   email: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsISO8601()
   dateOfBirth: Date;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
   firstName: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
   lastName: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
   location: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
   avatarId: string;
 }
