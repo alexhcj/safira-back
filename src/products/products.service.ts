@@ -8,6 +8,7 @@ import {
   IProduct,
   IProductFilter,
   IProductQuery,
+  IProductRelatedQuery,
   IProductRO,
   IProductsBySlugRO,
   IProductsRO,
@@ -208,6 +209,59 @@ export class ProductsService {
         minPrice: +lowestPrice[0].price,
       },
     };
+  }
+
+  async findRelated(query: IProductRelatedQuery): Promise<ProductDocument[]> {
+    const { limit = 10, slug } = query;
+    const product = await this.findBySlug(slug);
+
+    if (!product)
+      throw new HttpException('Product not found', HttpStatus.NOT_FOUND);
+
+    const { name, description, basicCategory, subCategory } = product.product;
+
+    const searchTerms = `${name} ${description} ${basicCategory} ${subCategory}`;
+
+    // TODO: score (dietary...)
+    return this.productModel
+      .aggregate([
+        {
+          $search: {
+            index: 'text',
+            text: {
+              query: searchTerms,
+              path: ['name', 'description', 'basicCategory', 'subCategory'],
+            },
+          },
+        },
+        {
+          $lookup: {
+            from: 'prices',
+            localField: 'price',
+            foreignField: '_id',
+            as: 'price',
+          },
+        },
+        { $unwind: '$price' },
+        {
+          $lookup: {
+            from: 'tags',
+            localField: 'tags',
+            foreignField: '_id',
+            as: 'tags',
+          },
+        },
+        {
+          $addFields: {
+            tags: {
+              $arrayElemAt: ['$tags.tags', 0],
+            },
+          },
+        },
+        { $match: { name: { $ne: name } } },
+        { $limit: +limit },
+      ])
+      .exec();
   }
 
   async findRandom({ size = 1 }): Promise<Aggregate<ProductDocument[]>> {

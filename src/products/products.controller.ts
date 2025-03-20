@@ -40,6 +40,12 @@ export class ProductsController {
     return this.productsService.findAll(query);
   }
 
+  @Get('related')
+  findRelated(@Query() query): Promise<ProductDocument[]> {
+    this.logger.log('Handling findRelated() request...');
+    return this.productsService.findRelated(query);
+  }
+
   @Get('random')
   findRandom(@Query() query): Promise<Aggregate<ProductDocument[]>> {
     this.logger.log('Handling findRandom() request...');

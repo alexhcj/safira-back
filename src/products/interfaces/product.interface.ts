@@ -74,6 +74,11 @@ export interface IProductQuery {
   dietary?: string;
 }
 
+export interface IProductRelatedQuery {
+  slug: string;
+  limit?: string;
+}
+
 export interface IProductFilter {
   name?: { $regex: string; $options?: string };
   minPrice?: { $gte: number };
