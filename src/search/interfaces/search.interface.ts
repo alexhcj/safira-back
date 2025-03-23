@@ -18,4 +18,5 @@ export interface ISearchPost {
 
 export interface ISearchRO {
   search: Array<ISearchProduct | ISearchPost>;
+  relatedCount: number;
 }

@@ -40,10 +40,10 @@ export class ProductsController {
     return this.productsService.findAll(query);
   }
 
-  @Get('find-top-ten-popular')
-  findTopTenPopular(): Promise<ProductDocument[]> {
-    this.logger.log('Handling findTopTenPopular() request...');
-    return this.productsService.findTopTenPopular();
+  @Get('related')
+  findRelated(@Query() query): Promise<ProductDocument[]> {
+    this.logger.log('Handling findRelated() request...');
+    return this.productsService.findRelated(query);
   }
 
   @Get('random')
