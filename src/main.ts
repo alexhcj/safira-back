@@ -25,7 +25,7 @@ async function bootstrap() {
     prefix: '/public',
   });
 
-  app.enableCors();
+  app.enableCors({ origin: false });
 
   await app.listen(port || 9090, () =>
     console.log(
