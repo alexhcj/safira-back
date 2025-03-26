@@ -26,7 +26,7 @@ export class OffersController {
     return this.offersService.getAll(query);
   }
 
-  @Get(':type')
+  @Get('list/:type')
   getOfferByType(@Param('type') type: OfferEnum): Promise<OfferDocument> {
     this.logger.log('Handling get() request...');
     return this.offersService.getOfferByType(type);
@@ -45,5 +45,12 @@ export class OffersController {
   ): Promise<OfferDocument> {
     this.logger.log('Handling update() request...');
     return this.offersService.update(id, data);
+  }
+
+  // ADMIN
+  @Get('update-deals-of-week')
+  _updateDealsOfWeek(): Promise<any> {
+    this.logger.log('Handling update() request...');
+    return this.offersService.updateDealsOfWeek();
   }
 }
