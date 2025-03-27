@@ -422,6 +422,15 @@ export class VerificationsService {
     };
   }
 
+  public async isUserEmailVerified(id: string): Promise<boolean> {
+    const verification = await this._findByUserId(id);
+
+    if (!verification)
+      throw new HttpException('Verification not found', HttpStatus.NOT_FOUND);
+
+    return verification.isEmailVerified;
+  }
+
   private _generateCode(): number {
     return Math.floor(Math.random() * (999999 - 100000 + 1)) + 100000;
   }

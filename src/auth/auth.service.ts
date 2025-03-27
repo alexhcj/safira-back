@@ -44,7 +44,9 @@ export class AuthService {
 
     const accessToken = this.jwtService.sign(payload);
 
-    return { id: validatedUser.id, accessToken };
+    const isUserEmailVerified = await this.verificationService.isUserEmailVerified(validatedUser.id)
+
+    return { id: validatedUser.id, accessToken, isEmailVerified: isUserEmailVerified };
   }
 
   async register(user: RegisterUserDto): Promise<any> {
