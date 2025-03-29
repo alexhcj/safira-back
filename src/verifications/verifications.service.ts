@@ -216,7 +216,7 @@ export class VerificationsService {
     });
 
     return {
-      message: HttpStatus.OK,
+      statusCode: HttpStatus.OK,
     };
   }
 
@@ -239,7 +239,7 @@ export class VerificationsService {
     await verification.save();
 
     return {
-      message: HttpStatus.OK,
+      statusCode: HttpStatus.OK,
     };
   }
 
@@ -276,7 +276,7 @@ export class VerificationsService {
     await verification.save();
 
     return {
-      message: HttpStatus.OK,
+      statusCode: HttpStatus.OK,
     };
   }
 

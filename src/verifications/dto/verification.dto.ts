@@ -67,7 +67,7 @@ export class ChangeEmailDto {
 }
 
 export class ChangeEmailRO {
-  message: HttpStatus;
+  statusCode: HttpStatus;
 }
 
 export class VerifyNewEmailDto {
@@ -77,7 +77,7 @@ export class VerifyNewEmailDto {
 }
 
 export class VerifyNewEmailRO {
-  message: HttpStatus;
+  statusCode: HttpStatus;
 }
 
 export class ValidatePasswordDto {
@@ -87,7 +87,7 @@ export class ValidatePasswordDto {
 }
 
 export class ValidatePasswordRO {
-  message: HttpStatus;
+  statusCode: HttpStatus;
 }
 
 export class ChangePasswordDto {
