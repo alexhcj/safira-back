@@ -27,6 +27,7 @@ export class AuthService {
     password: string,
   ): Promise<UserDocument> {
     const user = await this.usersService.findByEmail(email);
+
     if (user && AuthService.comparePassword(password, user.passwordHash)) {
       return user;
     }
@@ -44,9 +45,14 @@ export class AuthService {
 
     const accessToken = this.jwtService.sign(payload);
 
-    const isUserEmailVerified = await this.verificationService.isUserEmailVerified(validatedUser.id)
+    const isUserEmailVerified =
+      await this.verificationService.isUserEmailVerified(validatedUser.id);
 
-    return { id: validatedUser.id, accessToken, isEmailVerified: isUserEmailVerified };
+    return {
+      id: validatedUser.id,
+      accessToken,
+      isEmailVerified: isUserEmailVerified,
+    };
   }
 
   async register(user: RegisterUserDto): Promise<any> {

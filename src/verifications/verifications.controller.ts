@@ -65,6 +65,7 @@ export class VerificationsController {
   @Post('validate-password')
   validatePassword(@Req() req, @Body() data: ValidatePasswordDto) {
     this.logger.log('Handling validatePassword() request');
+
     return this.verificationsService.validatePassword(
       req.user.email,
       data.password,
