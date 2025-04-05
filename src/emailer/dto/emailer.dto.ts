@@ -23,3 +23,22 @@ export class VerifyEmailDto {
   @IsEnum(VerifyEmailTemplateIdEnum)
   type: VerifyEmailTemplateIdEnum;
 }
+
+export class SendChangePasswordErrorDto {
+  @IsNotEmpty()
+  @IsString()
+  @IsEmail()
+  email: string;
+
+  @IsNotEmpty()
+  @IsString()
+  browser: string;
+
+  @IsNotEmpty()
+  @IsString()
+  os: string;
+
+  @IsNotEmpty()
+  @IsString()
+  name: string;
+}

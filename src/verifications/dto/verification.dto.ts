@@ -10,6 +10,7 @@ import {
 import { HttpStatus } from '@nestjs/common';
 import { VerifyEmailTemplateIdEnum } from '../../emailer/enums/emailer.enum';
 import { Transform } from 'class-transformer';
+import { AuthLoginRO } from '../../auth/interfaces/auth.interface';
 
 export class VerificationDto {
   @IsNotEmpty()
@@ -88,6 +89,7 @@ export class ValidatePasswordDto {
 
 export class ValidatePasswordRO {
   statusCode: HttpStatus;
+  creds: AuthLoginRO;
 }
 
 export class ChangePasswordDto {
@@ -98,7 +100,7 @@ export class ChangePasswordDto {
 }
 
 export class ChangePasswordRO {
-  message: HttpStatus;
+  statusCode: HttpStatus;
 }
 
 export class VerifyCodeDto {
@@ -108,7 +110,7 @@ export class VerifyCodeDto {
 }
 
 export class VerifyCodeRO {
-  message: HttpStatus;
+  statusCode: HttpStatus;
 }
 
 export class ResetPasswordDto {
@@ -122,5 +124,5 @@ export class ResetPasswordDto {
 }
 
 export class ResetPasswordRO {
-  message: HttpStatus;
+  statusCode: HttpStatus;
 }

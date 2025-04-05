@@ -8,6 +8,7 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
+import { UAParser } from 'ua-parser-js';
 import { VerificationsService } from './verifications.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import {
@@ -76,9 +77,14 @@ export class VerificationsController {
   @Post('change-password')
   changePassword(@Req() req, @Body() data: ChangePasswordDto) {
     this.logger.log('Handling changePassword() request');
+
+    const { browser, os } = UAParser(req.headers['user-agent']);
+
     return this.verificationsService.changePassword(
       req.user.userId,
       data.email,
+      `${browser.name} ${browser.major}`,
+      `${os.name} ${os.version}`,
     );
   }
 
@@ -86,10 +92,14 @@ export class VerificationsController {
   @Post('verify-code')
   verifyCode(@Req() req, @Ip() ip, @Body() data: VerifyCodeDto) {
     this.logger.log('Handling verifyCode() request');
+
+    const { browser, os } = UAParser(req.headers['user-agent']);
+
     return this.verificationsService.verifyCode(
       req.user.userId,
       ip,
-      req.headers['user-agent'],
+      `${browser.name} ${browser.major}`,
+      `${os.name} ${os.version}`,
       req.user.email,
       data.code,
     );
@@ -104,12 +114,17 @@ export class VerificationsController {
     @Body() data: ResetPasswordDto,
   ) {
     this.logger.log('Handling resetPassword() request');
+
+    const { browser, os } = UAParser(req.headers['user-agent']);
+
     return this.verificationsService.resetPassword(
+      req.user.userId,
       query.userId,
       +query.expirationTime,
       query.token,
       ip,
-      req.headers['user-agent'],
+      `${browser.name} ${browser.major}`,
+      `${os.name} ${os.version}`,
       req.user.email,
       data,
     );

@@ -46,7 +46,8 @@
     "reflect-metadata": "0.1.13",
     "rimraf": "5.0.5",
     "rxjs": "7.8.1",
-    "slug": "8.2.3"
+    "slug": "8.2.3",
+    "ua-parser-js": "^2.0.3"
   },
   "devDependencies": {
     "@nestjs/cli": "10.1.18",
@@ -59,6 +60,7 @@
     "@types/passport-jwt": "3.0.10",
     "@types/passport-local": "1.0.36",
     "@types/supertest": "2.0.14",
+    "@types/ua-parser-js": "^0.7.39",
     "@typescript-eslint/eslint-plugin": "6.7.5",
     "@typescript-eslint/parser": "6.7.5",
     "bullmq": "^5.44.4",

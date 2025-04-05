@@ -90,13 +90,6 @@ export class VerificationsService {
     if (!verification)
       throw new HttpException('Verification not found.', HttpStatus.NOT_FOUND);
 
-    // TODO: add protection: e.x. => not allow to call method?
-    if (verification.isEmailVerified)
-      throw new HttpException(
-        'Email already verified.',
-        HttpStatus.BAD_REQUEST,
-      );
-
     if (
       +new Date(verification.codeCreatedAt) +
         +VerificationCodeEnum.VERIFY_EMAIL_CODE_RESEND_TIMEOUT >
@@ -109,7 +102,8 @@ export class VerificationsService {
 
     if (
       new Date().getTime() <
-      +new Date(verification.codeCreatedAt) + 1000 * 60
+      +new Date(verification.codeCreatedAt) +
+        +VerificationCodeEnum.VERIFY_EMAIL_CODE_RESEND_TIMEOUT
     )
       throw new HttpException(
         'Could not create new code now.',
@@ -268,6 +262,11 @@ export class VerificationsService {
 
     await this.emailerService.sendChangeEmailSuccess(user.email);
 
+    const creds = await this.authService.login({
+      email: verification.newEmail,
+      password,
+    });
+
     verification.code = undefined;
     verification.codeCreatedAt = undefined;
     verification.isNewEmailVerified = undefined;
@@ -277,6 +276,7 @@ export class VerificationsService {
 
     return {
       statusCode: HttpStatus.OK,
+      creds,
     };
   }
 
@@ -284,6 +284,8 @@ export class VerificationsService {
   public async changePassword(
     userId: string,
     email: string,
+    browser: string,
+    os: string,
   ): Promise<ChangePasswordRO> {
     const user = await this.usersService.findById(userId);
     const userByEmail = await this.usersService.findByEmail(email);
@@ -296,10 +298,17 @@ export class VerificationsService {
     ) {
       console.log('Email || user validation error');
 
-      await this.emailerService.sendChangePasswordError(email);
+      const profile = await this.usersService.findProfile(userId);
+
+      await this.emailerService.sendChangePasswordError({
+        email: user.email ?? userByEmail.email,
+        browser,
+        os,
+        name: profile.firstName ?? 'Dear Customer',
+      });
 
       return {
-        message: HttpStatus.OK,
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
       };
     }
 
@@ -312,6 +321,7 @@ export class VerificationsService {
 
     verification.code = code;
     verification.codeCreatedAt = new Date();
+    // TODO: call CRON with timeout
 
     await verification.save();
 
@@ -322,14 +332,15 @@ export class VerificationsService {
     });
 
     return {
-      message: HttpStatus.OK,
+      statusCode: HttpStatus.OK,
     };
   }
 
   public async verifyCode(
     userId: string,
     clientIp: string,
-    userAgent: string,
+    browser: string,
+    os: string,
     email: string,
     code: number,
   ): Promise<VerifyCodeRO> {
@@ -352,12 +363,12 @@ export class VerificationsService {
 
     const salt = await bcrypt.genSalt(15);
     const token = await bcrypt.hash(
-      `${code}${email}${user.user.passwordHash}${expirationTime}${clientIp}${userAgent}`,
+      `${code}${email}${user.user.passwordHash}${expirationTime}${clientIp}${browser}${os}`,
       salt,
     );
     const link = `${this.configService.get<string>(
       'client.clientUrl',
-    )}/reset-password?userId=${userId}&expirationTime=${expirationTime}&token=${token}`;
+    )}/change-password?userId=${userId}&expirationTime=${expirationTime}&token=${token}`;
 
     await this.emailerService.sendChangePasswordLink(
       email,
@@ -366,25 +377,29 @@ export class VerificationsService {
     );
 
     return {
-      message: HttpStatus.OK,
+      statusCode: HttpStatus.OK,
     };
   }
 
   public async resetPassword(
+    reqUserId: string,
     userId: string,
     expirationTime: number,
     token: string,
     clientIp: string,
-    userAgent: string,
+    browser: string,
+    os: string,
     email: string,
     data: ResetPasswordDto,
   ): Promise<ResetPasswordRO> {
     if (new Date().getTime() > expirationTime)
       throw new HttpException('Token is expired', HttpStatus.BAD_REQUEST);
 
-    const user = await this.usersService.findById(userId);
+    const userByReq = await this.usersService.findById(reqUserId);
+    const userByQuery = await this.usersService.findById(userId);
 
-    if (!user) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+    if (!userByReq || !userByQuery)
+      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
 
     if (data.password !== data.confirmPassword)
       throw new HttpException(
@@ -394,7 +409,7 @@ export class VerificationsService {
 
     const verification = await this._findByUserId(userId);
 
-    const link = `${verification.code}${email}${user.passwordHash}${expirationTime}${clientIp}${userAgent}`;
+    const link = `${verification.code}${email}${userByReq.passwordHash}${expirationTime}${clientIp}${browser}${os}`;
 
     const isEquals = bcrypt.compareSync(link, token);
 
@@ -418,7 +433,7 @@ export class VerificationsService {
     await this.emailerService.sendChangePasswordSuccess(email);
 
     return {
-      message: HttpStatus.OK,
+      statusCode: HttpStatus.OK,
     };
   }
 
