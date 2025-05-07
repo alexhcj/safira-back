@@ -12,10 +12,10 @@ export class ReviewItem {
   @Prop({ type: SchemaTypes.ObjectId, ref: Profile.name })
   readonly user: Profile;
 
-  @Prop()
+  @Prop({ required: true })
   readonly text: string;
 
-  @Prop()
+  @Prop({ required: true })
   readonly rating: number;
 }
 

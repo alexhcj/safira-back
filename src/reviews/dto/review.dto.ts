@@ -1,12 +1,12 @@
-import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
 export class ReviewDto {
+  @IsNotEmpty()
   @IsString()
-  @IsOptional()
   readonly text: string;
 
+  @IsNotEmpty()
   @IsNumber()
-  @IsOptional()
   readonly rating: number;
 
   @IsString()
