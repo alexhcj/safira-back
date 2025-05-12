@@ -14,7 +14,7 @@ export class SearchService {
     private postsService: PostsService,
   ) {}
 
-  async searchGlobal({ search }): Promise<ISearchRO> {
+  async findAllMatches({ search }): Promise<ISearchRO> {
     const products = await this.productsService.findAll({ slug: search });
     const posts = await this.postsService.getAll({ search });
 
