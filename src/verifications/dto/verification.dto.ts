@@ -68,6 +68,7 @@ export class ChangeEmailDto {
 }
 
 export class ChangeEmailRO {
+  message: string;
   statusCode: HttpStatus;
 }
 
@@ -78,6 +79,7 @@ export class VerifyNewEmailDto {
 }
 
 export class VerifyNewEmailRO {
+  message: string;
   statusCode: HttpStatus;
 }
 
@@ -88,8 +90,9 @@ export class ValidatePasswordDto {
 }
 
 export class ValidatePasswordRO {
+  message: string;
   statusCode: HttpStatus;
-  creds: AuthLoginRO;
+  accessToken: string;
 }
 
 export class ChangePasswordDto {
@@ -100,6 +103,7 @@ export class ChangePasswordDto {
 }
 
 export class ChangePasswordRO {
+  message: string;
   statusCode: HttpStatus;
 }
 
@@ -110,6 +114,7 @@ export class VerifyCodeDto {
 }
 
 export class VerifyCodeRO {
+  message: string;
   statusCode: HttpStatus;
 }
 
@@ -124,5 +129,6 @@ export class ResetPasswordDto {
 }
 
 export class ResetPasswordRO {
+  message: string;
   statusCode: HttpStatus;
 }

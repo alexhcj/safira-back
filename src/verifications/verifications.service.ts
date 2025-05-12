@@ -210,6 +210,7 @@ export class VerificationsService {
     });
 
     return {
+      message: 'Code has been send.',
       statusCode: HttpStatus.OK,
     };
   }
@@ -233,6 +234,7 @@ export class VerificationsService {
     await verification.save();
 
     return {
+      message: 'Email has been verified.',
       statusCode: HttpStatus.OK,
     };
   }
@@ -275,8 +277,9 @@ export class VerificationsService {
     await verification.save();
 
     return {
+      message: 'Email has been changed.',
       statusCode: HttpStatus.OK,
-      creds,
+      accessToken: creds.accessToken,
     };
   }
 
@@ -296,8 +299,6 @@ export class VerificationsService {
       email !== user.email ||
       email !== userByEmail.email
     ) {
-      console.log('Email || user validation error');
-
       const profile = await this.usersService.findProfile(userId);
 
       await this.emailerService.sendChangePasswordError({
@@ -307,9 +308,10 @@ export class VerificationsService {
         name: profile.firstName ?? 'Dear Customer',
       });
 
-      return {
-        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-      };
+      throw new HttpException(
+        'Something went wrong.',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
 
     const verification = await this._findByUserId(userId);
@@ -332,6 +334,7 @@ export class VerificationsService {
     });
 
     return {
+      message: 'Code has been send.',
       statusCode: HttpStatus.OK,
     };
   }
@@ -377,6 +380,7 @@ export class VerificationsService {
     );
 
     return {
+      message: 'Link has been send.',
       statusCode: HttpStatus.OK,
     };
   }
@@ -433,6 +437,7 @@ export class VerificationsService {
     await this.emailerService.sendChangePasswordSuccess(email);
 
     return {
+      message: 'Password has been changed.',
       statusCode: HttpStatus.OK,
     };
   }
