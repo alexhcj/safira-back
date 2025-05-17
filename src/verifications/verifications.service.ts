@@ -90,25 +90,17 @@ export class VerificationsService {
     if (!verification)
       throw new HttpException('Verification not found.', HttpStatus.NOT_FOUND);
 
-    if (
-      +new Date(verification.codeCreatedAt) +
-        +VerificationCodeEnum.VERIFY_EMAIL_CODE_RESEND_TIMEOUT >
-      +new Date()
-    )
-      throw new HttpException(
-        `${HttpStatus.BAD_REQUEST}. Try later`,
-        HttpStatus.BAD_REQUEST,
-      );
+    const now = new Date().getTime();
+    const cooldownEndTime =
+      new Date(verification.codeCreatedAt).getTime() +
+      VerificationCodeEnum.VERIFY_CODE_RESEND_TIMEOUT;
 
-    if (
-      new Date().getTime() <
-      +new Date(verification.codeCreatedAt) +
-        +VerificationCodeEnum.VERIFY_EMAIL_CODE_RESEND_TIMEOUT
-    )
+    if (now < cooldownEndTime) {
       throw new HttpException(
-        'Could not create new code now.',
-        HttpStatus.BAD_REQUEST,
+        `Could not create new code now.`,
+        HttpStatus.TOO_MANY_REQUESTS,
       );
+    }
 
     const user = await this.usersService.findById(userId);
 
@@ -150,15 +142,18 @@ export class VerificationsService {
         HttpStatus.BAD_REQUEST,
       );
 
-    if (
-      +new Date(verification.codeCreatedAt) +
-        +VerificationCodeEnum.VERIFY_EMAIL_CODE_EXPIRATION <
-      +new Date()
-    )
+    const now = new Date().getTime();
+    const expirationTime =
+      new Date(verification.codeCreatedAt).getTime() +
+      VerificationCodeEnum.VERIFY_EMAIL_CODE_EXPIRATION;
+
+    // If current time is past the expiration time, the code has expired
+    if (now > expirationTime) {
       throw new HttpException(
         'Code expired. Try new code.',
         HttpStatus.BAD_REQUEST,
       );
+    }
 
     verification.isEmailVerified = true;
     verification.code = undefined;
@@ -323,7 +318,6 @@ export class VerificationsService {
 
     verification.code = code;
     verification.codeCreatedAt = new Date();
-    // TODO: call CRON with timeout
 
     await verification.save();
 
@@ -339,6 +333,15 @@ export class VerificationsService {
     };
   }
 
+  /**
+   * Change password 2-nd step - verifies code from email and sends link to reset password
+   * @param userId - ID of the user
+   * @param clientIp - IP address of client
+   * @param browser - Browser used
+   * @param os - Operating system used
+   * @param email - User's email address
+   * @param code - Verification code from email
+   */
   public async verifyCode(
     userId: string,
     clientIp: string,
@@ -349,8 +352,18 @@ export class VerificationsService {
   ): Promise<VerifyCodeRO> {
     const verification = await this._findByUserId(userId);
 
-    if (verification.resetPasswordTimeout > new Date())
-      throw new HttpException('Timeout error.', HttpStatus.BAD_REQUEST);
+    const now = new Date().getTime();
+    const expirationTime =
+      new Date(verification.codeCreatedAt).getTime() +
+      VerificationCodeEnum.PASSWORD_CHANGE_CODE_EXPIRATION;
+
+    // If current time is past the expiration time, the code has expired
+    if (now > expirationTime) {
+      throw new HttpException(
+        'Code expired. Try new code.',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
     if (code !== verification.code)
       throw new HttpException(
         "Code isn't valid. Try another.",
@@ -358,10 +371,6 @@ export class VerificationsService {
       );
 
     const user = await this.usersService.findByIdWithProfile(userId);
-
-    const expirationTime: number = new Date().getTime() + 86400000;
-
-    verification.resetPasswordTimeout = new Date(expirationTime);
     await verification.save();
 
     const salt = await bcrypt.genSalt(15);
@@ -431,7 +440,6 @@ export class VerificationsService {
     });
     verification.code = undefined;
     verification.codeCreatedAt = undefined;
-    verification.resetPasswordTimeout = undefined;
     await verification.save();
 
     await this.emailerService.sendChangePasswordSuccess(email);

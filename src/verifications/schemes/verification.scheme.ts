@@ -30,9 +30,6 @@ export class Verification {
 
   @Prop({ type: Date })
   codeCreatedAt: Date;
-
-  @Prop({ type: Date })
-  resetPasswordTimeout: Date;
 }
 
 export const VerificationScheme = SchemaFactory.createForClass(Verification);
