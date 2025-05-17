@@ -419,7 +419,7 @@ export class VerificationsService {
 
     if (!isEquals)
       throw new HttpException(
-        'Internal severer error',
+        'Internal server error',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
 
