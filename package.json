@@ -1,10 +1,29 @@
 {
-  "name": "react-shop-back",
+  "name": "safira-back",
   "version": "0.0.1",
-  "description": "",
-  "author": "",
+  "description": "NestJS API backend for the Safira platform - handles authentication, data management, and business logic.",
+  "author": {
+    "name": "Alex",
+    "email": "alexhcj@yandex.ru",
+    "url": "https://t.me/alex_hcj"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/alexhcj/safira-back.git"
+  },
+  "keywords": [
+    "e-commerce",
+    "react",
+    "vite",
+    "food-store",
+    "safira"
+  ],
   "private": true,
-  "license": "UNLICENSED",
+  "license": "MIT",
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  },
   "scripts": {
     "prebuild": "rimraf dist",
     "build": "nest build",
