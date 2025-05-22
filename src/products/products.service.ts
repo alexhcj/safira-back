@@ -88,6 +88,29 @@ export class ProductsService {
     }: IProductQuery = query;
     // TODO: check sort key of SortEnum type?
     // TODO: check CategoryEnum item?
+
+    const brandFilter = brand
+      ? {
+          $or: [
+            // Match by slug (most efficient)
+            {
+              'specifications.company.slug': {
+                $in: brand.split('+'),
+              },
+            },
+            // Fallback to normalized name search if needed
+            {
+              'specifications.company.normalizedName': {
+                $regex: brand
+                  .split('+')
+                  .map((b) => this.normalizeCompanyName(b.replace(/-/g, ' ')))
+                  .join('|'),
+              },
+            },
+          ],
+        }
+      : {};
+
     const [{ products, total, highestPrice, lowestPrice }] =
       await this.productModel.aggregate([
         {
@@ -96,14 +119,7 @@ export class ProductsService {
             primeCategory: primeCategory || /.*/, // TODO: refactor to combined query with types
             subCategory: subCategory || /.*/,
             basicCategory: basicCategory || /.*/,
-            'specifications.company': brand
-              ? {
-                  $regex: brand
-                    .split('+')
-                    .map((b) => b.replace(/-/g, ' '))
-                    .join('|'),
-                }
-              : /.*/,
+            ...brandFilter,
             slug: { $regex: `${slug ? slug : ''}`, $options: 'i' },
           },
         },
@@ -273,6 +289,7 @@ export class ProductsService {
     return this.productModel.aggregate([{ $sample: { size } }]);
   }
 
+  // TODO: add RDO
   async getQueryBrands(query): Promise<any> {
     const {
       slug,
@@ -283,20 +300,22 @@ export class ProductsService {
       basicCategory,
       brand,
     }: IProductQuery = query;
+
+    const brandFilter = brand
+      ? {
+          'specifications.company.slug': {
+            $in: brand.split('+'),
+          },
+        }
+      : {};
+
     const brands = await this.productModel.aggregate([
       {
         $match: {
           primeCategory: primeCategory || /.*/,
           subCategory: subCategory || /.*/,
           basicCategory: basicCategory || /.*/,
-          'specifications.company': brand
-            ? {
-                $regex: brand
-                  .split('+')
-                  .map((b) => b.replace(/-/g, ' '))
-                  .join('|'),
-              }
-            : /.*/,
+          ...brandFilter,
           slug: { $regex: `${slug ? slug : ''}`, $options: 'i' },
         },
       },
@@ -331,14 +350,15 @@ export class ProductsService {
       {
         $group: {
           _id: '$specifications.company',
-          brand: { $addToSet: '$specifications.company' },
+          brand: { $first: '$specifications.company' },
           popularity: {
             $sum: '$popularity',
           },
           quantity: { $sum: 1 },
+          firstProductName: { $first: '$name' }, // Product name as a secondary sort key
         },
       },
-      { $unwind: '$brand' },
+      { $sort: { popularity: -1, 'brand.displayName': 1 } }, // alphabetical sort as a tie-breaker
     ]);
 
     return {
@@ -356,20 +376,22 @@ export class ProductsService {
       basicCategory,
       brand,
     }: IProductQuery = query;
+
+    const brandFilter = brand
+      ? {
+          'specifications.company.slug': {
+            $in: brand.split('+'),
+          },
+        }
+      : {};
+
     const res = await this.productModel.aggregate([
       {
         $match: {
           primeCategory: primeCategory || /.*/, // TODO: refactor
           subCategory: subCategory || /.*/,
           basicCategory: basicCategory || /.*/,
-          'specifications.company': brand
-            ? {
-                $regex: brand
-                  .split('+')
-                  .map((b) => b.replace(/-/g, ' '))
-                  .join('|'),
-              }
-            : /.*/,
+          ...brandFilter,
           slug: { $regex: `${slug ? slug : ''}`, $options: 'i' },
         },
       },
@@ -508,12 +530,25 @@ export class ProductsService {
       tags: data.tags,
       reviews: data.reviews,
       specifications: {
-        company: data.specifications
-          ? data.specifications.company
+        company: data.specifications?.company
+          ? {
+              displayName:
+                data.specifications.company.displayName ||
+                product.specifications.company.displayName,
+              slug:
+                data.specifications.company.slug ||
+                this.slugify(data.specifications.company.displayName),
+              normalizedName:
+                data.specifications.company.normalizedName ||
+                this.normalizeCompanyName(
+                  data.specifications.company.displayName,
+                ),
+            }
           : product.specifications.company,
         producingCountry: data.specifications
           ? data.specifications.producingCountry
-          : product.specifications.company,
+          : product.specifications.producingCountry ??
+            data.specifications.company.displayName,
         quantity: data.specifications
           ? data.specifications.quantity
           : product.specifications.quantity,
@@ -547,6 +582,14 @@ export class ProductsService {
       '-' +
       ((Math.random() * Math.pow(36, 6)) | 0).toString(36)
     );
+  }
+
+  private normalizeCompanyName(name: string): string {
+    return name
+      .toLowerCase()
+      .replace(/[^\w\s]/g, '') // Remove punctuation
+      .replace(/\s+/g, ' ') // Normalize whitespace
+      .trim();
   }
 
   private async findById(id: Types.ObjectId): Promise<ProductDocument> {

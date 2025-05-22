@@ -7,9 +7,21 @@ import { PrimeCategoryEnum, SubCategoryEnum } from '../enums/categories.enum';
 import { BasicCategoryType } from '../interfaces/category.interface';
 
 @Schema({ _id: false })
+class Company {
+  @Prop({ required: true })
+  readonly displayName: string;
+
+  @Prop({ required: true })
+  readonly normalizedName: string;
+
+  @Prop({ required: true })
+  readonly slug: string;
+}
+
+@Schema({ _id: false })
 class Specifications {
   @Prop({ required: true })
-  readonly company: string;
+  readonly company: Company;
 
   @Prop()
   readonly producingCountry: string;

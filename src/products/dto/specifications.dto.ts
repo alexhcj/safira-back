@@ -5,6 +5,7 @@ import {
   IsOptional,
   IsString,
 } from 'class-validator';
+import { ICompanyData } from '../interfaces/company.interface';
 
 export class CreateSpecificationsDto {
   @IsNotEmpty()
@@ -27,7 +28,7 @@ export class CreateSpecificationsDto {
 export class UpdateSpecificationsDto {
   @IsOptional()
   @IsString()
-  readonly company?: string;
+  readonly company?: ICompanyData;
 
   @IsOptional()
   @IsString()
