@@ -483,26 +483,37 @@ export class ProductsService {
     return { product };
   }
 
-  async findAllBrands(): Promise<IBrandsRO[]> {
+  // IBrandsRO[]
+  async findAllBrands(): Promise<any> {
     return this.productModel.aggregate([
       {
         $group: {
           _id: {
-            company: { $substr: ['$specifications.company', 0, 1] },
+            firstLetter: {
+              $substr: ['$specifications.company.displayName', 0, 1],
+            },
           },
           brands: {
-            $addToSet: '$specifications.company',
+            $addToSet: {
+              slug: '$specifications.company.slug',
+              displayName: '$specifications.company.displayName',
+            },
           },
         },
       },
       {
-        $sort: { _id: 1 },
+        $sort: { '_id.firstLetter': 1 },
       },
       {
         $project: {
-          name: '$_id.company',
+          name: { $toUpper: '$_id.firstLetter' },
           _id: 0,
-          brands: 1,
+          brands: {
+            $sortArray: {
+              input: '$brands',
+              sortBy: 1,
+            },
+          },
         },
       },
     ]);
