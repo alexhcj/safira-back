@@ -47,7 +47,7 @@ export class ProductsService {
       tags: data.tags.map((tag) => new Types.ObjectId(tag)),
       specifications: {
         company: data.specifications.company,
-        shelfLife: new Date(data.specifications.shelfLife),
+        shelfLife: data.specifications.shelfLife,
         quantity: data.specifications.quantity,
         producingCountry: data.specifications.producingCountry,
       },

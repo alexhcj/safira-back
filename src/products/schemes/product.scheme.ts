@@ -5,6 +5,7 @@ import { Review } from '../../reviews/schemes/review.scheme';
 import { Tag } from '../../tags/schemes/tag.scheme';
 import { PrimeCategoryEnum, SubCategoryEnum } from '../enums/categories.enum';
 import { BasicCategoryType } from '../interfaces/category.interface';
+import { ShelfLifeUnitEnum } from '../enums/ShelfLifeUnitEnum.enum';
 
 @Schema({ _id: false })
 class Company {
@@ -19,6 +20,15 @@ class Company {
 }
 
 @Schema({ _id: false })
+class ShelfLife {
+  @Prop({ required: true, min: 1 })
+  readonly value: number;
+
+  @Prop({ required: true, type: String, enum: ShelfLifeUnitEnum })
+  readonly unit: ShelfLifeUnitEnum;
+}
+
+@Schema({ _id: false })
 class Specifications {
   @Prop({ required: true })
   readonly company: Company;
@@ -27,7 +37,7 @@ class Specifications {
   readonly producingCountry: string;
 
   @Prop({ required: true })
-  readonly shelfLife: Date;
+  readonly shelfLife: ShelfLife;
 
   @Prop({ default: 0 })
   readonly quantity: number;

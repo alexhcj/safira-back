@@ -2,12 +2,16 @@ import { Product, ProductDocument } from '../schemes/product.scheme';
 import { PrimeCategoryEnum, SubCategoryEnum } from '../enums/categories.enum';
 import { BasicCategoryType } from './category.interface';
 import { Types } from 'mongoose';
+import { ShelfLifeUnitEnum } from '../enums/ShelfLifeUnitEnum.enum';
 
 interface ISpecifications {
   company: string;
   producingCountry?: string;
   quantity: number;
-  shelfLife: Date;
+  shelfLife: {
+    value: number;
+    unit: ShelfLifeUnitEnum;
+  };
 }
 
 export interface IProduct {

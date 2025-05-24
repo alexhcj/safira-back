@@ -1,11 +1,12 @@
 import {
-  IsDateString,
   IsNotEmpty,
   IsNumber,
+  IsObject,
   IsOptional,
   IsString,
 } from 'class-validator';
 import { ICompanyData } from '../interfaces/company.interface';
+import { ShelfLifeUnitEnum } from '../enums/ShelfLifeUnitEnum.enum';
 
 export class CreateSpecificationsDto {
   @IsNotEmpty()
@@ -17,8 +18,11 @@ export class CreateSpecificationsDto {
   readonly producingCountry: string;
 
   @IsNotEmpty()
-  @IsDateString()
-  readonly shelfLife: Date;
+  @IsObject()
+  readonly shelfLife: {
+    value: number;
+    unit: ShelfLifeUnitEnum;
+  };
 
   @IsOptional()
   @IsNumber()
@@ -35,8 +39,11 @@ export class UpdateSpecificationsDto {
   readonly producingCountry?: string;
 
   @IsOptional()
-  @IsDateString()
-  readonly shelfLife?: Date;
+  @IsObject()
+  readonly shelfLife?: {
+    value: number;
+    unit: ShelfLifeUnitEnum;
+  };
 
   @IsOptional()
   @IsNumber()
