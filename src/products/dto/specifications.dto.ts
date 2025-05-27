@@ -6,7 +6,7 @@ import {
   IsString,
 } from 'class-validator';
 import { ICompanyData } from '../interfaces/company.interface';
-import { ShelfLifeUnitEnum } from '../enums/ShelfLifeUnitEnum.enum';
+import { ShelfLifeUnitEnum } from '../enums/shelf-life-unit.enum';
 
 export class CreateSpecificationsDto {
   @IsNotEmpty()
@@ -15,7 +15,7 @@ export class CreateSpecificationsDto {
 
   @IsOptional()
   @IsString()
-  readonly producingCountry: string;
+  readonly producingCountry?: string;
 
   @IsNotEmpty()
   @IsObject()

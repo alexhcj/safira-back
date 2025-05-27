@@ -9,7 +9,7 @@ import {
   Query,
 } from '@nestjs/common';
 import { TagsService } from './tags.service';
-import { CreateTagDto, UpdateTagDto } from './dto/tag.dto';
+import { CreateTagDto, UpdateTagDto } from './dto/tags.dto';
 
 @Controller('tags')
 export class TagsController {

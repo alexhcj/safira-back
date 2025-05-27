@@ -4,7 +4,6 @@ import { Aggregate, Model, Types } from 'mongoose';
 import { Product, ProductDocument } from './schemes/product.scheme';
 import { CreateProductDto } from './dto/create-product.dto';
 import {
-  IBrandsRO,
   IProduct,
   IProductFilter,
   IProductQuery,
@@ -15,6 +14,8 @@ import {
 } from './interfaces/product.interface';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { PricesService } from '../prices/prices.service';
+import { TagsService } from '../tags/tags.service';
+import { TagTypeEnum } from '../tags/enum/tag-type.enum';
 
 const slug = require('slug');
 
@@ -23,35 +24,56 @@ export class ProductsService {
   constructor(
     @InjectModel(Product.name) private productModel: Model<ProductDocument>,
     private readonly pricesService: PricesService,
+    private readonly tagsService: TagsService,
   ) {}
 
   async create(data: CreateProductDto): Promise<ProductDocument> {
-    const { _id } = await this.pricesService.create(data.price);
+    const priceDocument = await this.pricesService.create({
+      price: data.price,
+    });
 
-    if (!_id)
+    if (!priceDocument._id)
       throw new HttpException(
         'Price was not created',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+
+    const tagsDocument = await this.tagsService.create({
+      type: TagTypeEnum.PRODUCT,
+      tags: data.tags,
+    });
+
+    if (!tagsDocument)
+      throw new HttpException(
+        'Tag was not created',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
 
     const newProduct: IProduct = {
       name: data.name,
       slug: this.slugify(data.name),
-      price: _id,
+      price: priceDocument._id,
       description: data.description,
       primeCategory: data.primeCategory,
       subCategory: data.subCategory,
       basicCategory: data.basicCategory,
       popularity: data.popularity,
       views: data.views,
-      tags: data.tags.map((tag) => new Types.ObjectId(tag)),
+      tags: tagsDocument._id,
       specifications: {
-        company: data.specifications.company,
+        company: {
+          displayName: data.specifications.company,
+          slug: this.slugify(data.specifications.company),
+          normalizedName: this.normalizeCompanyName(
+            data.specifications.company,
+          ),
+        },
         shelfLife: data.specifications.shelfLife,
         quantity: data.specifications.quantity,
         producingCountry: data.specifications.producingCountry,
       },
     };
+
     const createdProduct = new this.productModel(newProduct);
     return createdProduct.save();
   }

@@ -5,7 +5,7 @@ import { Review } from '../../reviews/schemes/review.scheme';
 import { Tag } from '../../tags/schemes/tag.scheme';
 import { PrimeCategoryEnum, SubCategoryEnum } from '../enums/categories.enum';
 import { BasicCategoryType } from '../interfaces/category.interface';
-import { ShelfLifeUnitEnum } from '../enums/ShelfLifeUnitEnum.enum';
+import { ShelfLifeUnitEnum } from '../enums/shelf-life-unit.enum';
 
 @Schema({ _id: false })
 class Company {

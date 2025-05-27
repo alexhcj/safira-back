@@ -1,9 +1,7 @@
 import {
-  IsArray,
   IsEnum,
   IsNotEmpty,
   IsNumber,
-  IsObject,
   IsOptional,
   IsString,
   ValidateNested,
@@ -12,6 +10,7 @@ import { PrimeCategoryEnum, SubCategoryEnum } from '../enums/categories.enum';
 import { BasicCategoryType } from '../interfaces/category.interface';
 import { CreateSpecificationsDto } from './specifications.dto';
 import { Type } from 'class-transformer';
+import { TagsDto } from '../../tags/dto/tags.dto';
 
 export class CreateProductDto {
   @IsString()
@@ -22,16 +21,13 @@ export class CreateProductDto {
   @IsString()
   readonly description?: string;
 
-  @IsObject()
-  @IsNotEmpty()
-  readonly price: {
-    price: number;
-    discount_price?: number;
-  };
-
   @IsNumber()
   @IsNotEmpty()
-  readonly quantity: number;
+  readonly price: number;
+
+  @IsNumber()
+  @IsOptional()
+  readonly discount_price?: number;
 
   @IsOptional()
   @IsEnum(PrimeCategoryEnum)
@@ -55,18 +51,14 @@ export class CreateProductDto {
   @IsNumber()
   readonly views: number;
 
-  @IsString()
-  @IsNotEmpty()
-  readonly company: string;
-
   @IsOptional()
   @IsString()
   readonly producingCountry: string;
 
   @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  readonly tags?: string[];
+  @ValidateNested()
+  @Type(() => TagsDto)
+  readonly tags: TagsDto;
 
   @ValidateNested()
   @Type(() => CreateSpecificationsDto)

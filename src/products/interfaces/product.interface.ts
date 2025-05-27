@@ -2,10 +2,11 @@ import { Product, ProductDocument } from '../schemes/product.scheme';
 import { PrimeCategoryEnum, SubCategoryEnum } from '../enums/categories.enum';
 import { BasicCategoryType } from './category.interface';
 import { Types } from 'mongoose';
-import { ShelfLifeUnitEnum } from '../enums/ShelfLifeUnitEnum.enum';
+import { ShelfLifeUnitEnum } from '../enums/shelf-life-unit.enum';
+import { ICompanyData } from './company.interface';
 
 interface ISpecifications {
-  company: string;
+  company: ICompanyData;
   producingCountry?: string;
   quantity: number;
   shelfLife: {
@@ -25,7 +26,7 @@ export interface IProduct {
   popularity?: number;
   views?: number;
   rating?: number;
-  tags?: Types.ObjectId[];
+  tags?: Types.ObjectId;
   reviews?: Types.ObjectId[];
   specifications: ISpecifications;
 }
