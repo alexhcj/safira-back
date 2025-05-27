@@ -1,5 +1,5 @@
 import {
-  IsEnum,
+  IsIn,
   IsNotEmpty,
   IsNumber,
   IsOptional,
@@ -7,40 +7,42 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { PrimeCategoryEnum, SubCategoryEnum } from '../enums/categories.enum';
-import { BasicCategoryType } from '../interfaces/category.interface';
+import {
+  AllBasicCategoryValues,
+  BasicCategoryType,
+} from '../interfaces/category.interface';
 import { CreateSpecificationsDto } from './specifications.dto';
 import { Type } from 'class-transformer';
 import { TagsDto } from '../../tags/dto/tags.dto';
+import { SlugEnum } from '../../common/decorators/slug-enum.decorator';
 
 export class CreateProductDto {
-  @IsString()
   @IsNotEmpty()
+  @IsString()
   readonly name: string;
 
   @IsOptional()
   @IsString()
   readonly description?: string;
 
-  @IsNumber()
   @IsNotEmpty()
+  @IsNumber()
   readonly price: number;
 
-  @IsNumber()
   @IsOptional()
+  @IsNumber()
   readonly discount_price?: number;
 
   @IsOptional()
-  @IsEnum(PrimeCategoryEnum)
-  @IsNotEmpty()
+  @SlugEnum(PrimeCategoryEnum)
   readonly primeCategory?: PrimeCategoryEnum;
 
   @IsOptional()
-  @IsEnum(SubCategoryEnum)
-  @IsNotEmpty()
+  @SlugEnum(SubCategoryEnum)
   readonly subCategory?: SubCategoryEnum;
 
-  @IsString()
   @IsNotEmpty()
+  @IsIn(AllBasicCategoryValues)
   readonly basicCategory: BasicCategoryType;
 
   @IsOptional()

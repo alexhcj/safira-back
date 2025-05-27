@@ -16,8 +16,7 @@ import { UpdateProductDto } from './dto/update-product.dto';
 import { PricesService } from '../prices/prices.service';
 import { TagsService } from '../tags/tags.service';
 import { TagTypeEnum } from '../tags/enum/tag-type.enum';
-
-const slug = require('slug');
+import { slugify } from '../common/utils';
 
 @Injectable()
 export class ProductsService {
@@ -51,7 +50,7 @@ export class ProductsService {
 
     const newProduct: IProduct = {
       name: data.name,
-      slug: this.slugify(data.name),
+      slug: slugify(data.name),
       price: priceDocument._id,
       description: data.description,
       primeCategory: data.primeCategory,
@@ -63,7 +62,7 @@ export class ProductsService {
       specifications: {
         company: {
           displayName: data.specifications.company,
-          slug: this.slugify(data.specifications.company),
+          slug: slugify(data.specifications.company),
           normalizedName: this.normalizeCompanyName(
             data.specifications.company,
           ),
@@ -570,7 +569,7 @@ export class ProductsService {
                 product.specifications.company.displayName,
               slug:
                 data.specifications.company.slug ||
-                this.slugify(data.specifications.company.displayName),
+                slugify(data.specifications.company.displayName),
               normalizedName:
                 data.specifications.company.normalizedName ||
                 this.normalizeCompanyName(
@@ -607,14 +606,6 @@ export class ProductsService {
     }
 
     return this.productModel.findByIdAndDelete(id).exec();
-  }
-
-  slugify(title: string) {
-    return (
-      slug(title, { lower: true }) +
-      '-' +
-      ((Math.random() * Math.pow(36, 6)) | 0).toString(36)
-    );
   }
 
   private normalizeCompanyName(name: string): string {
