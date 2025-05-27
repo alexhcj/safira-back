@@ -8,6 +8,7 @@ import { User, UserScheme } from '../users/schemes/user.scheme';
 import { ProductsService } from '../products/products.service';
 import { Price, PriceScheme } from '../prices/schemes/price.scheme';
 import { PricesService } from '../prices/prices.service';
+import { TagsModule } from '../tags/tags.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { PricesService } from '../prices/prices.service';
     MongooseModule.forFeature([{ name: Product.name, schema: ProductScheme }]),
     MongooseModule.forFeature([{ name: User.name, schema: UserScheme }]),
     MongooseModule.forFeature([{ name: Price.name, schema: PriceScheme }]),
+    TagsModule,
   ],
   controllers: [ReviewsController],
   providers: [ReviewsService, ProductsService, PricesService],
