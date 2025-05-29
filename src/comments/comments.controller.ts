@@ -45,14 +45,16 @@ export class CommentsController {
     return this.commentsService.create(slug, req.user.userId, data);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Put(':postSlug')
   update(
     @Param('postSlug') postSlug: string,
+    @Req() req,
     @Body() data: UpdateCommentDto,
     @Query() query,
   ) {
     this.logger.log('Handling update() request with id=' + postSlug + '...');
-    return this.commentsService.update(postSlug, data, query);
+    return this.commentsService.update(postSlug, req.user.userId, data, query);
   }
 
   @Delete(':id')
