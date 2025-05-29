@@ -62,13 +62,13 @@ export class Product {
   @Prop()
   readonly description: string;
 
-  @Prop({ required: true, type: String, enum: PrimeCategoryEnum })
+  @Prop({ required: true, type: String })
   readonly primeCategory: string;
 
-  @Prop({ type: String, enum: SubCategoryEnum, default: undefined })
+  @Prop({ type: String, default: undefined })
   readonly subCategory: string;
 
-  @Prop({ default: undefined })
+  @Prop({ type: String, default: undefined })
   readonly basicCategory: BasicCategoryType;
 
   @Prop({ default: 0 })
