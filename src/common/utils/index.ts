@@ -11,6 +11,13 @@ export function fromSlug<T extends Record<string, string>>(
   ) as T[keyof T] | undefined;
 }
 
+export function fromSlugValue(
+  slug: string,
+  map: Record<string, string>,
+): string | undefined {
+  return map[slug];
+}
+
 export function slugify(title: string, addRandom = false): string {
   const base = title
     .toLowerCase()

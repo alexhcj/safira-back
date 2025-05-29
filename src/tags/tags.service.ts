@@ -12,9 +12,9 @@ export class TagsService {
     const tag: CreateTagDto = {
       type: data.type,
       tags: {
-        dietaries: data.tags.dietaries,
-        common: data.tags.common,
-        promotions: data.tags.promotions,
+        ...(data.tags?.dietaries && { dietaries: data.tags.dietaries }),
+        ...(data.tags?.common && { common: data.tags.common }),
+        ...(data.tags?.promotions && { promotions: data.tags.promotions }),
       },
     };
 

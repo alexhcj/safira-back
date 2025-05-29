@@ -16,7 +16,7 @@ import { UpdateProductDto } from './dto/update-product.dto';
 import { PricesService } from '../prices/prices.service';
 import { TagsService } from '../tags/tags.service';
 import { TagTypeEnum } from '../tags/enum/tag-type.enum';
-import { slugify } from '../common/utils';
+import { slugify, toSlug } from '../common/utils';
 
 @Injectable()
 export class ProductsService {
@@ -27,9 +27,7 @@ export class ProductsService {
   ) {}
 
   async create(data: CreateProductDto): Promise<ProductDocument> {
-    const priceDocument = await this.pricesService.create({
-      price: data.price,
-    });
+    const priceDocument = await this.pricesService.create(data.price);
 
     if (!priceDocument._id)
       throw new HttpException(
@@ -37,12 +35,14 @@ export class ProductsService {
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
 
-    const tagsDocument = await this.tagsService.create({
-      type: TagTypeEnum.PRODUCT,
-      tags: data.tags,
-    });
+    const tagsDocument =
+      data.tags &&
+      (await this.tagsService.create({
+        type: TagTypeEnum.PRODUCT,
+        tags: data.tags,
+      }));
 
-    if (!tagsDocument)
+    if (data.tags && !tagsDocument)
       throw new HttpException(
         'Tag was not created',
         HttpStatus.INTERNAL_SERVER_ERROR,
@@ -53,12 +53,16 @@ export class ProductsService {
       slug: slugify(data.name),
       price: priceDocument._id,
       description: data.description,
-      primeCategory: data.primeCategory,
-      subCategory: data.subCategory,
-      basicCategory: data.basicCategory,
+      primeCategory: data.primeCategory
+        ? toSlug(data.primeCategory)
+        : undefined,
+      subCategory: data.subCategory ? toSlug(data.subCategory) : undefined,
+      basicCategory: data.basicCategory
+        ? toSlug(data.basicCategory)
+        : undefined,
       popularity: data.popularity,
       views: data.views,
-      tags: tagsDocument._id,
+      tags: (data.tags && tagsDocument._id) || undefined,
       specifications: {
         company: {
           displayName: data.specifications.company,

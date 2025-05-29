@@ -11,6 +11,7 @@ import {
   BasicOilSubCategoryEnum,
   BasicVegetablesSubCategoryEnum,
 } from '../enums/categories.enum';
+import { toSlug } from '../../common/utils';
 
 export type BasicCategoryType =
   | BasicBeerWineSpiritsSubCategoryEnum
@@ -38,3 +39,9 @@ export const AllBasicCategoryValues: string[] = [
   ...Object.values(BasicOilSubCategoryEnum),
   ...Object.values(BasicFrozenFoodSubCategoryEnum),
 ];
+
+export const SlugToBasicCategoryMap: Record<string, string> = {};
+
+AllBasicCategoryValues.forEach((val) => {
+  SlugToBasicCategoryMap[toSlug(val)] = val;
+});
