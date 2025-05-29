@@ -63,7 +63,7 @@ export class SendSubscribedSuccessDto {
   email: string;
 }
 
-export class SendSubscribedSuccessccRO {
+export class SendSubscribedSuccessRO {
   @IsNotEmpty()
   @IsEnum(HttpStatus)
   message: HttpStatus;

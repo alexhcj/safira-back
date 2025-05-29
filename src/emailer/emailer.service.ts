@@ -14,7 +14,7 @@ import { UsersService } from '../users/users.service';
 import {
   SendSubscribedAuthorRO,
   SendSubscribedOnboardRO,
-  SendSubscribedSuccessccRO,
+  SendSubscribedSuccessRO,
   SendSubscribedSuccessDto,
   SendWeeklyProductsRO,
   SubscribeUserDto,
@@ -322,7 +322,7 @@ export class EmailerService implements IEmailer {
     email,
     profileLink,
     name,
-  }: SendSubscribedSuccessDto): Promise<SendSubscribedSuccessccRO> {
+  }: SendSubscribedSuccessDto): Promise<SendSubscribedSuccessRO> {
     const apiInstance = this._createEmailApiInstance();
 
     try {

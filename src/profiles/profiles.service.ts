@@ -44,7 +44,7 @@ export class ProfilesService {
 
     if (!profile)
       throw new HttpException(
-        'Couldn`t udpate profile',
+        'Could`t update profile',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
 

@@ -171,7 +171,7 @@ export class ProductsService {
         {
           $match: {
             sortPrice: {
-              $gte: minPrice ? +minPrice : 0, // TODO: replace 0 & 500 to dynamic value. It shoudl be highest and lowest product price. Values should appear on front even if no value received from start query
+              $gte: minPrice ? +minPrice : 0, // TODO: replace 0 & 500 to dynamic value. It should be highest and lowest product price. Values should appear on front even if no value received from start query
               $lte: maxPrice ? +maxPrice : 500,
             },
           },
@@ -306,7 +306,7 @@ export class ProductsService {
   }
 
   public async findTopTenPopular(): Promise<ProductDocument[]> {
-    // TODO: change to popularity (buy countes)
+    // TODO: change to popularity (buy counts)
     return this.productModel.find().sort({ views: -1 }).limit(10).lean().exec();
   }
 

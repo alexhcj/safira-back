@@ -29,7 +29,7 @@ export class PricesService {
     const price = await this.priceModel.findById(id);
 
     if (!price) {
-      throw new HttpException(`Price doens't exist`, HttpStatus.BAD_REQUEST);
+      throw new HttpException(`Price doesn't exist`, HttpStatus.BAD_REQUEST);
     }
 
     const updatedPrice: UpdatePriceDto = {

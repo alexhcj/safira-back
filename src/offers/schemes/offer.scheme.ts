@@ -3,7 +3,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { OfferEnum } from '../enums/offer.enum';
 import { Product } from '../../products/schemes/product.scheme';
 import {
-  CategotyTypeEnum,
+  CategoryTypeEnum,
   PrimeCategoryEnum,
   SubCategoryEnum,
 } from '../../products/enums/categories.enum';
@@ -13,8 +13,8 @@ class Link {
   @Prop()
   readonly page: string;
 
-  @Prop({ enum: CategotyTypeEnum, type: String })
-  readonly categoryType: CategotyTypeEnum;
+  @Prop({ enum: CategoryTypeEnum, type: String })
+  readonly categoryType: CategoryTypeEnum;
 
   @Prop({ type: String })
   readonly categoryValue:

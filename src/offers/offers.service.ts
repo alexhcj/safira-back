@@ -44,7 +44,7 @@ export class OffersService {
 
     if (!offer)
       throw new HttpException(
-        'This offer doen`t exists',
+        'This offer does`t exists',
         HttpStatus.BAD_REQUEST,
       );
 
@@ -78,7 +78,7 @@ export class OffersService {
 
     if (!offer)
       throw new HttpException(
-        'This offer doesn`t exists',
+        'This offer does`t exists',
         HttpStatus.BAD_REQUEST,
       );
 
