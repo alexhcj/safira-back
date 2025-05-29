@@ -110,7 +110,6 @@ export class OffersService {
 
       const products = await this.productsService.findAll({ limit: 100 });
 
-      // TODO: add for "new" tag filter + sort "new" on top
       const newProductDealCandidates = products.products.filter(
         (product) =>
           product.price.discount_price &&
@@ -126,7 +125,6 @@ export class OffersService {
       const newDealData = {
         type: OfferEnum.DEALS_OF_WEEK,
         expiresDate: new Date(new Date().getTime() + 7 * 24 * 60 * 60 * 1000),
-        // TODO: refactor schemas, dto, ro, types...
         // @ts-ignore
         deal: newProductDeal[0]._id,
       };

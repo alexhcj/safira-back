@@ -36,7 +36,6 @@ export class ProductsController {
   @Get('list')
   findAll(@Query() query): Promise<IProductsRO> {
     this.logger.log('Handling findAll() request...');
-    // TODO: add transform query to indeed formats (number, string)
     return this.productsService.findAll(query);
   }
 

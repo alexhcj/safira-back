@@ -511,7 +511,6 @@ export class EmailerService implements IEmailer {
     return await this._subscriptionModel.findOne({ email }).exec();
   }
 
-  // TODO: fix return type
   private async _findSubscriptionByEmailAndDelete(email: string): Promise<any> {
     return this._subscriptionModel.findOneAndDelete({ email }).exec();
   }

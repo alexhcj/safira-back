@@ -111,8 +111,6 @@ export class ProductsService {
       brand,
       dietary,
     }: IProductQuery = query;
-    // TODO: check sort key of SortEnum type?
-    // TODO: check CategoryEnum item?
 
     const brandFilter = brand
       ? {
@@ -140,8 +138,7 @@ export class ProductsService {
       await this.productModel.aggregate([
         {
           $match: {
-            // TODO: refactor to common methods (find, sort...). hearts performance
-            primeCategory: primeCategory || /.*/, // TODO: refactor to combined query with types
+            primeCategory: primeCategory || /.*/,
             subCategory: subCategory || /.*/,
             basicCategory: basicCategory || /.*/,
             ...brandFilter,
@@ -171,7 +168,7 @@ export class ProductsService {
         {
           $match: {
             sortPrice: {
-              $gte: minPrice ? +minPrice : 0, // TODO: replace 0 & 500 to dynamic value. It should be highest and lowest product price. Values should appear on front even if no value received from start query
+              $gte: minPrice ? +minPrice : 0,
               $lte: maxPrice ? +maxPrice : 500,
             },
           },
@@ -194,7 +191,6 @@ export class ProductsService {
         {
           $match: {
             'tags.dietaries': {
-              // TODO: fix error when not existed tag in db. should return empty array
               $in: dietary ? dietary.split('+') : [null, /.*/],
             },
           },
@@ -263,7 +259,6 @@ export class ProductsService {
 
     const searchTerms = `${name} ${description} ${basicCategory} ${subCategory}`;
 
-    // TODO: score (dietary...)
     return this.productModel
       .aggregate([
         {
@@ -306,7 +301,6 @@ export class ProductsService {
   }
 
   public async findTopTenPopular(): Promise<ProductDocument[]> {
-    // TODO: change to popularity (buy counts)
     return this.productModel.find().sort({ views: -1 }).limit(10).lean().exec();
   }
 
@@ -314,7 +308,6 @@ export class ProductsService {
     return this.productModel.aggregate([{ $sample: { size } }]);
   }
 
-  // TODO: add RDO
   async getQueryBrands(query): Promise<any> {
     const {
       slug,
@@ -367,7 +360,7 @@ export class ProductsService {
       {
         $match: {
           sortPrice: {
-            $gte: minPrice ? +minPrice : 0, // TODO: replace 0 & 500 to dynamic value. It shoudl be highest and lowest product price. Values should appear on front even if no value received from start query
+            $gte: minPrice ? +minPrice : 0,
             $lte: maxPrice ? +maxPrice : 500,
           },
         },
@@ -413,7 +406,7 @@ export class ProductsService {
     const res = await this.productModel.aggregate([
       {
         $match: {
-          primeCategory: primeCategory || /.*/, // TODO: refactor
+          primeCategory: primeCategory || /.*/,
           subCategory: subCategory || /.*/,
           basicCategory: basicCategory || /.*/,
           ...brandFilter,
@@ -443,7 +436,7 @@ export class ProductsService {
       {
         $match: {
           sortPrice: {
-            $gte: minPrice ? +minPrice : 0, // TODO: replace 0 & 500 to dynamic value. It shoudl be highest and lowest product price. Values should appear on front even if no value received from start query
+            $gte: minPrice ? +minPrice : 0,
             $lte: maxPrice ? +maxPrice : 500,
           },
         },
