@@ -3,7 +3,6 @@ import { Document, SchemaTypes } from 'mongoose';
 import { Price, PriceDocument } from '../../prices/schemes/price.scheme';
 import { Review } from '../../reviews/schemes/review.scheme';
 import { Tag } from '../../tags/schemes/tag.scheme';
-import { PrimeCategoryEnum, SubCategoryEnum } from '../enums/categories.enum';
 import { BasicCategoryType } from '../interfaces/category.interface';
 import { ShelfLifeUnitEnum } from '../enums/shelf-life-unit.enum';
 
