@@ -27,7 +27,7 @@ export interface IProduct {
   views?: number;
   rating?: number;
   tags?: Types.ObjectId;
-  reviews?: Types.ObjectId[];
+  reviews?: Types.ObjectId;
   specifications: ISpecifications;
 }
 
