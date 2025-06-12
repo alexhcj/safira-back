@@ -442,14 +442,19 @@ export class EmailerService implements IEmailer {
           name: 'telegram',
         },
         {
+          src: `${apiBaseUrl}/public/images/emails/vk.svg`,
+          link: 'https://vk.com/alex_hcj',
+          name: 'vk',
+        },
+        {
           src: `${apiBaseUrl}/public/images/emails/github.svg`,
           link: 'https://github.com/alexhcj',
           name: 'github',
         },
         {
-          src: `${apiBaseUrl}/public/images/emails/vk.svg`,
-          link: 'https://vk.com/alex_hcj',
-          name: 'vk',
+          src: `${apiBaseUrl}/public/images/emails/figma.svg`,
+          link: 'https://www.figma.com/design/i0PEldds46MbUNR5avusy3/safira?node-id=1494-199&t=U6ofgb37pEb4sqSM-1',
+          name: 'figma',
         },
       ],
       unsubscribeLink: `${apiBaseWithPrefixUrl}}/unsubscribe-user`,
