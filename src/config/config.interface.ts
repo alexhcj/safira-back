@@ -19,10 +19,17 @@ interface IMongodb {
   };
 }
 
+interface IEmailerTimings {
+  subscribedOnboard: number;
+  subscribedAuthor: number;
+  mostPopularProducts: number;
+}
+
 interface IEmailer {
   brevoApiKey: string;
   senderName: string;
   senderEmail: string;
+  timings: IEmailerTimings;
 }
 
 interface IRedis {

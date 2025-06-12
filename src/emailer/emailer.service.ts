@@ -31,7 +31,6 @@ import {
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { JobEnum } from './enums/job.enum';
-import { SubscribeEmailsChainTimingsEnum } from './enums/subscription.enum';
 import * as fs from 'node:fs';
 import Handlebars from 'handlebars';
 import { ProductsService } from '../products/products.service';
@@ -249,18 +248,30 @@ export class EmailerService implements IEmailer {
       await this._emailerQueue.add(
         JobEnum.SUBSCRIBE_ONBOARD,
         { email: entity.email },
-        { delay: SubscribeEmailsChainTimingsEnum.SUBSCRIBED_ONBOARD },
+        {
+          delay: this.configService.get<number>(
+            'emailer.timings.subscribedOnboard',
+          ),
+        },
       );
       await this._emailerQueue.add(
         JobEnum.SUBSCRIBE_AUTHOR,
         { email: entity.email },
-        { delay: SubscribeEmailsChainTimingsEnum.SUBSCRIBED_AUTHOR },
+        {
+          delay: this.configService.get<number>(
+            'emailer.timings.subscribedAuthor',
+          ),
+        },
       );
-      await this._emailerQueue.add(
-        JobEnum.MOST_POPULAR_PRODUCTS,
-        { email: entity.email },
-        { delay: SubscribeEmailsChainTimingsEnum.MOST_POPULAR_PRODUCTS },
-      );
+      // await this._emailerQueue.add(
+      //   JobEnum.MOST_POPULAR_PRODUCTS,
+      //   { email: entity.email },
+      //   {
+      //     delay: this.configService.get<number>(
+      //       'emailer.timings.mostPopularProducts',
+      //     ),
+      //   },
+      // );
 
       return {
         message: HttpStatus.CREATED,
@@ -322,8 +333,20 @@ export class EmailerService implements IEmailer {
     email,
     profileLink,
     name,
-  }: SendSubscribedSuccessDto): Promise<SendSubscribedSuccessRO> {
+  }: SendSubscribedSuccessDto): Promise<any> {
     const apiInstance = this._createEmailApiInstance();
+    const timingUnit =
+      process.env.NODE_ENV === 'development' ? ' seconds' : ' minutes';
+    const firstEmailTiming =
+      (
+        this.configService.get<number>('emailer.timings.subscribedOnboard') /
+        1000
+      ).toString() + timingUnit;
+    const secondEmailTiming =
+      (
+        this.configService.get<number>('emailer.timings.subscribedAuthor') /
+        1000
+      ).toString() + timingUnit;
 
     try {
       const smtpEmail = new brevo.SendSmtpEmail();
@@ -340,6 +363,8 @@ export class EmailerService implements IEmailer {
       smtpEmail.params = {
         PROFILE_LINK: profileLink,
         NAME: name,
+        FIRST_EMAIL_TIMING: firstEmailTiming,
+        SECOND_EMAIL_TIMING: secondEmailTiming,
       };
       smtpEmail.templateId = SubscriptionTemplateIdEnum.SUBSCRIBED_SUCCESS;
 

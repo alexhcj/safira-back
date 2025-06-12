@@ -29,6 +29,20 @@ export default (): IConfig => ({
     brevoApiKey: process.env.BREVO_API_KEY,
     senderName: process.env.BREVO_SENDER_NAME,
     senderEmail: process.env.BREVO_SENDER_EMAIL,
+    timings: {
+      subscribedOnboard: parseInt(
+        process.env.EMAIL_SUBSCRIBED_ONBOARD || '15000',
+        10,
+      ),
+      subscribedAuthor: parseInt(
+        process.env.EMAIL_SUBSCRIBED_AUTHOR || '30000',
+        10,
+      ),
+      mostPopularProducts: parseInt(
+        process.env.EMAIL_MOST_POPULAR_PRODUCTS || '45000',
+        10,
+      ),
+    },
   },
   redis: {
     connection: {
