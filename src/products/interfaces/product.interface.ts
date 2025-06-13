@@ -2,12 +2,17 @@ import { Product, ProductDocument } from '../schemes/product.scheme';
 import { PrimeCategoryEnum, SubCategoryEnum } from '../enums/categories.enum';
 import { BasicCategoryType } from './category.interface';
 import { Types } from 'mongoose';
+import { ShelfLifeUnitEnum } from '../enums/shelf-life-unit.enum';
+import { ICompanyData } from './company.interface';
 
 interface ISpecifications {
-  company: string;
+  company: ICompanyData;
   producingCountry?: string;
   quantity: number;
-  shelfLife: Date;
+  shelfLife: {
+    value: number;
+    unit: ShelfLifeUnitEnum;
+  };
 }
 
 export interface IProduct {
@@ -21,8 +26,8 @@ export interface IProduct {
   popularity?: number;
   views?: number;
   rating?: number;
-  tags?: Types.ObjectId[];
-  reviews?: Types.ObjectId[];
+  tags?: Types.ObjectId;
+  reviews?: Types.ObjectId;
   specifications: ISpecifications;
 }
 
@@ -53,6 +58,11 @@ export interface IProductsBySlugRO {
   products: IProductBySlug[];
 }
 
+export interface IBrandsRO {
+  name: string;
+  brands: string[];
+}
+
 export interface IProductQuery {
   name?: string;
   sort?: IProductSort;
@@ -67,6 +77,11 @@ export interface IProductQuery {
   basicCategory?: BasicCategoryType;
   brand?: string;
   dietary?: string;
+}
+
+export interface IProductRelatedQuery {
+  slug: string;
+  limit?: string;
 }
 
 export interface IProductFilter {

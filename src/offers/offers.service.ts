@@ -1,6 +1,8 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { Cron, CronExpression } from '@nestjs/schedule';
+import { ProductsService } from '../products/products.service';
 import { Offer, OfferDocument } from './schemes/offer.scheme';
 import { CreateOfferDto } from './dto/create-offer.dto';
 import { OfferEnum } from './enums/offer.enum';
@@ -9,9 +11,12 @@ import { IOfferFilter, IOfferQuery } from './interfaces/offer.interface';
 
 @Injectable()
 export class OffersService {
+  private readonly logger = new Logger(OffersService.name);
+
   constructor(
     @InjectModel(Offer.name)
     private offerModel: Model<OfferDocument>,
+    private productsService: ProductsService,
   ) {}
 
   async getAll({ type }: IOfferQuery): Promise<OfferDocument[]> {
@@ -39,7 +44,7 @@ export class OffersService {
 
     if (!offer)
       throw new HttpException(
-        'This offer doen`t exists',
+        'This offer does`t exists',
         HttpStatus.BAD_REQUEST,
       );
 
@@ -73,7 +78,7 @@ export class OffersService {
 
     if (!offer)
       throw new HttpException(
-        'This offer doesn`t exists',
+        'This offer does`t exists',
         HttpStatus.BAD_REQUEST,
       );
 
@@ -94,5 +99,47 @@ export class OffersService {
       path: 'deal',
       populate: [{ path: 'price' }, { path: 'tags' }],
     });
+  }
+
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+  async updateDealsOfWeek(): Promise<any> {
+    try {
+      this.logger.log('Starting "Deals of Week" products update');
+
+      const deals = await this.getAll({ type: OfferEnum.DEALS_OF_WEEK });
+
+      const products = await this.productsService.findAll({ limit: 100 });
+
+      const newProductDealCandidates = products.products.filter(
+        (product) =>
+          product.price.discount_price &&
+          !deals.some((deal) => deal.deal.slug === product.slug),
+      );
+
+      const newProductDeal = newProductDealCandidates
+        .sort(() => 0.5 - Math.random())
+        .slice(0, 1);
+
+      await this._findByIdAndDelete(deals[0].id);
+
+      const newDealData = {
+        type: OfferEnum.DEALS_OF_WEEK,
+        expiresDate: new Date(new Date().getTime() + 7 * 24 * 60 * 60 * 1000),
+        // @ts-ignore
+        deal: newProductDeal[0]._id,
+      };
+
+      await new this.offerModel(newDealData).save();
+
+      this.logger.log(`Successfully updated slider deals`);
+    } catch (error) {
+      this.logger.error('Failed to update slider products', error.stack);
+    }
+  }
+
+  private async _findByIdAndDelete(id: string): Promise<{
+    status: HttpStatus.OK | HttpStatus.INTERNAL_SERVER_ERROR;
+  }> {
+    return this.offerModel.findByIdAndDelete(id);
   }
 }

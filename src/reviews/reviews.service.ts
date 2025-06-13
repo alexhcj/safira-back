@@ -19,6 +19,9 @@ export class ReviewsService {
       data.reviewProductSlug,
     );
 
+    if (!product)
+      throw new HttpException('Product not found', HttpStatus.NOT_FOUND);
+
     const reviewToDB: IReview = {
       user: new Types.ObjectId(userId),
       text: data.text,

@@ -1,0 +1,107 @@
+<html>
+    <head>
+        <style>
+            body {
+                color: #000;
+            }
+            img {
+                display: block;
+                object-fit: cover;
+            }
+            a {
+                color: #000;
+                text-decoration: underline;
+            }
+            .content {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+            .logo {
+                width: 122px;
+                height: 30px;
+                margin-bottom: 50px;
+            }
+            .title {
+                margin-bottom: 15px;
+                text-transform: capitalize;
+                font-size: 24px;
+                /*letter-spacing: 0.2em;*/
+                font-weight: 600;
+                font-family: 'Work Sans', sans-serif;
+            }
+            .list {
+                list-style: none;
+                padding-left: 0;
+                margin-bottom: 0;
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 10px;
+                max-width: 500px;
+                width: 100%;
+            }
+            .list-link {
+                display: block;
+            }
+            .list-img {
+                width: 150px;
+                height: 150px;
+            }
+            .text {
+                text-align: center;
+                margin-top: 30px;
+                margin-bottom: 40px;
+                max-width: 283px;
+            }
+            .socials {
+                display: flex;
+                justify-content: center;
+                gap: 12px;
+                margin-bottom: 24px;
+            }
+            .contact-text {
+                text-align: center;
+                /*letter-spacing: -0.2em;*/
+                max-width: 293px;
+                line-height: 18px;
+                font-size: 11px;
+                font-family: 'Work Sans', sans-serif;
+            }
+            .unsubscribe {
+                margin-top: 20px;
+                /*letter-spacing: -0.2em;*/
+                font-size: 10px;
+                font-family: 'Work Sans', sans-serif;
+                color: #9D9B9B;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="content">
+            <img class="logo" src="{{logoLink}}" alt="Safira logo" title="Safira logo" />
+            <h3 class="title">Top 10 most popular products</h3>
+            <ul class="list">
+                {{#products}}
+                <li>
+                    <a class="list-link" href="{{link}}" target="_blank">
+                        <img class="list-img" src="{{image}}" title="{{name}}" alt="{{name}}" />
+                    </a>
+                </li>
+                {{/products}}
+            </ul>
+            <p class="text">Check top 10 popular products in our <a href="{{storeLink}}" class="link">store</a>.</p>
+            <ul class="socials">
+                {{#socials}}
+                    <li>
+                        <a href="{{link}}" target="_blank">
+                            <img src="{{src}}" title="{{name}}" alt="{{name}}" />
+                        </a>
+                    </li>
+                {{/socials}}
+            </ul>
+            <div class="contact-text">For offers and questions use contacts listed above or mail to <a class="link" href="mailto:alexhcj@yandex.ru">alexhcj@yandex.ru</a></div>
+            <a class="unsubscribe link" href="{{unsubscribeLink}}">Unsubscribe</a>
+        </div>
+    </body>
+</html>

@@ -1,4 +1,5 @@
-export enum PostTagsEnum {
+export enum CommonTagsEnum {
+  NEW = 'NEW',
   SALE = 'SALE',
   SPECIAL = 'SPECIAL',
   FREE = 'FREE',

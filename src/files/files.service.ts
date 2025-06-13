@@ -20,6 +20,9 @@ export class FilesService {
   ) {}
 
   async getFileById(id: string) {
+    if (!Types.ObjectId.isValid(id))
+      throw new HttpException('Id not found', HttpStatus.BAD_REQUEST);
+
     const file = await this.findById(new Types.ObjectId(id));
 
     if (!file)

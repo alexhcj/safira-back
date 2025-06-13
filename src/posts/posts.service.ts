@@ -100,7 +100,7 @@ export class PostsService {
         populate: {
           path: 'comments.user',
           foreignField: 'userId',
-          select: 'firstName avatarId -userId',
+          select: 'firstName avatarId userId',
         },
       })
       .exec();

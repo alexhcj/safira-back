@@ -3,19 +3,40 @@ import { Document, SchemaTypes } from 'mongoose';
 import { Price, PriceDocument } from '../../prices/schemes/price.scheme';
 import { Review } from '../../reviews/schemes/review.scheme';
 import { Tag } from '../../tags/schemes/tag.scheme';
-import { PrimeCategoryEnum, SubCategoryEnum } from '../enums/categories.enum';
 import { BasicCategoryType } from '../interfaces/category.interface';
+import { ShelfLifeUnitEnum } from '../enums/shelf-life-unit.enum';
+
+@Schema({ _id: false })
+class Company {
+  @Prop({ required: true })
+  readonly displayName: string;
+
+  @Prop({ required: true })
+  readonly normalizedName: string;
+
+  @Prop({ required: true })
+  readonly slug: string;
+}
+
+@Schema({ _id: false })
+class ShelfLife {
+  @Prop({ required: true, min: 1 })
+  readonly value: number;
+
+  @Prop({ required: true, type: String, enum: ShelfLifeUnitEnum })
+  readonly unit: ShelfLifeUnitEnum;
+}
 
 @Schema({ _id: false })
 class Specifications {
   @Prop({ required: true })
-  readonly company: string;
+  readonly company: Company;
 
   @Prop()
   readonly producingCountry: string;
 
   @Prop({ required: true })
-  readonly shelfLife: Date;
+  readonly shelfLife: ShelfLife;
 
   @Prop({ default: 0 })
   readonly quantity: number;
@@ -40,13 +61,13 @@ export class Product {
   @Prop()
   readonly description: string;
 
-  @Prop({ required: true, type: String, enum: PrimeCategoryEnum })
+  @Prop({ required: true, type: String })
   readonly primeCategory: string;
 
-  @Prop({ type: String, enum: SubCategoryEnum })
+  @Prop({ type: String, default: undefined })
   readonly subCategory: string;
 
-  @Prop()
+  @Prop({ type: String, default: undefined })
   readonly basicCategory: BasicCategoryType;
 
   @Prop({ default: 0 })

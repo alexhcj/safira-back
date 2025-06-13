@@ -2,23 +2,24 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Tag, TagDocument } from './schemes/tag.scheme';
 import { Model } from 'mongoose';
-import { CreateTagDto, UpdateTagDto } from './dto/tag.dto';
+import { CreateTagDto, UpdateTagDto } from './dto/tags.dto';
 
 @Injectable()
 export class TagsService {
   constructor(@InjectModel(Tag.name) private tagModel: Model<TagDocument>) {}
 
-  async create(data: CreateTagDto): Promise<Tag> {
+  async create(data: CreateTagDto): Promise<TagDocument> {
     const tag: CreateTagDto = {
       type: data.type,
       tags: {
-        dietaries: data.tags.dietaries,
-        common: data.tags.common,
-        promotions: data.tags.promotions,
+        ...(data.tags?.dietaries && { dietaries: data.tags.dietaries }),
+        ...(data.tags?.common && { common: data.tags.common }),
+        ...(data.tags?.promotions && { promotions: data.tags.promotions }),
       },
     };
 
-    return new this.tagModel(tag).save();
+    const newTag = new this.tagModel(tag);
+    return newTag.save();
   }
 
   async findAll(): Promise<Tag[]> {

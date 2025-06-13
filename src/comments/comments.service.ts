@@ -95,6 +95,7 @@ export class CommentsService {
 
   async update(
     postSlug: string,
+    userId: string,
     data: UpdateCommentDto,
     { nestedLvl }: ICommentUpdateQuery,
   ): Promise<CommentDocument> {
@@ -102,7 +103,7 @@ export class CommentsService {
 
     // generates path to replied comment replies.0.replies.2.replies...
     const commentPath =
-      nestedLvl === ''
+      +nestedLvl === 0
         ? 'comments'
         : 'comments' +
           nestedLvl
@@ -121,7 +122,7 @@ export class CommentsService {
 
     const comment: IComment = {
       user: {
-        _id: new Types.ObjectId(data.userId),
+        _id: new Types.ObjectId(userId),
         fullName: 'John Been',
       },
       text: data.text,

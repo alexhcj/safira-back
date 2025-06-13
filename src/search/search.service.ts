@@ -14,12 +14,13 @@ export class SearchService {
     private postsService: PostsService,
   ) {}
 
-  async searchGlobal({ search }): Promise<ISearchRO> {
+  async findAllMatches({ search }): Promise<ISearchRO> {
     const products = await this.productsService.findAll({ slug: search });
     const posts = await this.postsService.getAll({ search });
 
-    const transformedProducts: ISearchProduct[] = products.products.map(
-      ({ slug, name, subCategory, price }) => {
+    const transformedProducts: ISearchProduct[] = products.products
+      .sort((a, b) => b.popularity - a.popularity)
+      .map(({ slug, name, subCategory, price }) => {
         return {
           type: 'product',
           slug,
@@ -27,15 +28,30 @@ export class SearchService {
           price,
           subCategory,
         };
-      },
-    );
+      });
 
     const transformedPosts: ISearchPost[] = posts.posts.map(
-      ({ slug, title, createdAt }, index) => {
-        return index < 5 && { type: 'post', slug, title, createdAt };
+      ({ slug, title, createdAt }) => {
+        return { type: 'post', slug, title, createdAt };
       },
     );
 
-    return { search: [...transformedProducts, ...transformedPosts] };
+    const productsData =
+      transformedPosts.length >= 1
+        ? transformedProducts.slice(0, 4)
+        : transformedProducts.slice(0, 5);
+    const postsData =
+      productsData.length < 4
+        ? transformedPosts.slice(0, transformedPosts.length - 1)
+        : productsData.length === 4
+        ? transformedPosts.slice(0, 1)
+        : [];
+
+    const relatedProducts = transformedProducts.length - productsData.length;
+
+    return {
+      search: [...productsData, ...postsData],
+      relatedCount: relatedProducts,
+    };
   }
 }

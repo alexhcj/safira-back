@@ -8,6 +8,9 @@ export const validationSchema = Joi.object<IConfig>({
     apiUrl: Joi.string().required(),
     globalPrefix: Joi.string().required(),
   },
+  client: {
+    clientUrl: Joi.string().required(),
+  },
   jwt: {
     secret: Joi.string().required(),
     expiresIn: Joi.string().required(),
@@ -21,6 +24,17 @@ export const validationSchema = Joi.object<IConfig>({
   files: {
     uploads: {
       destination: Joi.string().required(),
+    },
+  },
+  emailer: {
+    brevoApiKey: Joi.string().required(),
+    brevoSenderName: Joi.string().required(),
+    brevoSenderEmail: Joi.string().required(),
+  },
+  redis: {
+    connection: {
+      host: Joi.string().required(),
+      port: Joi.number().required(),
     },
   },
 });

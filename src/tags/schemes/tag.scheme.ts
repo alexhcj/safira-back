@@ -2,9 +2,8 @@ import { Document } from 'mongoose';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { TagTypeEnum } from '../enum/tag-type.enum';
 import { DietaryTagsEnum } from '../enum/dietary-tags.enum';
-import { PostTagsEnum } from '../enum/post-tags.enum';
+import { CommonTagsEnum } from '../enum/common-tags.enum';
 import { PromotionTagsEnum } from '../enum/promotion-tags.enum';
-import { ProductTagsEnum } from '../enum/product-tags.enum';
 
 export type TagsDocument = Tags & Document;
 
@@ -13,8 +12,8 @@ export class Tags {
   @Prop({ type: () => [String], enum: DietaryTagsEnum, default: undefined })
   dietaries: DietaryTagsEnum[];
 
-  @Prop({ type: () => [String], enum: PostTagsEnum, default: undefined })
-  common: PostTagsEnum[] | ProductTagsEnum[];
+  @Prop({ type: () => [String], enum: CommonTagsEnum, default: undefined })
+  common: CommonTagsEnum[];
 
   @Prop({ type: () => [String], enum: PromotionTagsEnum, default: undefined })
   promotions: PromotionTagsEnum[];

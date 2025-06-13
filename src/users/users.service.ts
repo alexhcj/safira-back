@@ -3,7 +3,12 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 import { User, UserDocument } from './schemes/user.scheme';
-import { UserDto, UserHashedDto } from './dto/user.dto';
+import {
+  FindProfileRO,
+  UpdateUserDto,
+  UserDto,
+  UserHashedDto,
+} from './dto/user.dto';
 import { ProfilesService } from '../profiles/profiles.service';
 
 @Injectable()
@@ -47,5 +52,44 @@ export class UsersService {
 
   async findById(id: string): Promise<UserDocument> {
     return await this.userModel.findById(id).exec();
+  }
+
+  public async findProfile(userId: string): Promise<FindProfileRO> {
+    const user = await this.findById(userId);
+    const profile = await this.profileService.findByUserId(userId);
+
+    return {
+      email: user.email,
+      firstName: profile.firstName,
+      lastName: profile.lastName,
+      location: profile.location,
+      dateOfBirth: profile.dateOfBirth,
+      avatarId: profile.avatarId && profile.avatarId.id,
+    };
+  }
+
+  public async findByIdWithProfile(id: string): Promise<any> {
+    const user = await this.findById(id);
+    const profile = await this.profileService.findByUserId(id);
+    return {
+      user,
+      profile,
+    };
+  }
+
+  public async findByEmailWithProfile(email: string): Promise<any> {
+    const user = await this.findByEmail(email);
+    const profile = await this.profileService.findByUserId(user.id);
+    return {
+      user,
+      profile,
+    };
+  }
+
+  public async findByIdAndUpdate(
+    id: string,
+    data: UpdateUserDto,
+  ): Promise<UserDocument> {
+    return this.userModel.findByIdAndUpdate(id, data).setOptions({ new: true });
   }
 }

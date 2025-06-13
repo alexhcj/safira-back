@@ -3,6 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { MongooseModule } from '@nestjs/mongoose';
+import { BullModule } from '@nestjs/bullmq';
 import { ProductsModule } from './products/products.module';
 import { ReviewsModule } from './reviews/reviews.module';
 import { AuthModule } from './auth/auth.module';
@@ -17,6 +18,7 @@ import { validationSchema } from './config/validation';
 import { SearchModule } from './search/search.module';
 import { ProfilesModule } from './profiles/profiles.module';
 import { FilesModule } from './files/files.module';
+import { EmailerModule } from './emailer/emailer.module';
 import configuration from './config/configuration';
 
 @Module({
@@ -35,6 +37,16 @@ import configuration from './config/configuration';
       }),
       inject: [ConfigService],
     }),
+    BullModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => ({
+        connection: {
+          host: configService.get<string>('redis.connection.host'),
+          port: configService.get<number>('redis.connection.port'),
+        },
+      }),
+      inject: [ConfigService],
+    }),
     ProductsModule,
     ReviewsModule,
     PostsModule,
@@ -48,6 +60,7 @@ import configuration from './config/configuration';
     SearchModule,
     ProfilesModule,
     FilesModule,
+    EmailerModule,
   ],
   controllers: [AppController],
   providers: [AppService],

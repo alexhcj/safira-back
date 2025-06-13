@@ -16,6 +16,7 @@ async function bootstrap() {
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,
+      whitelist: true,
     }),
   );
   app.setGlobalPrefix(globalPrefix);
@@ -24,7 +25,7 @@ async function bootstrap() {
     prefix: '/public',
   });
 
-  app.enableCors();
+  app.enableCors({ origin: true });
 
   await app.listen(port || 9090, () =>
     console.log(

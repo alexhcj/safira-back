@@ -7,6 +7,9 @@ export default (): IConfig => ({
     apiUrl: process.env.API_URL,
     globalPrefix: process.env.GLOBAL_PREFIX,
   },
+  client: {
+    clientUrl: process.env.CLIENT_URL,
+  },
   jwt: {
     secret: process.env.JWT_SECRET,
     expiresIn: process.env.JWT_EXPIRES_IN,
@@ -20,6 +23,31 @@ export default (): IConfig => ({
   files: {
     uploads: {
       destination: process.env.UPLOADED_FILES_DESTINATION,
+    },
+  },
+  emailer: {
+    brevoApiKey: process.env.BREVO_API_KEY,
+    senderName: process.env.BREVO_SENDER_NAME,
+    senderEmail: process.env.BREVO_SENDER_EMAIL,
+    timings: {
+      subscribedOnboard: parseInt(
+        process.env.EMAIL_SUBSCRIBED_ONBOARD || '15000',
+        10,
+      ),
+      subscribedAuthor: parseInt(
+        process.env.EMAIL_SUBSCRIBED_AUTHOR || '30000',
+        10,
+      ),
+      mostPopularProducts: parseInt(
+        process.env.EMAIL_MOST_POPULAR_PRODUCTS || '45000',
+        10,
+      ),
+    },
+  },
+  redis: {
+    connection: {
+      host: process.env.REDIS_HOST || 'redis',
+      port: parseInt(process.env.REDIS_PORT) || 6379,
     },
   },
 });

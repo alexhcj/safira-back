@@ -7,49 +7,76 @@ import {
   IProduct,
   IProductFilter,
   IProductQuery,
+  IProductRelatedQuery,
   IProductRO,
   IProductsBySlugRO,
   IProductsRO,
 } from './interfaces/product.interface';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { PricesService } from '../prices/prices.service';
-
-const slug = require('slug');
+import { TagsService } from '../tags/tags.service';
+import { TagTypeEnum } from '../tags/enum/tag-type.enum';
+import { slugify, toSlug } from '../common/utils';
 
 @Injectable()
 export class ProductsService {
   constructor(
     @InjectModel(Product.name) private productModel: Model<ProductDocument>,
     private readonly pricesService: PricesService,
+    private readonly tagsService: TagsService,
   ) {}
 
   async create(data: CreateProductDto): Promise<ProductDocument> {
-    const { _id } = await this.pricesService.create(data.price);
+    const priceDocument = await this.pricesService.create(data.price);
 
-    if (!_id)
+    if (!priceDocument._id)
       throw new HttpException(
         'Price was not created',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
 
+    const tagsDocument =
+      data.tags &&
+      (await this.tagsService.create({
+        type: TagTypeEnum.PRODUCT,
+        tags: data.tags,
+      }));
+
+    if (data.tags && !tagsDocument)
+      throw new HttpException(
+        'Tag was not created',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+
     const newProduct: IProduct = {
       name: data.name,
-      slug: this.slugify(data.name),
-      price: _id,
+      slug: slugify(data.name),
+      price: priceDocument._id,
       description: data.description,
-      primeCategory: data.primeCategory,
-      subCategory: data.subCategory,
-      basicCategory: data.basicCategory,
+      primeCategory: data.primeCategory
+        ? toSlug(data.primeCategory)
+        : undefined,
+      subCategory: data.subCategory ? toSlug(data.subCategory) : undefined,
+      basicCategory: data.basicCategory
+        ? toSlug(data.basicCategory)
+        : undefined,
       popularity: data.popularity,
       views: data.views,
-      tags: data.tags.map((tag) => new Types.ObjectId(tag)),
+      tags: (data.tags && tagsDocument._id) || undefined,
       specifications: {
-        company: data.specifications.company,
-        shelfLife: new Date(data.specifications.shelfLife),
+        company: {
+          displayName: data.specifications.company,
+          slug: slugify(data.specifications.company),
+          normalizedName: this.normalizeCompanyName(
+            data.specifications.company,
+          ),
+        },
+        shelfLife: data.specifications.shelfLife,
         quantity: data.specifications.quantity,
         producingCountry: data.specifications.producingCountry,
       },
     };
+
     const createdProduct = new this.productModel(newProduct);
     return createdProduct.save();
   }
@@ -84,24 +111,37 @@ export class ProductsService {
       brand,
       dietary,
     }: IProductQuery = query;
-    // TODO: check sort key of SortEnum type?
-    // TODO: check CategoryEnum item?
+
+    const brandFilter = brand
+      ? {
+          $or: [
+            // Match by slug (most efficient)
+            {
+              'specifications.company.slug': {
+                $in: brand.split('+'),
+              },
+            },
+            // Fallback to normalized name search if needed
+            {
+              'specifications.company.normalizedName': {
+                $regex: brand
+                  .split('+')
+                  .map((b) => this.normalizeCompanyName(b.replace(/-/g, ' ')))
+                  .join('|'),
+              },
+            },
+          ],
+        }
+      : {};
+
     const [{ products, total, highestPrice, lowestPrice }] =
       await this.productModel.aggregate([
         {
           $match: {
-            // TODO: refactor to common methods (find, sort...). hearts performance
-            primeCategory: primeCategory || /.*/, // TODO: refactor to combined query with types
+            primeCategory: primeCategory || /.*/,
             subCategory: subCategory || /.*/,
             basicCategory: basicCategory || /.*/,
-            'specifications.company': brand
-              ? {
-                  $regex: brand
-                    .split('+')
-                    .map((b) => b.replace(/-/g, ' '))
-                    .join('|'),
-                }
-              : /.*/,
+            ...brandFilter,
             slug: { $regex: `${slug ? slug : ''}`, $options: 'i' },
           },
         },
@@ -128,7 +168,7 @@ export class ProductsService {
         {
           $match: {
             sortPrice: {
-              $gte: minPrice ? +minPrice : 0, // TODO: replace 0 & 500 to dynamic value. It shoudl be highest and lowest product price. Values should appear on front even if no value received from start query
+              $gte: minPrice ? +minPrice : 0,
               $lte: maxPrice ? +maxPrice : 500,
             },
           },
@@ -151,7 +191,6 @@ export class ProductsService {
         {
           $match: {
             'tags.dietaries': {
-              // TODO: fix error when not existed tag in db. should return empty array
               $in: dietary ? dietary.split('+') : [null, /.*/],
             },
           },
@@ -209,6 +248,62 @@ export class ProductsService {
     };
   }
 
+  async findRelated(query: IProductRelatedQuery): Promise<ProductDocument[]> {
+    const { limit = 10, slug } = query;
+    const product = await this.findBySlug(slug);
+
+    if (!product)
+      throw new HttpException('Product not found', HttpStatus.NOT_FOUND);
+
+    const { name, description, basicCategory, subCategory } = product.product;
+
+    const searchTerms = `${name} ${description} ${basicCategory} ${subCategory}`;
+
+    return this.productModel
+      .aggregate([
+        {
+          $search: {
+            index: 'text',
+            text: {
+              query: searchTerms,
+              path: ['name', 'description', 'basicCategory', 'subCategory'],
+            },
+          },
+        },
+        {
+          $lookup: {
+            from: 'prices',
+            localField: 'price',
+            foreignField: '_id',
+            as: 'price',
+          },
+        },
+        { $unwind: '$price' },
+        {
+          $lookup: {
+            from: 'tags',
+            localField: 'tags',
+            foreignField: '_id',
+            as: 'tags',
+          },
+        },
+        {
+          $addFields: {
+            tags: {
+              $arrayElemAt: ['$tags.tags', 0],
+            },
+          },
+        },
+        { $match: { name: { $ne: name } } },
+        { $limit: +limit },
+      ])
+      .exec();
+  }
+
+  public async findTopTenPopular(): Promise<ProductDocument[]> {
+    return this.productModel.find().sort({ views: -1 }).limit(10).lean().exec();
+  }
+
   async findRandom({ size = 1 }): Promise<Aggregate<ProductDocument[]>> {
     return this.productModel.aggregate([{ $sample: { size } }]);
   }
@@ -223,20 +318,22 @@ export class ProductsService {
       basicCategory,
       brand,
     }: IProductQuery = query;
+
+    const brandFilter = brand
+      ? {
+          'specifications.company.slug': {
+            $in: brand.split('+'),
+          },
+        }
+      : {};
+
     const brands = await this.productModel.aggregate([
       {
         $match: {
           primeCategory: primeCategory || /.*/,
           subCategory: subCategory || /.*/,
           basicCategory: basicCategory || /.*/,
-          'specifications.company': brand
-            ? {
-                $regex: brand
-                  .split('+')
-                  .map((b) => b.replace(/-/g, ' '))
-                  .join('|'),
-              }
-            : /.*/,
+          ...brandFilter,
           slug: { $regex: `${slug ? slug : ''}`, $options: 'i' },
         },
       },
@@ -263,7 +360,7 @@ export class ProductsService {
       {
         $match: {
           sortPrice: {
-            $gte: minPrice ? +minPrice : 0, // TODO: replace 0 & 500 to dynamic value. It shoudl be highest and lowest product price. Values should appear on front even if no value received from start query
+            $gte: minPrice ? +minPrice : 0,
             $lte: maxPrice ? +maxPrice : 500,
           },
         },
@@ -271,14 +368,15 @@ export class ProductsService {
       {
         $group: {
           _id: '$specifications.company',
-          brand: { $addToSet: '$specifications.company' },
+          brand: { $first: '$specifications.company' },
           popularity: {
             $sum: '$popularity',
           },
           quantity: { $sum: 1 },
+          firstProductName: { $first: '$name' }, // Product name as a secondary sort key
         },
       },
-      { $unwind: '$brand' },
+      { $sort: { popularity: -1, 'brand.displayName': 1 } }, // alphabetical sort as a tie-breaker
     ]);
 
     return {
@@ -296,20 +394,22 @@ export class ProductsService {
       basicCategory,
       brand,
     }: IProductQuery = query;
+
+    const brandFilter = brand
+      ? {
+          'specifications.company.slug': {
+            $in: brand.split('+'),
+          },
+        }
+      : {};
+
     const res = await this.productModel.aggregate([
       {
         $match: {
-          primeCategory: primeCategory || /.*/, // TODO: refactor
+          primeCategory: primeCategory || /.*/,
           subCategory: subCategory || /.*/,
           basicCategory: basicCategory || /.*/,
-          'specifications.company': brand
-            ? {
-                $regex: brand
-                  .split('+')
-                  .map((b) => b.replace(/-/g, ' '))
-                  .join('|'),
-              }
-            : /.*/,
+          ...brandFilter,
           slug: { $regex: `${slug ? slug : ''}`, $options: 'i' },
         },
       },
@@ -336,7 +436,7 @@ export class ProductsService {
       {
         $match: {
           sortPrice: {
-            $gte: minPrice ? +minPrice : 0, // TODO: replace 0 & 500 to dynamic value. It shoudl be highest and lowest product price. Values should appear on front even if no value received from start query
+            $gte: minPrice ? +minPrice : 0,
             $lte: maxPrice ? +maxPrice : 500,
           },
         },
@@ -401,6 +501,42 @@ export class ProductsService {
     return { product };
   }
 
+  // IBrandsRO[]
+  async findAllBrands(): Promise<any> {
+    return this.productModel.aggregate([
+      {
+        $group: {
+          _id: {
+            firstLetter: {
+              $substr: ['$specifications.company.displayName', 0, 1],
+            },
+          },
+          brands: {
+            $addToSet: {
+              slug: '$specifications.company.slug',
+              displayName: '$specifications.company.displayName',
+            },
+          },
+        },
+      },
+      {
+        $sort: { '_id.firstLetter': 1 },
+      },
+      {
+        $project: {
+          name: { $toUpper: '$_id.firstLetter' },
+          _id: 0,
+          brands: {
+            $sortArray: {
+              input: '$brands',
+              sortBy: 1,
+            },
+          },
+        },
+      },
+    ]);
+  }
+
   async update(id: string, data: UpdateProductDto): Promise<Product> {
     const product = await this.findById(new Types.ObjectId(id));
 
@@ -423,12 +559,25 @@ export class ProductsService {
       tags: data.tags,
       reviews: data.reviews,
       specifications: {
-        company: data.specifications
-          ? data.specifications.company
+        company: data.specifications?.company
+          ? {
+              displayName:
+                data.specifications.company.displayName ||
+                product.specifications.company.displayName,
+              slug:
+                data.specifications.company.slug ||
+                slugify(data.specifications.company.displayName),
+              normalizedName:
+                data.specifications.company.normalizedName ||
+                this.normalizeCompanyName(
+                  data.specifications.company.displayName,
+                ),
+            }
           : product.specifications.company,
         producingCountry: data.specifications
           ? data.specifications.producingCountry
-          : product.specifications.company,
+          : product.specifications.producingCountry ??
+            data.specifications.company.displayName,
         quantity: data.specifications
           ? data.specifications.quantity
           : product.specifications.quantity,
@@ -456,12 +605,12 @@ export class ProductsService {
     return this.productModel.findByIdAndDelete(id).exec();
   }
 
-  slugify(title: string) {
-    return (
-      slug(title, { lower: true }) +
-      '-' +
-      ((Math.random() * Math.pow(36, 6)) | 0).toString(36)
-    );
+  private normalizeCompanyName(name: string): string {
+    return name
+      .toLowerCase()
+      .replace(/[^\w\s]/g, '') // Remove punctuation
+      .replace(/\s+/g, ' ') // Normalize whitespace
+      .trim();
   }
 
   private async findById(id: Types.ObjectId): Promise<ProductDocument> {

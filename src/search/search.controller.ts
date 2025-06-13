@@ -8,8 +8,8 @@ export class SearchController {
   constructor(private readonly searchService: SearchService) {}
 
   @Get()
-  searchGlobal(@Query() query): Promise<any> {
-    this.logger.log('Handling searchGlobal() request...');
-    return this.searchService.searchGlobal(query);
+  findAllMatches(@Query() query): Promise<any> {
+    this.logger.log('Handling findAllMatches() request...');
+    return this.searchService.findAllMatches(query);
   }
 }
