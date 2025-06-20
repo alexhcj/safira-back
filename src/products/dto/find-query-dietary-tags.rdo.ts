@@ -1,8 +1,7 @@
-import { IsArray, IsNotEmpty, IsString } from 'class-validator';
+import { IsArray, IsString } from 'class-validator';
 
 export class FindQueryDietaryTagsRdo {
-  @IsNotEmpty()
-  @IsArray({ each: true })
-  @IsString()
+  @IsArray()
+  @IsString({ each: true })
   tags: string[];
 }
