@@ -190,11 +190,13 @@ export class ProductsService {
           },
         },
         {
-          $match: {
-            'tags.dietaries': {
-              $in: dietary ? dietary.split('+') : [null, /.*/],
-            },
-          },
+          $match: dietary
+            ? {
+                'tags.dietaries': {
+                  $in: dietary.split('+'),
+                },
+              }
+            : {},
         },
         { $sort: { [`${sort}`]: order === 'desc' ? 1 : -1 } },
         {
@@ -406,6 +408,7 @@ export class ProductsService {
       subCategory,
       basicCategory,
       brand,
+      dietary,
     }: IProductQuery = query;
 
     const brandFilter = brand
@@ -455,6 +458,30 @@ export class ProductsService {
         },
       },
       {
+        $lookup: {
+          from: 'tags',
+          localField: 'tags',
+          foreignField: '_id',
+          as: 'tags',
+        },
+      },
+      {
+        $addFields: {
+          tags: {
+            $arrayElemAt: ['$tags.tags', 0],
+          },
+        },
+      },
+      {
+        $match: dietary
+          ? {
+              'tags.dietaries': {
+                $in: dietary.split('+'),
+              },
+            }
+          : {},
+      },
+      {
         $group: {
           _id: '$specifications.company',
           brand: { $first: '$specifications.company' },
@@ -482,6 +509,7 @@ export class ProductsService {
       subCategory,
       basicCategory,
       brand,
+      dietary,
     }: IProductQuery = query;
 
     const brandFilter = brand
@@ -529,6 +557,30 @@ export class ProductsService {
             $lte: maxPrice ? +maxPrice : 500,
           },
         },
+      },
+      {
+        $lookup: {
+          from: 'tags',
+          localField: 'tags',
+          foreignField: '_id',
+          as: 'tags',
+        },
+      },
+      {
+        $addFields: {
+          tags: {
+            $arrayElemAt: ['$tags.tags', 0],
+          },
+        },
+      },
+      {
+        $match: dietary
+          ? {
+              'tags.dietaries': {
+                $in: dietary.split('+'),
+              },
+            }
+          : {},
       },
       {
         $group: {
