@@ -29,6 +29,12 @@ export class TagsController {
     return this.tagsService.findAll();
   }
 
+  @Get('/unique-dietary-tags')
+  findUniqueDietaryTags() {
+    this.logger.log('Handling findUniqueDietaryTags() request...');
+    return this.tagsService.findUniqueDietaryTags();
+  }
+
   @Put(':id')
   update(@Param('id') id: string, @Body() data: UpdateTagDto) {
     this.logger.log('Handling update() request with id=' + id + '...');
