@@ -63,6 +63,12 @@ export class ProductsController {
     return this.productsService.getQueryBrands(query);
   }
 
+  @Get('list-tags')
+  findQueryDietaryTags(@Query() query): Promise<any> {
+    this.logger.log('Handling findQueryDietaryTags() request...');
+    return this.productsService.findQueryDietaryTags(query);
+  }
+
   @Get('price-range')
   getQueryPriceRange(@Query() query): Promise<any> {
     this.logger.log('Handling getQueryPriceRange() request...');
