@@ -22,8 +22,10 @@ export function slugify(title: string, addRandom = false): string {
   const base = title
     .toLowerCase()
     .trim()
+    .replace(/'/g, '-') // replace single quotes with hyphens
     .replace(/\s+/g, '-') // spaces to hyphens
-    .replace(/[^a-z0-9-]/g, ''); // remove non-url characters
+    .replace(/[^\w-]/g, '') // remove non-url characters but retain hyphens
+    .replace(/-+/g, '-'); // replace multiple consecutive hyphens with a single one
 
   const suffix = addRandom ? '-' + Math.random().toString(36).slice(2, 8) : '';
 
