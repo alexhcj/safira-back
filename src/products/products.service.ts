@@ -17,6 +17,7 @@ import { PricesService } from '../prices/prices.service';
 import { TagsService } from '../tags/tags.service';
 import { TagTypeEnum } from '../tags/enum/tag-type.enum';
 import { slugify, toSlug } from '../common/utils';
+import { FindQueryDietaryTagsRdo } from './dto/find-query-dietary-tags.rdo';
 
 @Injectable()
 export class ProductsService {
@@ -189,11 +190,13 @@ export class ProductsService {
           },
         },
         {
-          $match: {
-            'tags.dietaries': {
-              $in: dietary ? dietary.split('+') : [null, /.*/],
-            },
-          },
+          $match: dietary
+            ? {
+                'tags.dietaries': {
+                  $in: dietary.split('+'),
+                },
+              }
+            : {},
         },
         { $sort: { [`${sort}`]: order === 'desc' ? 1 : -1 } },
         {
@@ -308,6 +311,94 @@ export class ProductsService {
     return this.productModel.aggregate([{ $sample: { size } }]);
   }
 
+  async findQueryDietaryTags(query): Promise<FindQueryDietaryTagsRdo> {
+    const {
+      slug,
+      minPrice = '0',
+      maxPrice,
+      primeCategory,
+      subCategory,
+      basicCategory,
+      brand,
+    }: IProductQuery = query;
+
+    const brandFilter = brand
+      ? {
+          'specifications.company.slug': {
+            $in: brand.split('+'),
+          },
+        }
+      : {};
+
+    const tags = await this.productModel.aggregate([
+      {
+        $match: {
+          primeCategory: primeCategory || /.*/,
+          subCategory: subCategory || /.*/,
+          basicCategory: basicCategory || /.*/,
+          ...brandFilter,
+          slug: { $regex: slug || '', $options: 'i' },
+        },
+      },
+      {
+        $lookup: {
+          from: 'prices',
+          localField: 'price',
+          foreignField: '_id',
+          as: 'price',
+        },
+      },
+      { $unwind: '$price' },
+      {
+        $addFields: {
+          sortPrice: {
+            $cond: {
+              if: '$price.discount_price',
+              then: '$price.discount_price',
+              else: '$price.price',
+            },
+          },
+        },
+      },
+      {
+        $match: {
+          sortPrice: {
+            $gte: +minPrice,
+            $lte: maxPrice ? +maxPrice : 500,
+          },
+        },
+      },
+      {
+        $lookup: {
+          from: 'tags',
+          localField: 'tags',
+          foreignField: '_id',
+          as: 'tags',
+        },
+      },
+      {
+        $unwind: '$tags',
+      },
+      {
+        $unwind: '$tags.tags.dietaries',
+      },
+      {
+        $group: {
+          _id: null,
+          uniqueDietaries: { $addToSet: '$tags.tags.dietaries' },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          uniqueDietaries: 1,
+        },
+      },
+    ]);
+
+    return tags[0]?.uniqueDietaries || [];
+  }
+
   async getQueryBrands(query): Promise<any> {
     const {
       slug,
@@ -317,6 +408,7 @@ export class ProductsService {
       subCategory,
       basicCategory,
       brand,
+      dietary,
     }: IProductQuery = query;
 
     const brandFilter = brand
@@ -366,6 +458,30 @@ export class ProductsService {
         },
       },
       {
+        $lookup: {
+          from: 'tags',
+          localField: 'tags',
+          foreignField: '_id',
+          as: 'tags',
+        },
+      },
+      {
+        $addFields: {
+          tags: {
+            $arrayElemAt: ['$tags.tags', 0],
+          },
+        },
+      },
+      {
+        $match: dietary
+          ? {
+              'tags.dietaries': {
+                $in: dietary.split('+'),
+              },
+            }
+          : {},
+      },
+      {
         $group: {
           _id: '$specifications.company',
           brand: { $first: '$specifications.company' },
@@ -393,6 +509,7 @@ export class ProductsService {
       subCategory,
       basicCategory,
       brand,
+      dietary,
     }: IProductQuery = query;
 
     const brandFilter = brand
@@ -440,6 +557,30 @@ export class ProductsService {
             $lte: maxPrice ? +maxPrice : 500,
           },
         },
+      },
+      {
+        $lookup: {
+          from: 'tags',
+          localField: 'tags',
+          foreignField: '_id',
+          as: 'tags',
+        },
+      },
+      {
+        $addFields: {
+          tags: {
+            $arrayElemAt: ['$tags.tags', 0],
+          },
+        },
+      },
+      {
+        $match: dietary
+          ? {
+              'tags.dietaries': {
+                $in: dietary.split('+'),
+              },
+            }
+          : {},
       },
       {
         $group: {

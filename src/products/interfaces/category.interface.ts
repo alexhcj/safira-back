@@ -7,6 +7,7 @@ import {
   BasicDrinksSubCategoryEnum,
   BasicFishAndSeaFoodSubCategoryEnum,
   BasicFrozenFoodSubCategoryEnum,
+  BasicFrozenSeafoodSubCategoryEnum,
   BasicFruitsSubCategoryEnum,
   BasicOilSubCategoryEnum,
   BasicVegetablesSubCategoryEnum,
@@ -24,7 +25,8 @@ export type BasicCategoryType =
   | BasicFishAndSeaFoodSubCategoryEnum
   | BasicDriedFoodSubCategoryEnum
   | BasicOilSubCategoryEnum
-  | BasicFrozenFoodSubCategoryEnum;
+  | BasicFrozenFoodSubCategoryEnum
+  | BasicFrozenSeafoodSubCategoryEnum;
 
 export const AllBasicCategoryValues: string[] = [
   ...Object.values(BasicBeerWineSpiritsSubCategoryEnum),
@@ -38,6 +40,7 @@ export const AllBasicCategoryValues: string[] = [
   ...Object.values(BasicDriedFoodSubCategoryEnum),
   ...Object.values(BasicOilSubCategoryEnum),
   ...Object.values(BasicFrozenFoodSubCategoryEnum),
+  ...Object.values(BasicFrozenSeafoodSubCategoryEnum),
 ];
 
 export const SlugToBasicCategoryMap: Record<string, string> = {};

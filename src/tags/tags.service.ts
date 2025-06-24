@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Tag, TagDocument } from './schemes/tag.scheme';
 import { Model } from 'mongoose';
 import { CreateTagDto, UpdateTagDto } from './dto/tags.dto';
+import { FindUniqueDietaryTagsRdo } from './dto/find-unique-dietary-tags.rdo';
 
 @Injectable()
 export class TagsService {
@@ -24,6 +25,27 @@ export class TagsService {
 
   async findAll(): Promise<Tag[]> {
     return this.tagModel.find().exec();
+  }
+
+  async findUniqueDietaryTags(): Promise<FindUniqueDietaryTagsRdo> {
+    const tags = await this.tagModel.aggregate([
+      {
+        $match: {
+          'tags.dietaries': { $exists: true, $ne: [] },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          dietaries: '$tags.dietaries',
+        },
+      },
+      { $unwind: '$dietaries' },
+      { $group: { _id: null, uniqueDietaries: { $addToSet: '$dietaries' } } },
+      { $project: { _id: 0, uniqueDietaries: 1 } },
+    ]);
+
+    return tags[0]?.uniqueDietaries || [];
   }
 
   async update(id: string, data: UpdateTagDto): Promise<Tag> {
