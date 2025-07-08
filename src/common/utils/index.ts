@@ -22,7 +22,7 @@ export function slugify(title: string, addRandom = false): string {
   const base = title
     .toLowerCase()
     .trim()
-    .replace(/'/g, '-') // replace single quotes with hyphens
+    .replace(/'/g, '') // replace single quotes with hyphens
     .replace(/\s+/g, '-') // spaces to hyphens
     .replace(/[^\w-]/g, '') // remove non-url characters but retain hyphens
     .replace(/-+/g, '-'); // replace multiple consecutive hyphens with a single one
