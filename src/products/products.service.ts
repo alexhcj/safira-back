@@ -18,6 +18,8 @@ import { TagsService } from '../tags/tags.service';
 import { TagTypeEnum } from '../tags/enum/tag-type.enum';
 import { slugify, toSlug } from '../common/utils';
 import { FindQueryDietaryTagsRdo } from './dto/find-query-dietary-tags.rdo';
+import { AllBasicCategoryValues } from './interfaces/category.interface';
+import { AllBasicCategoriesRO } from './dto/all-basic-categories.ro';
 
 @Injectable()
 export class ProductsService {
@@ -301,10 +303,6 @@ export class ProductsService {
         { $limit: +limit },
       ])
       .exec();
-  }
-
-  public async findTopTenPopular(): Promise<ProductDocument[]> {
-    return this.productModel.find().sort({ views: -1 }).limit(10).lean().exec();
   }
 
   async findRandom({ size = 1 }): Promise<Aggregate<ProductDocument[]>> {
@@ -672,6 +670,80 @@ export class ProductsService {
               input: '$brands',
               sortBy: 1,
             },
+          },
+        },
+      },
+    ]);
+  }
+
+  async findAllBasicCategories(): Promise<AllBasicCategoriesRO> {
+    const categorySlugs = AllBasicCategoryValues.map((category) =>
+      toSlug(category),
+    );
+
+    return {
+      categories: categorySlugs,
+    };
+  }
+
+  public async findTopPopular(query?: any): Promise<ProductDocument[]> {
+    const { limit = 10 } = query;
+    return this.productModel
+      .find()
+      .sort({ views: -1 })
+      .limit(limit)
+      .lean()
+      .exec();
+  }
+
+  async findTopByPrimeCategories(): Promise<any> {
+    return this.productModel.aggregate([
+      {
+        $lookup: {
+          from: 'prices',
+          localField: 'price',
+          foreignField: '_id',
+          as: 'price',
+        },
+      },
+      { $unwind: '$price' },
+      {
+        $lookup: {
+          from: 'tags',
+          localField: 'tags',
+          foreignField: '_id',
+          as: 'tags',
+        },
+      },
+      {
+        $addFields: {
+          tags: {
+            $arrayElemAt: ['$tags.tags', 0],
+          },
+        },
+      },
+      {
+        $group: {
+          _id: '$primeCategory',
+          products: {
+            $push: '$$ROOT',
+          },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          category: '$_id',
+          products: {
+            $slice: [
+              {
+                $sortArray: {
+                  input: '$products',
+                  sortBy: { popularity: -1 },
+                },
+              },
+              5,
+            ],
           },
         },
       },

@@ -440,7 +440,7 @@ export class EmailerService implements IEmailer {
   public async sendMostPopularProducts({
     email,
   }): Promise<SendWeeklyProductsRO> {
-    const products = await this._productsService.findTopTenPopular();
+    const products = await this._productsService.findTopPopular();
     const clientBaseUrl = `${this.configService.get<string>(
       'client.clientUrl',
     )}`;
