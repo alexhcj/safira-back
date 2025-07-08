@@ -14,7 +14,6 @@ import { UsersService } from '../users/users.service';
 import {
   SendSubscribedAuthorRO,
   SendSubscribedOnboardRO,
-  SendSubscribedSuccessRO,
   SendSubscribedSuccessDto,
   SendWeeklyProductsRO,
   SubscribeUserDto,
