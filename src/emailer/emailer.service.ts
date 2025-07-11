@@ -12,6 +12,7 @@ import { Queue } from 'bullmq';
 import { QueueEnum } from './enums/queu.enum';
 import { UsersService } from '../users/users.service';
 import {
+  CreateSubscriptionDto,
   SendSubscribedAuthorRO,
   SendSubscribedOnboardRO,
   SendSubscribedSuccessDto,
@@ -46,6 +47,28 @@ export class EmailerService implements IEmailer {
     private readonly userService: UsersService,
     private readonly _productsService: ProductsService,
   ) {}
+
+  // return existed subscription || create a new document with default values (unsubscribed)
+  public async findSubscription(userId: string): Promise<SubscriptionDocument> {
+    const existedSubscription = await this._subscriptionModel.findOne({
+      userId,
+    });
+
+    if (!existedSubscription) {
+      const user = await this.userService.findById(userId);
+
+      const subscriptionDto: CreateSubscriptionDto = {
+        userId: userId,
+        email: user.email,
+      };
+
+      if (user) {
+        return await this._create(subscriptionDto);
+      }
+    }
+
+    return existedSubscription;
+  }
 
   // TRANSACTIONAL
   // sends verify code for one of template types: signup | change-email | change-passowrd
@@ -211,25 +234,44 @@ export class EmailerService implements IEmailer {
   }
 
   // SUBSCRIPTIONS
-  public async subscribeUser(data: SubscribeUserDto): Promise<SubscribeUserRO> {
-    const email = await this._findSubscriptionByEmail(data.email);
+  public async subscribeUser(
+    userId: string,
+    data: SubscribeUserDto,
+  ): Promise<SubscribeUserRO> {
+    const existedUser = await this.userService.findById(userId);
 
-    if (email)
-      throw new HttpException(
-        'Email already subscribed.',
-        HttpStatus.BAD_REQUEST,
-      );
+    if (!existedUser)
+      throw new HttpException('User not found.', HttpStatus.NOT_FOUND);
 
-    const user = await this.userService.findByEmailWithProfile(data.email);
+    let subscription = await this._findSubscriptionByEmail(data.email);
 
-    const subscriptionData = {
-      email: data.email,
-      userId: user.user._id,
-    };
+    if (subscription) {
+      const updateData = {
+        devNews: true,
+        blogNews: true,
+        marketingNews: true,
+      };
 
-    const entity = await new this._subscriptionModel(subscriptionData).save();
+      await this.updateSubscription(data.email, updateData);
+    }
 
-    if (entity) {
+    if (!subscription) {
+      const subscriptionDto: CreateSubscriptionDto = {
+        userId: userId,
+        email: data.email,
+        devNews: true,
+        blogNews: true,
+        marketingNews: true,
+      };
+
+      subscription = await this._create(subscriptionDto);
+    }
+
+    const user = await this.userService.findByEmailWithProfile(
+      existedUser.email,
+    );
+
+    if (subscription) {
       const profileLink = `${this.configService.get<string>(
         'client.clientUrl',
       )}/profile`;
@@ -237,7 +279,7 @@ export class EmailerService implements IEmailer {
       const subscribedSuccessData = {
         name: user.profile.firstName ?? 'Customer',
         profileLink,
-        email: entity.email,
+        email: subscription.email,
       };
 
       await this._emailerQueue.add(
@@ -246,7 +288,7 @@ export class EmailerService implements IEmailer {
       );
       await this._emailerQueue.add(
         JobEnum.SUBSCRIBE_ONBOARD,
-        { email: entity.email },
+        { email: subscription.email },
         {
           delay: this.configService.get<number>(
             'emailer.timings.subscribedOnboard',
@@ -255,7 +297,7 @@ export class EmailerService implements IEmailer {
       );
       await this._emailerQueue.add(
         JobEnum.SUBSCRIBE_AUTHOR,
-        { email: entity.email },
+        { email: subscription.email },
         {
           delay: this.configService.get<number>(
             'emailer.timings.subscribedAuthor',
@@ -264,7 +306,7 @@ export class EmailerService implements IEmailer {
       );
       // await this._emailerQueue.add(
       //   JobEnum.MOST_POPULAR_PRODUCTS,
-      //   { email: entity.email },
+      //   { email: subscription.email },
       //   {
       //     delay: this.configService.get<number>(
       //       'emailer.timings.mostPopularProducts',
@@ -273,11 +315,13 @@ export class EmailerService implements IEmailer {
       // );
 
       return {
-        message: HttpStatus.CREATED,
+        message: 'Subscription created successfully.',
+        statusCode: HttpStatus.CREATED,
       };
     } else {
       return {
-        message: HttpStatus.CONFLICT,
+        message: 'Subscription not created.',
+        statusCode: HttpStatus.CONFLICT,
       };
     }
   }
@@ -306,6 +350,7 @@ export class EmailerService implements IEmailer {
     }
   }
 
+  // TODO: replace to basic methods + mb refactor. Don't delete db entity, just update fields
   public async unsubscribeUser(
     userId: string,
     data: UnsubscribeUserDto,
@@ -534,6 +579,16 @@ export class EmailerService implements IEmailer {
   }
 
   // BASIC METHODS
+  private async _create(
+    data: CreateSubscriptionDto,
+  ): Promise<SubscriptionDocument> {
+    const subscriptionDto: CreateSubscriptionDto = {
+      userId: data.userId,
+      email: data.email,
+    };
+
+    return await new this._subscriptionModel(subscriptionDto).save();
+  }
   private async _findSubscriptionByEmail(
     email: string,
   ): Promise<SubscriptionDocument> {

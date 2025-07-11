@@ -16,7 +16,31 @@ export class SubscribeUserDto {
 }
 
 export class SubscribeUserRO {
-  message: HttpStatus;
+  message: string;
+  statusCode: HttpStatus;
+}
+
+export class CreateSubscriptionDto {
+  @IsNotEmpty()
+  @IsString()
+  userId: string;
+
+  @IsNotEmpty()
+  @IsString()
+  @IsEmail()
+  email: string;
+
+  @IsOptional()
+  @IsBoolean()
+  devNews?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  marketingNews?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  blogNews?: boolean;
 }
 
 export class UpdateSubscriptionDto {

@@ -24,16 +24,24 @@ export class EmailerController {
 
   constructor(private readonly emailerService: EmailerService) {}
 
+  @UseGuards(JwtAuthGuard)
+  @Get()
+  findSubscription(@Req() req) {
+    this.logger.log('Handling findSubscription() request...');
+    return this.emailerService.findSubscription(req.user.userId);
+  }
+
   @Post('send-verify-email')
   sendVerifyEmail(@Body() data: VerifyEmailDto) {
     this.logger.log('Handling sendVerifyEmail() request...');
     return this.emailerService.sendVerifyEmail(data);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post('subscribe-user')
-  subscribeUser(@Body() data: SubscribeUserDto) {
+  subscribeUser(@Req() req, @Body() data: SubscribeUserDto) {
     this.logger.log('Handling subscribeUser() request...');
-    return this.emailerService.subscribeUser(data);
+    return this.emailerService.subscribeUser(req.user.userId, data);
   }
 
   @UseGuards(JwtAuthGuard)
