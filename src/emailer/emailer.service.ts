@@ -12,10 +12,14 @@ import { Queue } from 'bullmq';
 import { QueueEnum } from './enums/queu.enum';
 import { UsersService } from '../users/users.service';
 import {
+  CreateFeedbackDto,
+  CreateFeedbackRO,
   CreateSubscriptionDto,
   SendSubscribedAuthorRO,
+  SendSubscribedOnboardDto,
   SendSubscribedOnboardRO,
   SendSubscribedSuccessDto,
+  SendSubscribedSuccessRO,
   SendWeeklyProductsRO,
   SubscribeUserDto,
   SubscribeUserRO,
@@ -34,6 +38,11 @@ import { JobEnum } from './enums/job.enum';
 import * as fs from 'node:fs';
 import Handlebars from 'handlebars';
 import { ProductsService } from '../products/products.service';
+import {
+  UnsubscribeCategoryEnum,
+  UnsubscribeExpirationEnum,
+} from './enums/unsubscribe.enum';
+import * as bcrypt from 'bcrypt';
 
 const path = require('node:path');
 
@@ -272,6 +281,11 @@ export class EmailerService implements IEmailer {
     );
 
     if (subscription) {
+      const unsubLinks = await this._generateUnsubscribeLinks(
+        userId,
+        subscription.email,
+      );
+
       const profileLink = `${this.configService.get<string>(
         'client.clientUrl',
       )}/profile`;
@@ -280,39 +294,53 @@ export class EmailerService implements IEmailer {
         name: user.profile.firstName ?? 'Customer',
         profileLink,
         email: subscription.email,
+        unsubLink: unsubLinks.ALL,
       };
-
       await this._emailerQueue.add(
         JobEnum.SUBSCRIBE_SUCCESS,
         subscribedSuccessData,
       );
+
+      const subscribedOnboardData = {
+        email: subscription.email,
+        unsubLink: unsubLinks.BLOG_NEWS,
+      };
       await this._emailerQueue.add(
         JobEnum.SUBSCRIBE_ONBOARD,
-        { email: subscription.email },
+        subscribedOnboardData,
         {
           delay: this.configService.get<number>(
             'emailer.timings.subscribedOnboard',
           ),
         },
       );
+
+      const subscribedAuthorData = {
+        email: subscription.email,
+      };
       await this._emailerQueue.add(
         JobEnum.SUBSCRIBE_AUTHOR,
-        { email: subscription.email },
+        subscribedAuthorData,
         {
           delay: this.configService.get<number>(
             'emailer.timings.subscribedAuthor',
           ),
         },
       );
-      // await this._emailerQueue.add(
-      //   JobEnum.MOST_POPULAR_PRODUCTS,
-      //   { email: subscription.email },
-      //   {
-      //     delay: this.configService.get<number>(
-      //       'emailer.timings.mostPopularProducts',
-      //     ),
-      //   },
-      // );
+
+      const subscribedMarketingData = {
+        email: subscription.email,
+        unsubLink: unsubLinks.MARKETING,
+      };
+      await this._emailerQueue.add(
+        JobEnum.MOST_POPULAR_PRODUCTS,
+        subscribedMarketingData,
+        {
+          delay: this.configService.get<number>(
+            'emailer.timings.mostPopularProducts',
+          ),
+        },
+      );
 
       return {
         message: 'Subscription created successfully.',
@@ -341,43 +369,46 @@ export class EmailerService implements IEmailer {
 
     if (updatedEntity) {
       return {
-        message: HttpStatus.CREATED,
+        message: 'Subscription has been updated.',
+        statusCode: HttpStatus.CREATED,
       };
     } else {
       return {
-        message: HttpStatus.CONFLICT,
+        message: "Subscription hasn't been updated.",
+        statusCode: HttpStatus.CONFLICT,
       };
     }
   }
 
-  // TODO: replace to basic methods + mb refactor. Don't delete db entity, just update fields
   public async unsubscribeUser(
     userId: string,
     data: UnsubscribeUserDto,
   ): Promise<UnsubscribeUserRO> {
     const user = await this.userService.findById(userId);
 
-    if (!user) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+    if (!user) throw new HttpException('User not found.', HttpStatus.NOT_FOUND);
     if (data.email !== user.email)
-      throw new HttpException('Emails not equal', HttpStatus.BAD_REQUEST);
+      throw new HttpException('Wrong email.', HttpStatus.CONFLICT);
 
-    const deletedEntity = await this._findSubscriptionByEmailAndDelete(
-      data.email,
-    );
+    const res = await this.updateSubscription(data.email, data.campaigns);
 
-    if (!deletedEntity)
-      throw new HttpException('Subscription not found', HttpStatus.NOT_FOUND);
-
-    return {
-      message: HttpStatus.OK,
-    };
+    return res.statusCode === HttpStatus.CREATED
+      ? {
+          message: 'Subscription has been unsubscribed.',
+          statusCode: HttpStatus.OK,
+        }
+      : {
+          message: 'Subscription has not been unsubscribed.',
+          statusCode: HttpStatus.CONFLICT,
+        };
   }
 
   public async sendSubscribedSuccess({
     email,
     profileLink,
     name,
-  }: SendSubscribedSuccessDto): Promise<any> {
+    unsubLink,
+  }: SendSubscribedSuccessDto): Promise<SendSubscribedSuccessRO> {
     const apiInstance = this._createEmailApiInstance();
     const timingUnit =
       process.env.NODE_ENV === 'development' ? ' seconds' : ' minutes';
@@ -409,22 +440,25 @@ export class EmailerService implements IEmailer {
         NAME: name,
         FIRST_EMAIL_TIMING: firstEmailTiming,
         SECOND_EMAIL_TIMING: secondEmailTiming,
+        UNSUB_LINK: unsubLink,
       };
       smtpEmail.templateId = SubscriptionTemplateIdEnum.SUBSCRIBED_SUCCESS;
 
       await apiInstance.sendTransacEmail(smtpEmail);
 
       return {
-        message: HttpStatus.OK,
+        message: 'Subscription has been sent.',
+        statusCode: HttpStatus.OK,
       };
     } catch (error) {
       console.error(error);
     }
   }
 
-  public async sendSubscribedOnboard(
-    email: string,
-  ): Promise<SendSubscribedOnboardRO> {
+  public async sendSubscribedOnboard({
+    email,
+    unsubLink,
+  }: SendSubscribedOnboardDto): Promise<SendSubscribedOnboardRO> {
     const apiInstance = this._createEmailApiInstance();
 
     try {
@@ -438,6 +472,9 @@ export class EmailerService implements IEmailer {
       smtpEmail.replyTo = {
         email: this.configService.get<string>('emailer.senderEmail'),
         name: this.configService.get<string>('emailer.senderName'),
+      };
+      smtpEmail.params = {
+        UNSUB_LINK: unsubLink,
       };
       smtpEmail.templateId = SubscriptionTemplateIdEnum.SUBSCRIBED_ONBOARD;
 
@@ -567,6 +604,33 @@ export class EmailerService implements IEmailer {
     }
   }
 
+  public async sendFeedback(
+    userId: string,
+    data: CreateFeedbackDto,
+  ): Promise<CreateFeedbackRO> {
+    const subscription = await this._findSubscriptionByUserId(userId);
+
+    if (!subscription)
+      throw new HttpException('Subscription not found.', HttpStatus.NOT_FOUND);
+
+    const feedback: CreateFeedbackDto = {
+      unsubReason: data.unsubReason,
+      unsubFeedback: data.unsubFeedback,
+    };
+
+    const updatedSubscription = await this.updateSubscription(
+      subscription.email,
+      feedback,
+    );
+
+    if (updatedSubscription) {
+      return {
+        message: 'Feedback has been sent.',
+        statusCode: HttpStatus.CREATED,
+      };
+    }
+  }
+
   private _createEmailApiInstance() {
     const apiInstance = new brevo.TransactionalEmailsApi();
 
@@ -576,6 +640,52 @@ export class EmailerService implements IEmailer {
     );
 
     return apiInstance;
+  }
+
+  private async _generateUnsubscribeLinks(
+    userId: string,
+    email: string,
+  ): Promise<Record<UnsubscribeCategoryEnum, string>> {
+    const links: Record<UnsubscribeCategoryEnum, string> = {} as Record<
+      UnsubscribeCategoryEnum,
+      string
+    >;
+
+    for (const category of Object.values(UnsubscribeCategoryEnum)) {
+      links[category] = await this._generateUnsubscribeLink(
+        userId,
+        email,
+        category,
+      );
+    }
+
+    return links;
+  }
+
+  private async _generateUnsubscribeLink(
+    userId: string,
+    email: string,
+    category: UnsubscribeCategoryEnum,
+  ): Promise<string> {
+    const token = await this._generateUnsubToken(userId, email, category);
+    const clientUrl = this.configService.get<string>('client.clientUrl');
+
+    return `${clientUrl}/unsubscribe?token=${token}&category=${category}&email=${email}`;
+  }
+
+  private async _generateUnsubToken(
+    userId: string,
+    email: string,
+    category: UnsubscribeCategoryEnum,
+  ) {
+    const timestamp = Date.now();
+    const expiresIn = UnsubscribeExpirationEnum.UNSUBSCRIBE_EXPIRATION;
+    const salt = await bcrypt.genSalt(15);
+
+    return await bcrypt.hash(
+      `${userId}${email}${category}${timestamp}${expiresIn}`,
+      salt,
+    );
   }
 
   // BASIC METHODS
@@ -589,6 +699,13 @@ export class EmailerService implements IEmailer {
 
     return await new this._subscriptionModel(subscriptionDto).save();
   }
+
+  private async _findSubscriptionByUserId(
+    userId: string,
+  ): Promise<SubscriptionDocument> {
+    return await this._subscriptionModel.findOne({ userId }).exec();
+  }
+
   private async _findSubscriptionByEmail(
     email: string,
   ): Promise<SubscriptionDocument> {

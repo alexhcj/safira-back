@@ -19,6 +19,12 @@ export class Subscription {
 
   @Prop({ required: true, type: Boolean, default: false })
   readonly blogNews: boolean;
+
+  @Prop({ type: String, default: undefined })
+  readonly unsubReason: string;
+
+  @Prop({ type: String, default: undefined })
+  readonly unsubFeedback: string;
 }
 
 export const SubscriptionScheme = SchemaFactory.createForClass(Subscription);

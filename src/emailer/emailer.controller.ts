@@ -1,7 +1,6 @@
 import {
   Body,
   Controller,
-  Delete,
   Get,
   Logger,
   Post,
@@ -12,6 +11,7 @@ import {
 import { EmailerService } from './emailer.service';
 import { VerifyEmailDto } from './dto/emailer.dto';
 import {
+  CreateFeedbackDto,
   SubscribeUserDto,
   UnsubscribeUserDto,
   UpdateSubscriptionDto,
@@ -52,7 +52,7 @@ export class EmailerController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Delete('unsubscribe-user')
+  @Put('unsubscribe')
   unsubscribeUser(@Req() req, @Body() data: UnsubscribeUserDto) {
     this.logger.log('Handling unsubscribeUser() request...');
     return this.emailerService.unsubscribeUser(req.user.userId, data);
@@ -62,5 +62,12 @@ export class EmailerController {
   sendMostPopularProducts(@Body() data: any) {
     this.logger.log('Handling sendMostPopularProducts() request...');
     return this.emailerService.sendMostPopularProducts(data);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('send-feedback')
+  sendFeedback(@Req() req, @Body() data: CreateFeedbackDto) {
+    this.logger.log('Handling sendFeedback() request...');
+    return this.emailerService.sendFeedback(req.user.userId, data);
   }
 }
