@@ -1,7 +1,6 @@
 import {
   Body,
   Controller,
-  Delete,
   Get,
   Logger,
   Post,
@@ -12,6 +11,7 @@ import {
 import { EmailerService } from './emailer.service';
 import { VerifyEmailDto } from './dto/emailer.dto';
 import {
+  CreateFeedbackDto,
   SubscribeUserDto,
   UnsubscribeUserDto,
   UpdateSubscriptionDto,
@@ -24,16 +24,24 @@ export class EmailerController {
 
   constructor(private readonly emailerService: EmailerService) {}
 
+  @UseGuards(JwtAuthGuard)
+  @Get()
+  findSubscription(@Req() req) {
+    this.logger.log('Handling findSubscription() request...');
+    return this.emailerService.findSubscription(req.user.userId);
+  }
+
   @Post('send-verify-email')
   sendVerifyEmail(@Body() data: VerifyEmailDto) {
     this.logger.log('Handling sendVerifyEmail() request...');
     return this.emailerService.sendVerifyEmail(data);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post('subscribe-user')
-  subscribeUser(@Body() data: SubscribeUserDto) {
+  subscribeUser(@Req() req, @Body() data: SubscribeUserDto) {
     this.logger.log('Handling subscribeUser() request...');
-    return this.emailerService.subscribeUser(data);
+    return this.emailerService.subscribeUser(req.user.userId, data);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -44,7 +52,7 @@ export class EmailerController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Delete('unsubscribe-user')
+  @Put('unsubscribe')
   unsubscribeUser(@Req() req, @Body() data: UnsubscribeUserDto) {
     this.logger.log('Handling unsubscribeUser() request...');
     return this.emailerService.unsubscribeUser(req.user.userId, data);
@@ -54,5 +62,12 @@ export class EmailerController {
   sendMostPopularProducts(@Body() data: any) {
     this.logger.log('Handling sendMostPopularProducts() request...');
     return this.emailerService.sendMostPopularProducts(data);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('send-feedback')
+  sendFeedback(@Req() req, @Body() data: CreateFeedbackDto) {
+    this.logger.log('Handling sendFeedback() request...');
+    return this.emailerService.sendFeedback(req.user.userId, data);
   }
 }

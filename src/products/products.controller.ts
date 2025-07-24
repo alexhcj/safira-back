@@ -45,12 +45,6 @@ export class ProductsController {
     return this.productsService.findRelated(query);
   }
 
-  @Get('find-top-ten-popular')
-  findTopTenPopular(): Promise<ProductDocument[]> {
-    this.logger.log('Handling findTopTenPopular() request...');
-    return this.productsService.findTopTenPopular();
-  }
-
   @Get('random')
   findRandom(@Query() query): Promise<Aggregate<ProductDocument[]>> {
     this.logger.log('Handling findRandom() request...');
@@ -87,6 +81,23 @@ export class ProductsController {
     return this.productsService.findAllBrands();
   }
 
+  @Get('all-basic-categories')
+  findAllBasicCategories(): Promise<any> {
+    this.logger.log('Handling findAllBasicCategories() request...');
+    return this.productsService.findAllBasicCategories();
+  }
+
+  @Get('top-popular')
+  findTopPopular(@Query() query): Promise<ProductDocument[]> {
+    this.logger.log('Handling findTopPopular() request...');
+    return this.productsService.findTopPopular(query);
+  }
+
+  @Get('top-by-prime-categories')
+  findTopByPrimeCategories(): Promise<any> {
+    this.logger.log('Handling findTopByPrimeCategories() request...');
+    return this.productsService.findTopByPrimeCategories();
+  }
   @Get(':slug')
   findBySlug(@Param('slug') slug: string): Promise<IProductRO> {
     this.logger.log('Handling findOne() request...');
