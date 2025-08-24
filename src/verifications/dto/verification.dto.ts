@@ -10,7 +10,6 @@ import {
 import { HttpStatus } from '@nestjs/common';
 import { VerifyEmailTemplateIdEnum } from '../../emailer/enums/emailer.enum';
 import { Transform } from 'class-transformer';
-import { AuthLoginRO } from '../../auth/interfaces/auth.interface';
 
 export class VerificationDto {
   @IsNotEmpty()
