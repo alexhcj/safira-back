@@ -102,7 +102,19 @@ export class ChangePasswordDto {
   email: string;
 }
 
+export class ForgotPasswordDto {
+  @IsNotEmpty()
+  @IsString()
+  @IsEmail()
+  email: string;
+}
+
 export class ChangePasswordRO {
+  message: string;
+  statusCode: HttpStatus;
+}
+
+export class ForgotPasswordRO {
   message: string;
   statusCode: HttpStatus;
 }
@@ -128,7 +140,27 @@ export class ResetPasswordDto {
   confirmPassword: string;
 }
 
+export class ResetForgotPasswordDto {
+  @IsNotEmpty()
+  @IsString()
+  password: string;
+
+  @IsNotEmpty()
+  @IsString()
+  confirmPassword: string;
+
+  @IsNotEmpty()
+  @IsString()
+  @IsEmail()
+  email: string;
+}
+
 export class ResetPasswordRO {
+  message: string;
+  statusCode: HttpStatus;
+}
+
+export class ResetForgotPasswordRO {
   message: string;
   statusCode: HttpStatus;
 }
