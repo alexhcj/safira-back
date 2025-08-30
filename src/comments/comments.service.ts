@@ -33,9 +33,6 @@ export class CommentsService {
 
     const commentEntity = await this.commentModel.findOne({ postSlug: slug });
 
-    if (commentEntity)
-      throw new HttpException('Comment already exists', HttpStatus.BAD_REQUEST);
-
     const comment: IComment = {
       user: {
         _id: new Types.ObjectId(userId),
@@ -44,20 +41,32 @@ export class CommentsService {
       text: data.text,
     };
 
-    const newCommentEntity: ICommentEntity = {
-      postSlug: slug,
-      comments: [comment],
-    };
+    // if no comment entity exists, create one
+    if (!commentEntity) {
+      const newCommentEntity: ICommentEntity = {
+        postSlug: slug,
+        comments: [comment],
+      };
 
-    const createdComment = await new this.commentModel(newCommentEntity).save();
+      const createdComment = await new this.commentModel(
+        newCommentEntity,
+      ).save();
 
-    const postWithComments: UpdatePostDto = {
-      comments: createdComment._id,
-    };
+      const postWithComments: UpdatePostDto = {
+        comments: createdComment._id,
+      };
 
-    await this.postService.update(post._id, postWithComments);
+      await this.postService.update(post._id, postWithComments);
 
-    return createdComment;
+      return createdComment;
+    }
+
+    // if comment entity exists, add to root level
+    return this.commentModel.findByIdAndUpdate(
+      commentEntity._id,
+      { $push: { comments: comment } },
+      { new: true },
+    );
   }
 
   async read(query): Promise<CommentDocument[]> {
@@ -81,6 +90,7 @@ export class CommentsService {
         select: 'firstName avatarId -userId',
       })
       .exec();
+
     const allComments = comments.reduce(
       (acc, cur) => [...acc, ...cur.comments],
       [],
@@ -93,6 +103,14 @@ export class CommentsService {
     return sortedComments.slice(0, +limit);
   }
 
+  /**
+   * Update method to add replies to nested comments
+   *
+   * @param postSlug - Post slug identifier
+   * @param userId - User ID creating the reply
+   * @param data - Comment data
+   * @param nestedLvl - Dot-separated path (e.g., "0.1.2" for third reply to second reply of first comment)
+   */
   async update(
     postSlug: string,
     userId: string,
@@ -101,21 +119,9 @@ export class CommentsService {
   ): Promise<CommentDocument> {
     const commentEntity = await this.commentModel.findOne({ postSlug });
 
-    // generates path to replied comment replies.0.replies.2.replies...
-    const commentPath =
-      +nestedLvl === 0
-        ? 'comments'
-        : 'comments' +
-          nestedLvl
-            .split('|')
-            .map((item) => {
-              return `.${item}.comments`;
-            })
-            .join('');
-
     if (!commentEntity) {
       throw new HttpException(
-        `That comment doesn't exist`,
+        `Comment entity for post ${postSlug} doesn't exist`,
         HttpStatus.BAD_REQUEST,
       );
     }
@@ -130,11 +136,44 @@ export class CommentsService {
       updatedAt: new Date(),
     };
 
-    return this.commentModel
-      .findByIdAndUpdate(commentEntity.id, {
-        $push: { [`${commentPath}`]: comment },
-      })
-      .setOptions({ new: true });
+    // generate the MongoDB path for nested comment insertion
+    const commentPath = this.generateCommentPath(nestedLvl);
+
+    console.log(`Inserting comment at path: ${commentPath}`);
+    console.log(`Nested level: ${nestedLvl}`);
+
+    return this.commentModel.findByIdAndUpdate(
+      commentEntity._id,
+      { $push: { [`${commentPath}`]: comment } },
+      { new: true },
+    );
+  }
+
+  /**
+   * Generate MongoDB path from nested level string
+   *
+   * Examples:
+   * - "0" -> "comments.0.comments" (reply to first root comment)
+   * - "0.1" -> "comments.0.comments.1.comments" (reply to second nested comment under first root comment)
+   * - "1.0.2" -> "comments.1.comments.0.comments.2.comments" (reply to third comment under first reply of second root comment)
+   *
+   * @param nestedLvl - Dot-separated path string
+   * @returns MongoDB field path for $push operation
+   */
+  private generateCommentPath(nestedLvl: string): string {
+    if (!nestedLvl) {
+      return 'comments'; // Root level
+    }
+
+    const indices = nestedLvl.split('.');
+
+    // build path: comments.0.comments.1.comments.2.comments
+    let path = 'comments';
+    for (const index of indices) {
+      path += `.${index}.comments`;
+    }
+
+    return path;
   }
 
   async delete(id: string) {
