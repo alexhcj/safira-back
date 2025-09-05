@@ -1,5 +1,4 @@
 import {
-  IsNotEmpty,
   IsNumber,
   IsObject,
   IsOptional,
@@ -55,7 +54,6 @@ export class UpdateProductDto {
   readonly tags?: string;
 
   @IsOptional()
-  @IsNotEmpty()
   readonly reviews?: Types.ObjectId;
 
   @IsOptional()
