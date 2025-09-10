@@ -1,9 +1,9 @@
 import {
   IsEmail,
-  IsISO8601,
   IsNotEmpty,
   IsOptional,
   IsString,
+  Matches,
 } from 'class-validator';
 
 export class UserDto {
@@ -39,8 +39,11 @@ export class FindProfileRO {
   email: string;
 
   @IsOptional()
-  @IsISO8601()
-  dateOfBirth: Date;
+  @IsString()
+  @Matches(/^\d{4}-\d{2}-\d{2}$/, {
+    message: 'dateOfBirth must be in YYYY-MM-DD format',
+  })
+  dateOfBirth: string;
 
   @IsOptional()
   @IsString()

@@ -1,5 +1,6 @@
-import { IsISO8601, IsOptional, IsString } from 'class-validator';
+import { IsOptional, IsString, Matches } from 'class-validator';
 import { Types } from 'mongoose';
+import { Transform } from 'class-transformer';
 
 export class UpdateProfileDto {
   @IsOptional()
@@ -13,9 +14,22 @@ export class UpdateProfileDto {
   @IsOptional()
   readonly lastName?: string;
 
-  @IsISO8601()
   @IsOptional()
-  readonly dateOfBirth?: Date;
+  @IsString()
+  @Matches(/^\d{4}-\d{2}-\d{2}$/, {
+    message: 'dateOfBirth must be in YYYY-MM-DD format',
+  })
+  @Transform(({ value }) => {
+    if (!value) return value;
+
+    // if it's a full ISO string, extract date part
+    if (typeof value === 'string' && value.includes('T')) {
+      return value.split('T')[0];
+    }
+
+    return value;
+  })
+  readonly dateOfBirth?: string;
 
   @IsString()
   @IsOptional()
