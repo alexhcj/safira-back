@@ -14,7 +14,9 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import {
   ChangeEmailDto,
   ChangePasswordDto,
+  ForgotPasswordDto,
   ResendVerifyEmailDto,
+  ResetForgotPasswordDto,
   ResetPasswordDto,
   ValidatePasswordDto,
   VerifyCodeDto,
@@ -88,6 +90,20 @@ export class VerificationsController {
     );
   }
 
+  @Post('forgot-password')
+  forgotPassword(@Req() req, @Ip() ip, @Body() data: ForgotPasswordDto) {
+    this.logger.log('Handling forgotPassword() request');
+
+    const { browser, os } = UAParser(req.headers['user-agent']);
+
+    return this.verificationsService.forgotPassword(
+      data.email,
+      ip,
+      `${browser.name} ${browser.major}`,
+      `${os.name} ${os.version}`,
+    );
+  }
+
   @UseGuards(JwtAuthGuard)
   @Post('verify-code')
   verifyCode(@Req() req, @Ip() ip, @Body() data: VerifyCodeDto) {
@@ -126,6 +142,28 @@ export class VerificationsController {
       `${browser.name} ${browser.major}`,
       `${os.name} ${os.version}`,
       req.user.email,
+      data,
+    );
+  }
+
+  @Post('reset-forgot-password')
+  resetForgotPassword(
+    @Req() req,
+    @Query() query,
+    @Ip() ip,
+    @Body() data: ResetForgotPasswordDto,
+  ) {
+    this.logger.log('Handling resetForgotPassword() request');
+
+    const { browser, os } = UAParser(req.headers['user-agent']);
+
+    return this.verificationsService.resetForgotPassword(
+      query.userId,
+      +query.expirationTime,
+      query.token,
+      ip,
+      `${browser.name} ${browser.major}`,
+      `${os.name} ${os.version}`,
       data,
     );
   }

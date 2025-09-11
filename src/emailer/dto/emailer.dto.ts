@@ -42,3 +42,22 @@ export class SendChangePasswordErrorDto {
   @IsString()
   name: string;
 }
+
+export class SendResetPasswordErrorDto {
+  @IsNotEmpty()
+  @IsString()
+  @IsEmail()
+  email: string;
+
+  @IsNotEmpty()
+  @IsString()
+  browser: string;
+
+  @IsNotEmpty()
+  @IsString()
+  os: string;
+
+  @IsNotEmpty()
+  @IsString()
+  name: string;
+}

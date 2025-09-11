@@ -7,6 +7,9 @@ export enum VerifyEmailTemplateIdEnum {
   CHANGE_PASSWORD_LINK = 8,
   CHANGE_PASSWORD_ERROR = 14,
   CHANGE_PASSWORD_SUCCESS = 15,
+  RESET_PASSWORD_ERROR = 22,
+  RESET_PASSWORD_LINK = 23,
+  RESET_PASSWORD_SUCCESS = 24,
 }
 
 export enum SubscriptionTemplateIdEnum {

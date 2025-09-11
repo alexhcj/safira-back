@@ -787,16 +787,13 @@ export class ProductsService {
                 ),
             }
           : product.specifications.company,
-        producingCountry: data.specifications
-          ? data.specifications.producingCountry
-          : product.specifications.producingCountry ??
-            data.specifications.company.displayName,
-        quantity: data.specifications
-          ? data.specifications.quantity
-          : product.specifications.quantity,
-        shelfLife: data.specifications
-          ? data.specifications.shelfLife
-          : product.specifications.shelfLife,
+        producingCountry:
+          data.specifications?.producingCountry ??
+          product.specifications.producingCountry,
+        quantity:
+          data.specifications?.quantity ?? product.specifications.quantity,
+        shelfLife:
+          data.specifications?.shelfLife ?? product.specifications.shelfLife,
       },
     };
 

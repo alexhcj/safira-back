@@ -107,6 +107,31 @@ export class PostsService {
 
     if (!post) throw new HttpException('Post not found', HttpStatus.NOT_FOUND);
 
+    // Recursively populate nested comments
+    if (post.comments && post.comments.comments) {
+      await this._populateNestedComments(post.comments.comments);
+    }
+
     return post;
+  }
+
+  private async _populateNestedComments(comments): Promise<void> {
+    if (!Array.isArray(comments)) {
+      return;
+    }
+
+    for (const comment of comments) {
+      if (comment.comments && comment.comments.length > 0) {
+        // Populate user data for nested comments
+        await this.postModel.populate(comment.comments, {
+          path: 'user',
+          foreignField: 'userId',
+          select: 'firstName avatarId userId',
+        });
+
+        // Recursively populate deeper levels
+        await this._populateNestedComments(comment.comments);
+      }
+    }
   }
 }

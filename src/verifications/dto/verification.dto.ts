@@ -10,7 +10,6 @@ import {
 import { HttpStatus } from '@nestjs/common';
 import { VerifyEmailTemplateIdEnum } from '../../emailer/enums/emailer.enum';
 import { Transform } from 'class-transformer';
-import { AuthLoginRO } from '../../auth/interfaces/auth.interface';
 
 export class VerificationDto {
   @IsNotEmpty()
@@ -102,7 +101,19 @@ export class ChangePasswordDto {
   email: string;
 }
 
+export class ForgotPasswordDto {
+  @IsNotEmpty()
+  @IsString()
+  @IsEmail()
+  email: string;
+}
+
 export class ChangePasswordRO {
+  message: string;
+  statusCode: HttpStatus;
+}
+
+export class ForgotPasswordRO {
   message: string;
   statusCode: HttpStatus;
 }
@@ -128,7 +139,27 @@ export class ResetPasswordDto {
   confirmPassword: string;
 }
 
+export class ResetForgotPasswordDto {
+  @IsNotEmpty()
+  @IsString()
+  password: string;
+
+  @IsNotEmpty()
+  @IsString()
+  confirmPassword: string;
+
+  @IsNotEmpty()
+  @IsString()
+  @IsEmail()
+  email: string;
+}
+
 export class ResetPasswordRO {
+  message: string;
+  statusCode: HttpStatus;
+}
+
+export class ResetForgotPasswordRO {
   message: string;
   statusCode: HttpStatus;
 }

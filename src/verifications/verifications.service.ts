@@ -16,6 +16,9 @@ import {
   ChangeEmailRO,
   ChangePasswordRO,
   CreateVerificationRO,
+  ForgotPasswordRO,
+  ResetForgotPasswordDto,
+  ResetForgotPasswordRO,
   ResetPasswordDto,
   ResetPasswordRO,
   ValidatePasswordRO,
@@ -446,6 +449,133 @@ export class VerificationsService {
 
     return {
       message: 'Password has been changed.',
+      statusCode: HttpStatus.OK,
+    };
+  }
+
+  // checks user existence & email equals => generate reset password link & send to email
+  public async forgotPassword(
+    email: string,
+    clientIp: string,
+    browser: string,
+    os: string,
+  ): Promise<ForgotPasswordRO> {
+    const user = await this.usersService.findByEmailWithProfile(email);
+
+    if (!user || email !== user.user.email) {
+      const profile = await this.usersService.findProfile(user.user._id);
+
+      await this.emailerService.sendResetPasswordError({
+        email,
+        browser,
+        os,
+        name: profile.firstName ?? 'Dear Customer',
+      });
+
+      throw new HttpException(
+        'Something went wrong.',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+
+    const verification = await this._findByUserId(user.user._id);
+
+    if (!verification)
+      throw new HttpException('Verification not found.', HttpStatus.NOT_FOUND);
+
+    const code = this._generateCode();
+
+    verification.code = code;
+    verification.codeCreatedAt = new Date();
+
+    await verification.save();
+
+    const expirationTime =
+      new Date(verification.codeCreatedAt).getTime() +
+      VerificationCodeEnum.PASSWORD_RESET_LINK_EXPIRATION;
+
+    const salt = await bcrypt.genSalt(15);
+    const token = await bcrypt.hash(
+      `${code}${email}${user.user.passwordHash}${expirationTime}${clientIp}${browser}${os}`,
+      salt,
+    );
+    const link = `${this.configService.get<string>(
+      'client.clientUrl',
+    )}/reset-password?userId=${
+      user.user.id
+    }&expirationTime=${expirationTime}&token=${token}`;
+
+    await this.emailerService.sendResetPasswordLink(
+      email,
+      user.profile.firstName ?? 'Dear Customer',
+      link,
+    );
+
+    return {
+      message: 'Link has been send.',
+      statusCode: HttpStatus.OK,
+    };
+  }
+
+  public async resetForgotPassword(
+    userId: string,
+    expirationTime: number,
+    token: string,
+    clientIp: string,
+    browser: string,
+    os: string,
+    data: ResetForgotPasswordDto,
+  ): Promise<ResetForgotPasswordRO> {
+    if (new Date().getTime() > expirationTime) {
+      const verification = await this._findByUserId(userId);
+
+      verification.code = undefined;
+      verification.codeCreatedAt = undefined;
+      await verification.save();
+
+      throw new HttpException(
+        'Token is expired. Try a new one.',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const user = await this.usersService.findById(userId);
+
+    if (!user) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+
+    if (data.password !== data.confirmPassword)
+      throw new HttpException(
+        'Passwords are not the same',
+        HttpStatus.BAD_REQUEST,
+      );
+
+    const verification = await this._findByUserId(userId);
+
+    const link = `${verification.code}${data.email}${user.passwordHash}${expirationTime}${clientIp}${browser}${os}`;
+
+    const isEquals = bcrypt.compareSync(link, token);
+
+    if (!isEquals)
+      throw new HttpException(
+        'Internal server error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+
+    const salt = await bcrypt.genSalt();
+    const ph = await bcrypt.hash(data.confirmPassword, salt);
+
+    await this.usersService.findByIdAndUpdate(userId, {
+      passwordHash: ph,
+    });
+    verification.code = undefined;
+    verification.codeCreatedAt = undefined;
+    verification.isEmailVerified = true;
+    await verification.save();
+
+    await this.emailerService.sendResetPasswordSuccess(user.email);
+
+    return {
+      message: 'Password has been reset.',
       statusCode: HttpStatus.OK,
     };
   }

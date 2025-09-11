@@ -19,8 +19,9 @@ export class Profile {
   @Prop({ type: String })
   readonly lastName: string;
 
-  @Prop({ type: Date })
-  readonly dateOfBirth: Date;
+  // birth date - store as YYYY-MM-DD string (no timezone)
+  @Prop({ type: String, match: /^\d{4}-\d{2}-\d{2}$/ })
+  readonly dateOfBirth: string;
 
   @Prop({ type: String })
   readonly location: string;
