@@ -9,7 +9,7 @@ export class Price {
   readonly price: number;
 
   @Prop()
-  readonly discount_price: number;
+  readonly discountPrice: number;
 }
 
 export const PriceScheme = SchemaFactory.createForClass(Price);

@@ -7,7 +7,7 @@ export class CreatePriceDto {
 
   @IsOptional()
   @IsNumber()
-  readonly discount_price?: number;
+  readonly discountPrice?: number;
 }
 
 export class UpdatePriceDto {
@@ -17,5 +17,5 @@ export class UpdatePriceDto {
 
   @IsOptional()
   @IsNumber()
-  readonly discount_price?: number;
+  readonly discountPrice?: number;
 }
