@@ -28,7 +28,7 @@ export interface IPostQuery {
   search?: string;
   tags?: string | [];
   category?: string | [];
-  sort?: IPostSort;
+  sort?: TPostSort;
   limit?: string;
   offset?: string;
   order?: string;
@@ -38,6 +38,4 @@ export interface IPostFilter {
   title?: string | { $regex: string; $options?: string };
 }
 
-export interface IPostSort {
-  sort: 'createdAt';
-}
+export type TPostSort = 'createdAt' | 'updatedAt' | 'title' | 'popularity';

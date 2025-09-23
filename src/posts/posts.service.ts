@@ -18,30 +18,53 @@ export class PostsService {
   async getAll(query): Promise<IPostsRO> {
     const {
       search,
-      sort,
-      order,
+      sort = 'createdAt',
+      order = 'desc',
       limit = '10',
       offset = '0',
     }: IPostQuery = query;
 
-    const [{ posts, total }] = await this.postModel.aggregate([
+    // build match conditions
+    const matchConditions: any = {};
+
+    if (search) {
+      const escapedSearch = await this._escapeRegex(search);
+
+      // create multiple search patterns for better matching
+      const searchPatterns = await this._createSearchPatterns(search);
+
+      matchConditions.$or = [
+        // title search with multiple patterns
+        ...searchPatterns.map((pattern) => ({
+          title: { $regex: pattern, $options: 'i' },
+        })),
+        { text: { $regex: escapedSearch, $options: 'i' } },
+      ];
+    }
+
+    const sortOrder = order === 'asc' ? 1 : -1;
+
+    const [result] = await this.postModel.aggregate([
       {
-        $match: {
-          title: { $regex: `${search ? search : ''}`, $options: 'i' },
-        },
+        $match: matchConditions,
       },
       {
         $sort: {
-          [`${sort}`]: order === 'desc' ? 1 : -1,
+          [sort]: sortOrder,
         },
       },
       {
         $facet: {
-          posts: [{ $skip: +offset }, { $limit: +limit }],
+          posts: [
+            { $skip: Math.max(0, +offset) },
+            { $limit: Math.max(1, Math.min(100, +limit)) }, // limit max results
+          ],
           total: [{ $count: 'total' }],
         },
       },
     ]);
+
+    const { posts = [], total = [] } = result || {};
 
     if (posts.length === 0) {
       return {
@@ -54,11 +77,18 @@ export class PostsService {
       };
     }
 
-    const page: number = +limit !== 0 ? +offset / +limit + 1 : 1;
-    const isLastPage =
-      page * +limit === total[0].total || page * +limit > total[0].total;
+    const totalCount = total[0]?.total || 0;
+    const page: number = +limit !== 0 ? Math.floor(+offset / +limit) + 1 : 1;
+    const isLastPage = +limit === 0 || page * +limit >= totalCount;
 
-    return { posts, meta: { total: total[0].total, page, isLastPage } };
+    return {
+      posts,
+      meta: {
+        total: totalCount,
+        page,
+        isLastPage,
+      },
+    };
   }
 
   async update(id: string, data: UpdatePostDto): Promise<PostDocument> {
@@ -133,5 +163,22 @@ export class PostsService {
         await this._populateNestedComments(comment.comments);
       }
     }
+  }
+
+  // helper function to escape regex special characters
+  private async _escapeRegex(string: string): Promise<string> {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  // helper function to create search patterns for partial matching
+  private async _createSearchPatterns(searchTerm: string): Promise<string[]> {
+    const escaped = await this._escapeRegex(searchTerm.trim());
+
+    return [
+      escaped, // exact match
+      `\\b${escaped}`, // word boundary start
+      `${escaped}\\b`, // word boundary end
+      `\\b${escaped}\\b`, // complete word
+    ];
   }
 }
