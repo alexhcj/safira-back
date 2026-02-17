@@ -22,7 +22,7 @@ export class UpdateProductDto {
   @IsObject()
   readonly price?: {
     price: number;
-    discount_price?: number;
+    discountPrice?: number;
   };
 
   @IsOptional()

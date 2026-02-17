@@ -112,7 +112,7 @@ export class OffersService {
 
       const newProductDealCandidates = products.products.filter(
         (product) =>
-          product.price.discount_price &&
+          product.price.discountPrice &&
           !deals.some((deal) => deal.deal.slug === product.slug),
       );
 

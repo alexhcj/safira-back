@@ -34,7 +34,7 @@ export class PricesService {
 
     const updatedPrice: UpdatePriceDto = {
       price: data.price,
-      discount_price: data.discount_price,
+      discountPrice: data.discountPrice,
     };
 
     return this.findByIdAndUpdate(new Types.ObjectId(id), updatedPrice);

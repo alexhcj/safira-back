@@ -161,8 +161,8 @@ export class ProductsService {
           $addFields: {
             sortPrice: {
               $cond: {
-                if: '$price.discount_price',
-                then: '$price.discount_price',
+                if: '$price.discountPrice',
+                then: '$price.discountPrice',
                 else: '$price.price',
               },
             },
@@ -351,8 +351,8 @@ export class ProductsService {
         $addFields: {
           sortPrice: {
             $cond: {
-              if: '$price.discount_price',
-              then: '$price.discount_price',
+              if: '$price.discountPrice',
+              then: '$price.discountPrice',
               else: '$price.price',
             },
           },
@@ -440,8 +440,8 @@ export class ProductsService {
         $addFields: {
           sortPrice: {
             $cond: {
-              if: '$price.discount_price',
-              then: '$price.discount_price',
+              if: '$price.discountPrice',
+              then: '$price.discountPrice',
               else: '$price.price',
             },
           },
@@ -541,8 +541,8 @@ export class ProductsService {
         $addFields: {
           sortPrice: {
             $cond: {
-              if: '$price.discount_price',
-              then: '$price.discount_price',
+              if: '$price.discountPrice',
+              then: '$price.discountPrice',
               else: '$price.price',
             },
           },

@@ -4,7 +4,7 @@ export interface ISearchProduct {
   name: string;
   price: {
     price: number;
-    discount_price: number;
+    discountPrice: number;
   };
   subCategory: string;
 }
