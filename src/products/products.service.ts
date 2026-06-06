@@ -4,6 +4,7 @@ import { Aggregate, Model, Types } from 'mongoose';
 import { Product, ProductDocument } from './schemes/product.scheme';
 import { CreateProductDto } from './dto/create-product.dto';
 import {
+  IBrandsRO,
   IProduct,
   IProductFilter,
   IProductQuery,
@@ -641,34 +642,69 @@ export class ProductsService {
   }
 
   // IBrandsRO[]
-  async findAllBrands(): Promise<any> {
+  async findAllBrands(): Promise<IBrandsRO[]> {
     return this.productModel.aggregate([
       {
-        $group: {
-          _id: {
-            firstLetter: {
-              $substr: ['$specifications.company.displayName', 0, 1],
-            },
-          },
-          brands: {
-            $addToSet: {
-              slug: '$specifications.company.slug',
-              displayName: '$specifications.company.displayName',
+        $project: {
+          company: '$specifications.company',
+          firstLetter: {
+            $toUpper: {
+              $substrCP: ['$specifications.company.displayName', 0, 1],
             },
           },
         },
       },
       {
-        $sort: { '_id.firstLetter': 1 },
+        $project: {
+          company: 1,
+          group: {
+            $cond: {
+              if: {
+                $regexMatch: {
+                  input: '$firstLetter',
+                  regex: /^[A-Z]$/,
+                },
+              },
+              then: '$firstLetter',
+              else: '#',
+            },
+          },
+        },
+      },
+      {
+        $group: {
+          _id: '$group',
+          brands: {
+            $addToSet: {
+              slug: '$company.slug',
+              displayName: '$company.displayName',
+            },
+          },
+        },
+      },
+      {
+        $addFields: {
+          sortOrder: {
+            $cond: [{ $eq: ['$_id', '#'] }, 0, 1],
+          },
+        },
+      },
+      {
+        $sort: {
+          sortOrder: 1,
+          _id: 1,
+        },
       },
       {
         $project: {
-          name: { $toUpper: '$_id.firstLetter' },
           _id: 0,
+          name: '$_id',
           brands: {
             $sortArray: {
               input: '$brands',
-              sortBy: 1,
+              sortBy: {
+                displayName: 1,
+              },
             },
           },
         },
