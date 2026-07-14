@@ -622,6 +622,9 @@ export class ProductsService {
       })
       .exec();
 
+    if (!product)
+      throw new HttpException('Product not found', HttpStatus.NOT_FOUND);
+
     const newViews: UpdateProductDto = {
       views: (product.views ? product.views : 0) + 1,
     };
