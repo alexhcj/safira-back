@@ -21,6 +21,7 @@ import { slugify, toSlug } from '../common/utils';
 import { FindQueryDietaryTagsRdo } from './dto/find-query-dietary-tags.rdo';
 import { AllBasicCategoryValues } from './interfaces/category.interface';
 import { AllBasicCategoriesRO } from './dto/all-basic-categories.ro';
+import { slugifySearch } from '../helpers';
 
 @Injectable()
 export class ProductsService {
@@ -138,6 +139,17 @@ export class ProductsService {
         }
       : {};
 
+    // Search normalization
+    const normalizedSearch = slug ? slugifySearch(slug) : '';
+    const searchWords = normalizedSearch.split('-').filter(Boolean);
+    const slugMatch = searchWords.length
+      ? {
+          $and: searchWords.map((w) => ({
+            slug: { $regex: w, $options: 'i' },
+          })),
+        }
+      : {};
+
     const [{ products, total, highestPrice, lowestPrice }] =
       await this.productModel.aggregate([
         {
@@ -146,7 +158,7 @@ export class ProductsService {
             subCategory: subCategory || /.*/,
             basicCategory: basicCategory || /.*/,
             ...brandFilter,
-            slug: { $regex: `${slug ? slug : ''}`, $options: 'i' },
+            ...slugMatch,
           },
         },
         {

@@ -15,3 +15,13 @@ export const deepCountComments = (arr: IComment[]): IComment[] => {
     comments.length ? deepCountComments(comments) : comments,
   );
 };
+
+export const slugifySearch = (text: string): string => {
+  return text
+    .toString()
+    .toLowerCase()
+    .trim()
+    .replace(/['"]/g, '') // strip apostrophes/quotes: Aw's -> Aws
+    .replace(/[^a-z0-9]+/g, '-') // spaces, parens, etc -> hyphen
+    .replace(/^-+|-+$/g, ''); // trim leading/trailing hyphens
+};
