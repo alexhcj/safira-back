@@ -40,3 +40,6 @@ lerna-debug.log*
 
 # files
 info.md
+
+# DB data
+db_data
