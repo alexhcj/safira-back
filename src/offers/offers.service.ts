@@ -23,17 +23,110 @@ export class OffersService {
     const searchType = type.includes('-')
       ? type.split('-').join('_').toUpperCase()
       : type.toUpperCase();
-    const find: IOfferFilter = {};
+    const match: IOfferFilter = {};
 
-    if (type) find.type = { $regex: `${searchType}`, $options: 'i' };
+    if (type) match.type = { $regex: `${searchType}`, $options: 'i' };
 
-    return this.offerModel.find(find).populate({
-      path: 'deal',
-      populate: [
-        { path: 'price' },
-        { path: 'tags', transform: (doc) => doc.tags },
-      ],
-    });
+    return this.offerModel.aggregate([
+      { $match: match },
+      {
+        $lookup: {
+          from: 'products',
+          localField: 'deal',
+          foreignField: '_id',
+          as: 'deal',
+        },
+      },
+      { $unwind: { path: '$deal', preserveNullAndEmptyArrays: true } },
+      {
+        $lookup: {
+          from: 'categories',
+          let: { categorySlug: '$deal.primeCategory' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$slug', '$$categorySlug'] },
+                    { $eq: ['$type', 'prime'] },
+                  ],
+                },
+              },
+            },
+            { $project: { _id: 0, name: 1, slug: 1 } },
+          ],
+          as: 'primeCategory',
+        },
+      },
+      {
+        $unwind: { path: '$primeCategory', preserveNullAndEmptyArrays: true },
+      },
+      {
+        $lookup: {
+          from: 'categories',
+          let: { categorySlug: '$deal.subCategory' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$slug', '$$categorySlug'] },
+                    { $eq: ['$type', 'sub'] },
+                  ],
+                },
+              },
+            },
+            { $project: { _id: 0, name: 1, slug: 1 } },
+          ],
+          as: 'subCategory',
+        },
+      },
+      { $unwind: { path: '$subCategory', preserveNullAndEmptyArrays: true } },
+      {
+        $lookup: {
+          from: 'prices',
+          localField: 'deal.price',
+          foreignField: '_id',
+          as: 'dealPrice',
+        },
+      },
+      { $unwind: { path: '$dealPrice', preserveNullAndEmptyArrays: true } },
+      {
+        $lookup: {
+          from: 'tags',
+          localField: 'deal.tags',
+          foreignField: '_id',
+          as: 'dealTags',
+        },
+      },
+      {
+        $addFields: {
+          deal: {
+            $cond: [
+              { $ifNull: ['$deal', false] },
+              {
+                $mergeObjects: [
+                  '$deal',
+                  { price: '$dealPrice' },
+                  { tags: { $arrayElemAt: ['$dealTags.tags', 0] } },
+                  { primeCategory: '$primeCategory' },
+                  { subCategory: '$subCategory' },
+                ],
+              },
+              null,
+            ],
+          },
+        },
+      },
+      {
+        $project: {
+          dealPrice: 0,
+          dealTags: 0,
+          primeCategory: 0,
+          subCategory: 0,
+        },
+      },
+    ]);
   }
 
   async getOfferByType(type: OfferEnum): Promise<OfferDocument> {
@@ -108,7 +201,9 @@ export class OffersService {
 
       const deals = await this.getAll({ type: OfferEnum.DEALS_OF_WEEK });
 
-      const products = await this.productsService.findAll({ limit: 100 });
+      const products = await this.productsService.findAllServer({
+        limit: '100',
+      });
 
       const newProductDealCandidates = products.products.filter(
         (product) =>
@@ -125,7 +220,6 @@ export class OffersService {
       const newDealData = {
         type: OfferEnum.DEALS_OF_WEEK,
         expiresDate: new Date(new Date().getTime() + 7 * 24 * 60 * 60 * 1000),
-        // @ts-ignore
         deal: newProductDeal[0]._id,
       };
 

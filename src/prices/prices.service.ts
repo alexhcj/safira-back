@@ -3,7 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Price, PriceDocument } from './schemes/price.scheme';
 import { CreatePriceDto, UpdatePriceDto } from './dto/price.dto';
-import { PriceRO } from './price.interface';
+import { IPriceRO } from './interfaces/price.interface';
 
 @Injectable()
 export class PricesService {
@@ -20,7 +20,7 @@ export class PricesService {
     return this.priceModel.find().exec();
   }
 
-  async findOne(where): Promise<PriceRO> {
+  async findOne(where): Promise<IPriceRO> {
     const price = await this.priceModel.findOne(where).populate('price').exec();
     return { price };
   }

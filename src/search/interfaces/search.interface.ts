@@ -1,12 +1,14 @@
+import { IPrice } from '../../prices/interfaces/price.interface';
+
 export interface ISearchProduct {
   type: string;
   slug: string;
   name: string;
-  price: {
-    price: number;
-    discountPrice: number;
+  price: IPrice;
+  subCategory: {
+    name: string;
+    slug: string;
   };
-  subCategory: string;
 }
 
 export interface ISearchPost {

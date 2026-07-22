@@ -5,22 +5,23 @@ import { Product, ProductDocument } from './schemes/product.scheme';
 import { CreateProductDto } from './dto/create-product.dto';
 import {
   IBrandsRO,
+  ICreateProduct,
   IProduct,
   IProductFilter,
   IProductQuery,
+  IProductRaw,
   IProductRelatedQuery,
   IProductRO,
   IProductsBySlugRO,
+  IProductsRawRO,
   IProductsRO,
 } from './interfaces/product.interface';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { PricesService } from '../prices/prices.service';
 import { TagsService } from '../tags/tags.service';
 import { TagTypeEnum } from '../tags/enum/tag-type.enum';
-import { slugify, toSlug } from '../common/utils';
+import { slugify } from '../common/utils';
 import { FindQueryDietaryTagsRdo } from './dto/find-query-dietary-tags.rdo';
-import { AllBasicCategoryValues } from './interfaces/category.interface';
-import { AllBasicCategoriesRO } from './dto/all-basic-categories.ro';
 import { slugifySearch } from '../helpers';
 
 @Injectable()
@@ -53,18 +54,14 @@ export class ProductsService {
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
 
-    const newProduct: IProduct = {
+    const newProduct: ICreateProduct = {
       name: data.name,
       slug: slugify(data.name),
       price: priceDocument._id,
       description: data.description,
-      primeCategory: data.primeCategory
-        ? toSlug(data.primeCategory)
-        : undefined,
-      subCategory: data.subCategory ? toSlug(data.subCategory) : undefined,
-      basicCategory: data.basicCategory
-        ? toSlug(data.basicCategory)
-        : undefined,
+      primeCategory: data.primeCategory,
+      subCategory: data.subCategory,
+      basicCategory: data.basicCategory,
       popularity: data.popularity,
       views: data.views,
       tags: (data.tags && tagsDocument._id) || undefined,
@@ -86,6 +83,30 @@ export class ProductsService {
     return createdProduct.save();
   }
 
+  public async findAllClient(query: IProductQuery): Promise<IProductsRO> {
+    const productsData = await this.findAll(query);
+
+    const transformedProducts: IProduct[] = productsData.products.map(
+      this.toClientProduct,
+    );
+
+    return {
+      products: transformedProducts,
+      meta: productsData.meta,
+    };
+  }
+
+  public async findAllServer(query: IProductQuery): Promise<IProductsRawRO> {
+    const productsData = await this.findAll(query);
+
+    const transformedProducts = productsData.products.map(this.toServerProduct);
+
+    return {
+      products: transformedProducts,
+      meta: productsData.meta,
+    };
+  }
+
   async getAllBySlug(query): Promise<IProductsBySlugRO> {
     const { slug }: IProductQuery = query;
 
@@ -99,171 +120,6 @@ export class ProductsService {
       .exec();
 
     return { products };
-  }
-
-  async findAll(query): Promise<IProductsRO> {
-    const {
-      slug,
-      minPrice = '0',
-      maxPrice,
-      sort,
-      limit = '10',
-      offset = '0',
-      order,
-      primeCategory,
-      subCategory,
-      basicCategory,
-      brand,
-      dietary,
-    }: IProductQuery = query;
-
-    const brandFilter = brand
-      ? {
-          $or: [
-            // Match by slug (most efficient)
-            {
-              'specifications.company.slug': {
-                $in: brand.split('+'),
-              },
-            },
-            // Fallback to normalized name search if needed
-            {
-              'specifications.company.normalizedName': {
-                $regex: brand
-                  .split('+')
-                  .map((b) => this.normalizeCompanyName(b.replace(/-/g, ' ')))
-                  .join('|'),
-              },
-            },
-          ],
-        }
-      : {};
-
-    // Search normalization
-    const normalizedSearch = slug ? slugifySearch(slug) : '';
-    const searchWords = normalizedSearch.split('-').filter(Boolean);
-    const slugMatch = searchWords.length
-      ? {
-          $and: searchWords.map((w) => ({
-            slug: { $regex: w, $options: 'i' },
-          })),
-        }
-      : {};
-
-    const [{ products, total, highestPrice, lowestPrice }] =
-      await this.productModel.aggregate([
-        {
-          $match: {
-            primeCategory: primeCategory || /.*/,
-            subCategory: subCategory || /.*/,
-            basicCategory: basicCategory || /.*/,
-            ...brandFilter,
-            ...slugMatch,
-          },
-        },
-        {
-          $lookup: {
-            from: 'prices',
-            localField: 'price',
-            foreignField: '_id',
-            as: 'price',
-          },
-        },
-        { $unwind: '$price' },
-        {
-          $addFields: {
-            sortPrice: {
-              $cond: {
-                if: '$price.discountPrice',
-                then: '$price.discountPrice',
-                else: '$price.price',
-              },
-            },
-          },
-        },
-        {
-          $match: {
-            sortPrice: {
-              $gte: minPrice ? +minPrice : 0,
-              $lte: maxPrice ? +maxPrice : 500,
-            },
-          },
-        },
-        {
-          $lookup: {
-            from: 'tags',
-            localField: 'tags',
-            foreignField: '_id',
-            as: 'tags',
-          },
-        },
-        {
-          $addFields: {
-            tags: {
-              $arrayElemAt: ['$tags.tags', 0],
-            },
-          },
-        },
-        {
-          $match: dietary
-            ? {
-                'tags.dietaries': {
-                  $in: dietary.split('+'),
-                },
-              }
-            : {},
-        },
-        { $sort: { [`${sort}`]: order === 'desc' ? 1 : -1 } },
-        {
-          $lookup: {
-            from: 'reviews',
-            localField: 'reviews',
-            foreignField: '_id',
-            as: 'reviews',
-          },
-        },
-        { $unwind: { path: '$reviews', preserveNullAndEmptyArrays: true } },
-        {
-          $facet: {
-            products: [{ $skip: +offset }, { $limit: +limit }],
-            total: [{ $count: 'total' }],
-            highestPrice: [
-              { $group: { _id: null, price: { $max: '$sortPrice' } } },
-            ],
-            lowestPrice: [
-              { $group: { _id: null, price: { $min: '$sortPrice' } } },
-            ],
-          },
-        },
-      ]);
-
-    if (products.length === 0) {
-      return {
-        products: [],
-        meta: {
-          total: 0,
-          page: 0,
-          isLastPage: null,
-          maxPrice: 0,
-          minPrice: 0,
-        },
-      };
-    }
-
-    const page: number = +limit !== 0 ? +offset / +limit + 1 : 1;
-    const isLastPage =
-      page * +limit === total[0].total || page * +limit > total[0].total;
-
-    return {
-      products,
-      meta: {
-        total: total[0].total,
-        page,
-        isLastPage,
-        maxPrice: +highestPrice[0].price,
-        minPrice: +lowestPrice[0].price,
-      },
-    };
   }
 
   async findRelated(query: IProductRelatedQuery): Promise<ProductDocument[]> {
@@ -615,24 +471,162 @@ export class ProductsService {
     };
   }
 
+  /**
+   * Fetches a single product by slug for the product detail page.
+   *
+   * Converted from find().populate() to aggregate() so the same
+   * category-name $lookup used in findAll() applies here too - the
+   * populate() chain couldn't do a slug+type filtered join, which is why
+   * primeCategory/subCategory need aggregate rather than a plain populate.
+   *
+   * Schema notes for the reviews join:
+   *  - `reviews` on Product is a single ref to a `Reviews` document.
+   *  - That document has an embedded `reviews` array; each item's `user`
+   *    field is a standard ObjectId ref to `Profile` (confirmed against
+   *    review.scheme.ts), matched here on `_id` like any Mongoose ref -
+   *    NOT on a `userId` field, which doesn't exist on either schema.
+   *  - `firstName`/`avatarId` are assumed to live on `Profile`; flag if
+   *    that's wrong once profile.scheme.ts is available.
+   */
   public async findBySlug(slug: string): Promise<IProductRO> {
-    const product = await this.productModel
-      .findOne({ slug })
-      .populate('price')
-      .populate({
-        path: 'reviews',
-        populate: {
-          path: 'reviews.user',
-          foreignField: 'userId',
-          select: 'firstName avatarId -userId',
+    const [product] = await this.productModel.aggregate([
+      { $match: { slug } },
+      {
+        $lookup: {
+          from: 'prices',
+          localField: 'price',
+          foreignField: '_id',
+          as: 'price',
         },
-      })
-      .populate({
-        path: 'tags',
-        select: 'tags',
-        transform: (doc) => (doc === null ? null : doc.tags),
-      })
-      .exec();
+      },
+      { $unwind: '$price' },
+      {
+        $lookup: {
+          from: 'tags',
+          localField: 'tags',
+          foreignField: '_id',
+          as: 'tags',
+        },
+      },
+      { $addFields: { tags: { $arrayElemAt: ['$tags.tags', 0] } } },
+      {
+        $lookup: {
+          from: 'reviews',
+          localField: 'reviews',
+          foreignField: '_id',
+          as: 'reviews',
+        },
+      },
+      { $unwind: { path: '$reviews', preserveNullAndEmptyArrays: true } },
+      {
+        $lookup: {
+          from: 'profiles',
+          localField: 'reviews.reviews.user',
+          foreignField: '_id',
+          as: 'reviewProfiles',
+        },
+      },
+      {
+        $addFields: {
+          'reviews.reviews': {
+            $map: {
+              input: { $ifNull: ['$reviews.reviews', []] },
+              as: 'review',
+              in: {
+                $mergeObjects: [
+                  '$$review',
+                  {
+                    user: {
+                      $let: {
+                        vars: {
+                          matched: {
+                            $first: {
+                              $filter: {
+                                input: '$reviewProfiles',
+                                as: 'p',
+                                cond: { $eq: ['$$p._id', '$$review.user'] },
+                              },
+                            },
+                          },
+                        },
+                        in: {
+                          firstName: '$$matched.firstName',
+                          avatarId: '$$matched.avatarId',
+                        },
+                      },
+                    },
+                  },
+                ],
+              },
+            },
+          },
+        },
+      },
+      { $project: { reviewProfiles: 0 } },
+      {
+        $lookup: {
+          from: 'categories',
+          let: { categorySlug: '$primeCategory' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$slug', '$$categorySlug'] },
+                    { $eq: ['$type', 'prime'] },
+                  ],
+                },
+              },
+            },
+            { $project: { _id: 0, name: 1, slug: 1 } },
+          ],
+          as: 'primeCategory',
+        },
+      },
+      { $unwind: { path: '$primeCategory', preserveNullAndEmptyArrays: true } },
+      {
+        $lookup: {
+          from: 'categories',
+          let: { categorySlug: '$subCategory' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$slug', '$$categorySlug'] },
+                    { $eq: ['$type', 'sub'] },
+                  ],
+                },
+              },
+            },
+            { $project: { _id: 0, name: 1, slug: 1 } },
+          ],
+          as: 'subCategory',
+        },
+      },
+      { $unwind: { path: '$subCategory', preserveNullAndEmptyArrays: true } },
+      {
+        $lookup: {
+          from: 'categories',
+          let: { categorySlug: '$basicCategory' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$slug', '$$categorySlug'] },
+                    { $eq: ['$type', 'basic'] },
+                  ],
+                },
+              },
+            },
+            { $project: { _id: 0, name: 1, slug: 1 } },
+          ],
+          as: 'basicCategory',
+        },
+      },
+      { $unwind: { path: '$basicCategory', preserveNullAndEmptyArrays: true } },
+    ]);
 
     if (!product)
       throw new HttpException('Product not found', HttpStatus.NOT_FOUND);
@@ -651,7 +645,9 @@ export class ProductsService {
       product.rating = totalRating / reviewsLength;
     }
 
-    await this.update(product.id, newViews);
+    // aggregate() returns plain objects, not Mongoose documents, so there's
+    // no `.id` virtual here - use `_id` directly.
+    await this.update(product._id.toString(), newViews);
 
     return { product };
   }
@@ -725,16 +721,6 @@ export class ProductsService {
         },
       },
     ]);
-  }
-
-  async findAllBasicCategories(): Promise<AllBasicCategoriesRO> {
-    const categorySlugs = AllBasicCategoryValues.map((category) =>
-      toSlug(category),
-    );
-
-    return {
-      categories: categorySlugs,
-    };
   }
 
   public async findTopPopular(query?: any): Promise<ProductDocument[]> {
@@ -866,12 +852,273 @@ export class ProductsService {
     return this.productModel.findByIdAndDelete(id).exec();
   }
 
+  // Helpers
   private normalizeCompanyName(name: string): string {
     return name
       .toLowerCase()
       .replace(/[^\w\s]/g, '') // Remove punctuation
       .replace(/\s+/g, ' ') // Normalize whitespace
       .trim();
+  }
+
+  private toClientProduct(doc: IProductRaw): IProduct {
+    const {
+      _id,
+      createdAt,
+      updatedAt,
+      price: {
+        _id: priceId,
+        createdAt: priceCreatedAt,
+        updatedAt: priceUpdatedAt,
+        __v: priceV,
+        ...priceRest
+      },
+      ...rest
+    } = doc;
+    return {
+      ...rest,
+      price: priceRest,
+    };
+  }
+
+  private toServerProduct(doc: IProductRaw): IProductRaw {
+    return doc;
+  }
+
+  // Repository (DB) layer
+  private async findAll(query: IProductQuery): Promise<IProductsRawRO> {
+    const {
+      slug,
+      minPrice = '0',
+      maxPrice,
+      sort,
+      limit = '10',
+      offset = '0',
+      order,
+      primeCategory,
+      subCategory,
+      basicCategory,
+      brand,
+      dietary,
+    } = query;
+
+    const brandFilter = brand
+      ? {
+          $or: [
+            // Match by slug (most efficient)
+            {
+              'specifications.company.slug': {
+                $in: brand.split('+'),
+              },
+            },
+            // Fallback to normalized name search if needed
+            {
+              'specifications.company.normalizedName': {
+                $regex: brand
+                  .split('+')
+                  .map((b) => this.normalizeCompanyName(b.replace(/-/g, ' ')))
+                  .join('|'),
+              },
+            },
+          ],
+        }
+      : {};
+
+    // Search normalization
+    const normalizedSearch = slug ? slugifySearch(slug) : '';
+    const searchWords = normalizedSearch.split('-').filter(Boolean);
+    const slugMatch = searchWords.length
+      ? {
+          $and: searchWords.map((w) => ({
+            slug: { $regex: w, $options: 'i' },
+          })),
+        }
+      : {};
+
+    const [{ products, total, highestPrice, lowestPrice }] =
+      await this.productModel.aggregate([
+        {
+          $match: {
+            primeCategory: primeCategory || /.*/,
+            subCategory: subCategory || /.*/,
+            basicCategory: basicCategory || /.*/,
+            ...brandFilter,
+            ...slugMatch,
+          },
+        },
+        {
+          $lookup: {
+            from: 'categories',
+            let: { categorySlug: '$primeCategory' },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $and: [
+                      { $eq: ['$slug', '$$categorySlug'] },
+                      { $eq: ['$type', 'prime'] },
+                    ],
+                  },
+                },
+              },
+              { $project: { _id: 0, name: 1, slug: 1 } },
+            ],
+            as: 'primeCategory',
+          },
+        },
+        {
+          $unwind: { path: '$primeCategory', preserveNullAndEmptyArrays: true },
+        },
+        {
+          $lookup: {
+            from: 'categories',
+            let: { categorySlug: '$subCategory' },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $and: [
+                      { $eq: ['$slug', '$$categorySlug'] },
+                      { $eq: ['$type', 'sub'] },
+                    ],
+                  },
+                },
+              },
+              { $project: { _id: 0, name: 1, slug: 1 } },
+            ],
+            as: 'subCategory',
+          },
+        },
+        { $unwind: { path: '$subCategory', preserveNullAndEmptyArrays: true } },
+        {
+          $lookup: {
+            from: 'categories',
+            let: { categorySlug: '$basicCategory' },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $and: [
+                      { $eq: ['$slug', '$$categorySlug'] },
+                      { $eq: ['$type', 'basic'] },
+                    ],
+                  },
+                },
+              },
+              { $project: { _id: 0, name: 1, slug: 1 } },
+            ],
+            as: 'basicCategory',
+          },
+        },
+        {
+          $unwind: { path: '$basicCategory', preserveNullAndEmptyArrays: true },
+        },
+        {
+          $lookup: {
+            from: 'prices',
+            localField: 'price',
+            foreignField: '_id',
+            as: 'price',
+          },
+        },
+        { $unwind: '$price' },
+        {
+          $addFields: {
+            sortPrice: {
+              $cond: {
+                if: '$price.discountPrice',
+                then: '$price.discountPrice',
+                else: '$price.price',
+              },
+            },
+          },
+        },
+        {
+          $match: {
+            sortPrice: {
+              $gte: minPrice ? +minPrice : 0,
+              $lte: maxPrice ? +maxPrice : 500,
+            },
+          },
+        },
+        {
+          $lookup: {
+            from: 'tags',
+            localField: 'tags',
+            foreignField: '_id',
+            as: 'tags',
+          },
+        },
+        {
+          $addFields: {
+            tags: {
+              $arrayElemAt: ['$tags.tags', 0],
+            },
+          },
+        },
+        {
+          $match: dietary
+            ? {
+                'tags.dietaries': {
+                  $in: dietary.split('+'),
+                },
+              }
+            : {},
+        },
+        { $sort: { [`${sort}`]: order === 'desc' ? 1 : -1 } },
+        {
+          $lookup: {
+            from: 'reviews',
+            localField: 'reviews',
+            foreignField: '_id',
+            as: 'reviews',
+          },
+        },
+        { $unwind: { path: '$reviews', preserveNullAndEmptyArrays: true } },
+        {
+          $unset: ['__v', 'price.__v', 'reviews.__v'],
+        },
+        {
+          $facet: {
+            products: [{ $skip: +offset }, { $limit: +limit }],
+            total: [{ $count: 'total' }],
+            highestPrice: [
+              { $group: { _id: null, price: { $max: '$sortPrice' } } },
+            ],
+            lowestPrice: [
+              { $group: { _id: null, price: { $min: '$sortPrice' } } },
+            ],
+          },
+        },
+      ]);
+
+    if (products.length === 0) {
+      return {
+        products: [],
+        meta: {
+          total: 0,
+          page: 0,
+          isLastPage: null,
+          maxPrice: 0,
+          minPrice: 0,
+        },
+      };
+    }
+
+    const page: number = +limit !== 0 ? +offset / +limit + 1 : 1;
+    const isLastPage =
+      page * +limit === total[0].total || page * +limit > total[0].total;
+
+    return {
+      products,
+      meta: {
+        total: total[0].total,
+        page,
+        isLastPage,
+        maxPrice: +highestPrice[0].price,
+        minPrice: +lowestPrice[0].price,
+      },
+    };
   }
 
   private async findById(id: Types.ObjectId): Promise<ProductDocument> {

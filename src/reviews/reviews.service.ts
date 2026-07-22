@@ -3,8 +3,7 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { Model, Types } from 'mongoose';
 import { ReviewDto } from './dto/review.dto';
 import { Review, ReviewDocument } from './schemes/review.scheme';
-import { IReview } from './review.interface';
-import { IReviewCreateRO } from './interfaces/review.interface';
+import { ICreateReview, IReviewCreateRO } from './interfaces/review.interface';
 import { ProductsService } from '../products/products.service';
 
 @Injectable()
@@ -22,7 +21,7 @@ export class ReviewsService {
     if (!product)
       throw new HttpException('Product not found', HttpStatus.NOT_FOUND);
 
-    const reviewToDB: IReview = {
+    const reviewToDB: ICreateReview = {
       user: new Types.ObjectId(userId),
       text: data.text,
       rating: data.rating,

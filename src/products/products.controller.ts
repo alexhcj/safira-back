@@ -36,7 +36,8 @@ export class ProductsController {
   @Get('list')
   findAll(@Query() query): Promise<IProductsRO> {
     this.logger.log('Handling findAll() request...');
-    return this.productsService.findAll(query);
+    return this.productsService.findAllClient(query);
+    // findAllClient
   }
 
   @Get('related')
@@ -81,12 +82,6 @@ export class ProductsController {
     return this.productsService.findAllBrands();
   }
 
-  @Get('all-basic-categories')
-  findAllBasicCategories(): Promise<any> {
-    this.logger.log('Handling findAllBasicCategories() request...');
-    return this.productsService.findAllBasicCategories();
-  }
-
   @Get('top-popular')
   findTopPopular(@Query() query): Promise<ProductDocument[]> {
     this.logger.log('Handling findTopPopular() request...');
@@ -100,7 +95,7 @@ export class ProductsController {
   }
   @Get(':slug')
   findBySlug(@Param('slug') slug: string): Promise<IProductRO> {
-    this.logger.log('Handling findOne() request...');
+    this.logger.log('Handling findBySlug() request...');
     return this.productsService.findBySlug(slug);
   }
 

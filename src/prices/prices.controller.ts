@@ -11,7 +11,7 @@ import {
   ParamData,
 } from '@nestjs/common';
 import { PricesService } from './prices.service';
-import { PriceRO } from './price.interface';
+import { IPriceRO } from './interfaces/price.interface';
 import { CreatePriceDto } from './dto/price.dto';
 
 @Controller('prices')
@@ -33,7 +33,7 @@ export class PricesController {
   }
 
   @Get()
-  findOne(@Query('id') id: ParamData): Promise<PriceRO> {
+  findOne(@Query('id') id: ParamData): Promise<IPriceRO> {
     this.logger.log('Handling findOne() request...');
     return this.pricesService.findOne({ id });
   }
