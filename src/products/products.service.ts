@@ -146,6 +146,73 @@ export class ProductsService {
         },
         {
           $lookup: {
+            from: 'categories',
+            let: { categorySlug: '$primeCategory' },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $and: [
+                      { $eq: ['$slug', '$$categorySlug'] },
+                      { $eq: ['$type', 'prime'] },
+                    ],
+                  },
+                },
+              },
+              { $project: { _id: 0, name: 1, slug: 1 } },
+            ],
+            as: 'primeCategory',
+          },
+        },
+        {
+          $unwind: { path: '$primeCategory', preserveNullAndEmptyArrays: true },
+        },
+        {
+          $lookup: {
+            from: 'categories',
+            let: { categorySlug: '$subCategory' },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $and: [
+                      { $eq: ['$slug', '$$categorySlug'] },
+                      { $eq: ['$type', 'sub'] },
+                    ],
+                  },
+                },
+              },
+              { $project: { _id: 0, name: 1, slug: 1 } },
+            ],
+            as: 'subCategory',
+          },
+        },
+        { $unwind: { path: '$subCategory', preserveNullAndEmptyArrays: true } },
+        {
+          $lookup: {
+            from: 'categories',
+            let: { categorySlug: '$basicCategory' },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $and: [
+                      { $eq: ['$slug', '$$categorySlug'] },
+                      { $eq: ['$type', 'basic'] },
+                    ],
+                  },
+                },
+              },
+              { $project: { _id: 0, name: 1, slug: 1 } },
+            ],
+            as: 'basicCategory',
+          },
+        },
+        {
+          $unwind: { path: '$basicCategory', preserveNullAndEmptyArrays: true },
+        },
+        {
+          $lookup: {
             from: 'prices',
             localField: 'price',
             foreignField: '_id',
@@ -170,6 +237,16 @@ export class ProductsService {
         },
         { $match: { name: { $ne: name } } },
         { $limit: +limit },
+        {
+          $unset: [
+            '_id',
+            'createdAt',
+            'updatedAt',
+            'price._id',
+            'price.createdAt',
+            'price.updatedAt',
+          ],
+        },
       ])
       .exec();
   }
