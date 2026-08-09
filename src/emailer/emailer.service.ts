@@ -636,12 +636,12 @@ export class EmailerService implements IEmailer {
       socials: [
         {
           src: `${apiBaseUrl}/public/images/emails/telegram.svg`,
-          link: 'https://t.me/alex_hcj',
+          link: 'https://t.me/alexhcj',
           name: 'telegram',
         },
         {
           src: `${apiBaseUrl}/public/images/emails/vk.svg`,
-          link: 'https://vk.com/alex_hcj',
+          link: 'https://vk.com/alexhcj',
           name: 'vk',
         },
         {

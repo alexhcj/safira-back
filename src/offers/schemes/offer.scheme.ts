@@ -6,8 +6,8 @@ import {
   CategoryTypeEnum,
   PrimeCategoryEnum,
   SubCategoryEnum,
-} from '../../products/enums/categories.enum';
-import { BasicCategoryType } from '../../products/interfaces/category.interface';
+} from '../enums/categories.enum';
+import { BasicCategoryType } from '../interfaces/category.interface';
 
 class Link {
   @Prop()

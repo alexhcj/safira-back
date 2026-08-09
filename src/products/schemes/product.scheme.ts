@@ -3,7 +3,6 @@ import { Document, SchemaTypes } from 'mongoose';
 import { Price, PriceDocument } from '../../prices/schemes/price.scheme';
 import { Review } from '../../reviews/schemes/review.scheme';
 import { Tag } from '../../tags/schemes/tag.scheme';
-import { BasicCategoryType } from '../interfaces/category.interface';
 import { ShelfLifeUnitEnum } from '../enums/shelf-life-unit.enum';
 
 @Schema({ _id: false })
@@ -68,7 +67,7 @@ export class Product {
   readonly subCategory: string;
 
   @Prop({ type: String, default: undefined })
-  readonly basicCategory: BasicCategoryType;
+  readonly basicCategory: string;
 
   @Prop({ default: 0 })
   readonly popularity: number;

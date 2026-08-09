@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, SchemaTypes } from 'mongoose';
-import { IReview } from '../review.interface';
 import { Profile } from '../../profiles/schemes/profile.scheme';
+import { IReview } from '../interfaces/review.interface';
 
 export type ReviewDocument = Review & Document;
 

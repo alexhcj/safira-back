@@ -5,14 +5,10 @@ import {
   IsString,
   ValidateNested,
 } from 'class-validator';
-import { PrimeCategoryEnum, SubCategoryEnum } from '../enums/categories.enum';
-import { BasicCategoryType } from '../interfaces/category.interface';
 import { CreateSpecificationsDto } from './specifications.dto';
 import { Type } from 'class-transformer';
 import { TagsDto } from '../../tags/dto/tags.dto';
-import { SlugEnum } from '../../common/decorators/slug-enum.decorator';
 import { CreatePriceDto } from '../../prices/dto/price.dto';
-import { SlugBasicCategory } from '../../common/decorators/slug-basic-category.docorator';
 
 export class CreateProductDto {
   @IsNotEmpty()
@@ -29,16 +25,16 @@ export class CreateProductDto {
   readonly price: CreatePriceDto;
 
   @IsNotEmpty()
-  @SlugEnum(PrimeCategoryEnum)
-  readonly primeCategory?: PrimeCategoryEnum;
+  @IsString()
+  readonly primeCategory: string;
 
   @IsOptional()
-  @SlugEnum(SubCategoryEnum)
-  readonly subCategory?: SubCategoryEnum;
+  @IsString()
+  readonly subCategory?: string;
 
   @IsOptional()
-  @SlugBasicCategory()
-  readonly basicCategory: BasicCategoryType;
+  @IsString()
+  readonly basicCategory: string;
 
   @IsOptional()
   @IsString()

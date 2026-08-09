@@ -19,6 +19,7 @@ import { SearchModule } from './search/search.module';
 import { ProfilesModule } from './profiles/profiles.module';
 import { FilesModule } from './files/files.module';
 import { EmailerModule } from './emailer/emailer.module';
+import { CategoriesModule } from './categories/categories.module';
 import configuration from './config/configuration';
 
 @Module({
@@ -61,6 +62,7 @@ import configuration from './config/configuration';
     ProfilesModule,
     FilesModule,
     EmailerModule,
+    CategoriesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

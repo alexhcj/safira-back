@@ -1,33 +1,76 @@
-import { Product, ProductDocument } from '../schemes/product.scheme';
-import { PrimeCategoryEnum, SubCategoryEnum } from '../enums/categories.enum';
-import { BasicCategoryType } from './category.interface';
+import { ProductDocument } from '../schemes/product.scheme';
 import { Types } from 'mongoose';
-import { ShelfLifeUnitEnum } from '../enums/shelf-life-unit.enum';
-import { ICompanyData } from './company.interface';
+import { IPrice, IPriceRaw } from '../../prices/interfaces/price.interface';
+import { ISpecifications } from './specifications.interface';
+import { ITags } from '../../tags/interfaces/tags.interface';
+import { IReviews } from '../../reviews/interfaces/review.interface';
 
-interface ISpecifications {
-  company: ICompanyData;
-  producingCountry?: string;
-  quantity: number;
-  shelfLife: {
-    value: number;
-    unit: ShelfLifeUnitEnum;
-  };
-}
-
-export interface IProduct {
+export interface ICreateProduct {
   name: string;
   slug: string;
   price: Types.ObjectId;
   description?: string;
   primeCategory: string;
-  subCategory: string;
-  basicCategory: string;
+  subCategory?: string;
+  basicCategory?: string;
   popularity?: number;
   views?: number;
   rating?: number;
   tags?: Types.ObjectId;
   reviews?: Types.ObjectId;
+  specifications: ISpecifications;
+}
+
+export interface IProductRaw {
+  _id: string;
+  createdAt: Date;
+  updatedAt: Date;
+  name: string;
+  slug: string;
+  price: IPriceRaw;
+  description?: string;
+  primeCategory: {
+    name: string;
+    slug: string;
+  };
+  subCategory: {
+    name: string;
+    slug: string;
+  };
+  basicCategory: {
+    name: string;
+    slug: string;
+  };
+  popularity?: number;
+  views?: number;
+  rating?: number;
+  tags?: ITags;
+  reviews?: IReviews;
+  specifications: ISpecifications;
+}
+
+export interface IProduct {
+  name: string;
+  slug: string;
+  price: IPrice;
+  description?: string;
+  primeCategory: {
+    name: string;
+    slug: string;
+  };
+  subCategory: {
+    name: string;
+    slug: string;
+  };
+  basicCategory: {
+    name: string;
+    slug: string;
+  };
+  popularity?: number;
+  views?: number;
+  rating?: number;
+  tags?: ITags;
+  reviews?: IReviews;
   specifications: ISpecifications;
 }
 
@@ -49,8 +92,13 @@ export interface IProductRO {
   product: ProductDocument;
 }
 
+export interface IProductsRawRO {
+  products: IProductRaw[];
+  meta: IProductMeta;
+}
+
 export interface IProductsRO {
-  products: Product[];
+  products: IProduct[];
   meta: IProductMeta;
 }
 
@@ -72,9 +120,9 @@ export interface IProductQuery {
   limit?: string;
   offset?: string;
   slug?: string;
-  primeCategory?: PrimeCategoryEnum;
-  subCategory?: SubCategoryEnum;
-  basicCategory?: BasicCategoryType;
+  primeCategory?: string;
+  subCategory?: string;
+  basicCategory?: string;
   brand?: string;
   dietary?: string;
 }
