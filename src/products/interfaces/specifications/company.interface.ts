@@ -3,3 +3,9 @@ export interface ICompanyData {
   normalizedName: string; // Cleaned name for searching (e.g., "conagra foods")
   slug: string; // URL-friendly version (e.g., "conagra-foods")
 }
+
+export interface ICompany {
+  brand: ICompanyData;
+  popularity: number;
+  quantity: number;
+}

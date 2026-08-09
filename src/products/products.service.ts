@@ -6,6 +6,7 @@ import { CreateProductDto } from './dto/create-product.dto';
 import {
   IBrandsRO,
   ICreateProduct,
+  IFindQueryBrandsRO,
   IProduct,
   IProductFilter,
   IProductQuery,
@@ -343,7 +344,7 @@ export class ProductsService {
     return tags[0]?.uniqueDietaries || [];
   }
 
-  async getQueryBrands(query): Promise<any> {
+  async getQueryBrands(query): Promise<IFindQueryBrandsRO> {
     const {
       slug,
       minPrice = '0',
@@ -356,21 +357,22 @@ export class ProductsService {
     }: IProductQuery = query;
 
     const brandFilter = brand
-      ? {
-          'specifications.company.slug': {
-            $in: brand.split('+'),
-          },
-        }
+      ? { 'specifications.company.slug': { $in: brand.split('+') } }
       : {};
+    const categoryFilter = {
+      ...(primeCategory && { primeCategory }),
+      ...(subCategory && { subCategory }),
+      ...(basicCategory && { basicCategory }),
+    };
+    const slugFilter = slug ? { slug: { $regex: slug, $options: 'i' } } : {};
 
     const brands = await this.productModel.aggregate([
       {
         $match: {
-          primeCategory: primeCategory || /.*/,
-          subCategory: subCategory || /.*/,
-          basicCategory: basicCategory || /.*/,
+          ...categoryFilter,
           ...brandFilter,
-          slug: { $regex: `${slug ? slug : ''}`, $options: 'i' },
+          ...slugFilter,
+          'specifications.company.slug': { $exists: true, $ne: null },
         },
       },
       {
@@ -409,39 +411,29 @@ export class ProductsService {
           as: 'tags',
         },
       },
-      {
-        $addFields: {
-          tags: {
-            $arrayElemAt: ['$tags.tags', 0],
-          },
-        },
-      },
+      { $addFields: { tags: { $arrayElemAt: ['$tags.tags', 0] } } },
       {
         $match: dietary
-          ? {
-              'tags.dietaries': {
-                $in: dietary.split('+'),
-              },
-            }
+          ? { 'tags.dietaries': { $in: dietary.split('+') } }
           : {},
       },
       {
         $group: {
-          _id: '$specifications.company',
+          _id: '$specifications.company.slug',
           brand: { $first: '$specifications.company' },
-          popularity: {
-            $sum: '$popularity',
-          },
+          popularity: { $sum: '$popularity' },
           quantity: { $sum: 1 },
-          firstProductName: { $first: '$name' }, // Product name as a secondary sort key
         },
       },
-      { $sort: { popularity: -1, 'brand.displayName': 1 } }, // alphabetical sort as a tie-breaker
+      { $sort: { popularity: -1, 'brand.displayName': 1 } },
+      { $project: { _id: 0, brand: 1, quantity: 1, popularity: 1 } },
     ]);
 
-    return {
-      brands,
-    };
+    const dietaryNames = dietary
+      ? this.tagsService.getDietaryLabels(dietary.split('+'))
+      : undefined;
+
+    return { brands, ...(dietaryNames?.length && { dietary: dietaryNames }) };
   }
 
   async getQueryPriceRange(query): Promise<any> {

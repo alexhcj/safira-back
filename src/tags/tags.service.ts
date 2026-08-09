@@ -4,6 +4,7 @@ import { Tag, TagDocument } from './schemes/tag.scheme';
 import { Model } from 'mongoose';
 import { CreateTagDto, UpdateTagDto } from './dto/tags.dto';
 import { FindUniqueDietaryTagsRdo } from './dto/find-unique-dietary-tags.rdo';
+import { DIETARY_TAG_LABELS, DietaryTagsEnum } from './enum/dietary-tags.enum';
 
 @Injectable()
 export class TagsService {
@@ -74,5 +75,11 @@ export class TagsService {
   // common methods
   async findOne(where): Promise<Tag> {
     return this.tagModel.findOne({ where }).exec();
+  }
+
+  getDietaryLabels(codes: string[]): string[] {
+    return codes
+      .filter((code): code is DietaryTagsEnum => code in DIETARY_TAG_LABELS)
+      .map((code) => DIETARY_TAG_LABELS[code]);
   }
 }
