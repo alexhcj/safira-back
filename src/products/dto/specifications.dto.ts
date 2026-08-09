@@ -5,8 +5,8 @@ import {
   IsOptional,
   IsString,
 } from 'class-validator';
-import { ICompanyData } from '../interfaces/company.interface';
 import { ShelfLifeUnitEnum } from '../enums/shelf-life-unit.enum';
+import { ICompanyData } from '../interfaces/specifications/company.interface';
 
 export class CreateSpecificationsDto {
   @IsNotEmpty()

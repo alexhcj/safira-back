@@ -4,6 +4,7 @@ import { IPrice, IPriceRaw } from '../../prices/interfaces/price.interface';
 import { ISpecifications } from './specifications.interface';
 import { ITags } from '../../tags/interfaces/tags.interface';
 import { IReviews } from '../../reviews/interfaces/review.interface';
+import { ICompany } from './specifications/company.interface';
 
 export interface ICreateProduct {
   name: string;
@@ -130,6 +131,11 @@ export interface IProductQuery {
 export interface IProductRelatedQuery {
   slug: string;
   limit?: string;
+}
+
+export interface IFindQueryBrandsRO {
+  brands: ICompany[];
+  dietary?: string[];
 }
 
 export interface IProductFilter {
