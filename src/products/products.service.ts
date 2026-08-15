@@ -21,7 +21,7 @@ import { UpdateProductDto } from './dto/update-product.dto';
 import { PricesService } from '../prices/prices.service';
 import { TagsService } from '../tags/tags.service';
 import { TagTypeEnum } from '../tags/enum/tag-type.enum';
-import { slugify } from '../common/utils';
+import { buildProductSlug, slugify } from '../common/utils';
 import { FindQueryDietaryTagsRdo } from './dto/find-query-dietary-tags.rdo';
 import { slugifySearch } from '../helpers';
 
@@ -57,27 +57,34 @@ export class ProductsService {
 
     const newProduct: ICreateProduct = {
       name: data.name,
-      slug: slugify(data.name),
-      price: priceDocument._id,
+      slug: buildProductSlug(data.name, data.packaging),
       description: data.description,
+      excerpt: data.excerpt,
+      price: priceDocument._id,
       primeCategory: data.primeCategory,
       subCategory: data.subCategory,
       basicCategory: data.basicCategory,
       popularity: data.popularity,
       views: data.views,
-      tags: (data.tags && tagsDocument._id) || undefined,
+      tags: tagsDocument?._id,
       specifications: {
         company: {
-          displayName: data.specifications.company,
-          slug: slugify(data.specifications.company),
+          displayName: data.specifications.companyName,
+          slug: slugify(data.specifications.companyName),
           normalizedName: this.normalizeCompanyName(
-            data.specifications.company,
+            data.specifications.companyName,
           ),
         },
-        shelfLife: data.specifications.shelfLife,
-        quantity: data.specifications.quantity,
         producingCountry: data.specifications.producingCountry,
+        shelfLife: data.specifications.shelfLife,
+        ingredients: data.specifications.ingredients,
+        storageInformation: data.specifications.storageInformation,
+        nutritionalData: data.specifications.nutritionalData,
+        categorySpecs: data.specifications.categorySpecs,
       },
+      inventory: data.inventory,
+      packaging: data.packaging,
+      shippingDetails: data.shippingDetails,
     };
 
     const createdProduct = new this.productModel(newProduct);
@@ -108,7 +115,7 @@ export class ProductsService {
     };
   }
 
-  async getAllBySlug(query): Promise<IProductsBySlugRO> {
+  async findListBySlug(query): Promise<IProductsBySlugRO> {
     const { slug }: IProductQuery = query;
 
     const find: IProductFilter = {};
@@ -716,7 +723,7 @@ export class ProductsService {
 
     // aggregate() returns plain objects, not Mongoose documents, so there's
     // no `.id` virtual here - use `_id` directly.
-    await this.update(product._id.toString(), newViews);
+    await this.update(product.slug, newViews);
 
     return { product };
   }
@@ -856,8 +863,8 @@ export class ProductsService {
     ]);
   }
 
-  async update(id: string, data: UpdateProductDto): Promise<Product> {
-    const product = await this.findById(new Types.ObjectId(id));
+  async update(slug: string, data: UpdateProductDto): Promise<Product> {
+    const product = await this.productModel.findOne({ slug });
 
     if (!product) {
       throw new HttpException(`Product doesn't exist`, HttpStatus.BAD_REQUEST);
@@ -870,6 +877,8 @@ export class ProductsService {
       name: data.name,
       slug: data.slug,
       description: data.description,
+      excerpt: data.excerpt,
+      price: data.price,
       primeCategory: data.primeCategory,
       subCategory: data.subCategory,
       basicCategory: data.basicCategory,
@@ -877,34 +886,14 @@ export class ProductsService {
       views: data.views,
       tags: data.tags,
       reviews: data.reviews,
-      specifications: {
-        company: data.specifications?.company
-          ? {
-              displayName:
-                data.specifications.company.displayName ||
-                product.specifications.company.displayName,
-              slug:
-                data.specifications.company.slug ||
-                slugify(data.specifications.company.displayName),
-              normalizedName:
-                data.specifications.company.normalizedName ||
-                this.normalizeCompanyName(
-                  data.specifications.company.displayName,
-                ),
-            }
-          : product.specifications.company,
-        producingCountry:
-          data.specifications?.producingCountry ??
-          product.specifications.producingCountry,
-        quantity:
-          data.specifications?.quantity ?? product.specifications.quantity,
-        shelfLife:
-          data.specifications?.shelfLife ?? product.specifications.shelfLife,
-      },
+      specifications: data.specifications,
+      inventory: data.inventory,
+      packaging: data.packaging,
+      shippingDetails: data.shippingDetails,
     };
 
     return this.productModel
-      .findByIdAndUpdate(id, updatedProduct)
+      .findByIdAndUpdate(product._id, updatedProduct)
       .setOptions({ new: true });
   }
 

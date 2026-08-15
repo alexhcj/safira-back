@@ -71,9 +71,9 @@ export class ProductsController {
   }
 
   @Get('list-by-slug')
-  getAllBySlug(@Query() query): Promise<IProductsBySlugRO> {
-    this.logger.log('Handling getAllByName() request...');
-    return this.productsService.getAllBySlug(query);
+  findListBySlug(@Query() query): Promise<IProductsBySlugRO> {
+    this.logger.log('Handling findListBySlug() request...');
+    return this.productsService.findListBySlug(query);
   }
 
   @Get('all-brands')
@@ -93,16 +93,17 @@ export class ProductsController {
     this.logger.log('Handling findTopByPrimeCategories() request...');
     return this.productsService.findTopByPrimeCategories();
   }
+
   @Get(':slug')
   findBySlug(@Param('slug') slug: string): Promise<IProductRO> {
     this.logger.log('Handling findBySlug() request...');
     return this.productsService.findBySlug(slug);
   }
 
-  @Put(':id')
-  update(@Param('id') id: string, @Body() data: UpdateProductDto) {
-    this.logger.log('Handling update() request with id=' + id + '...');
-    return this.productsService.update(id, data);
+  @Put(':slug')
+  update(@Param('slug') slug: string, @Body() data: UpdateProductDto) {
+    this.logger.log('Handling update() request for product = ' + slug);
+    return this.productsService.update(slug, data);
   }
 
   @Delete(':id')
