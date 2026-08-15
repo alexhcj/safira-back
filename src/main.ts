@@ -1,11 +1,3 @@
-import { setServers } from 'node:dns/promises';
-
-// Node.js v24+ DNS regression workaround on Windows:
-// Forces DNS resolution through public resolvers to fix querySrv ETIMEOUT
-// errors with MongoDB Atlas SRV connection strings.
-// See: https://github.com/nodejs/node/pull/61453
-setServers(['1.1.1.1', '8.8.8.8']);
-
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module';
