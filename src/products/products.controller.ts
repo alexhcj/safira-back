@@ -12,7 +12,6 @@ import {
 import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import {
-  IBrandsRO,
   IProductRO,
   IProductsBySlugRO,
   IProductsRO,
@@ -52,13 +51,13 @@ export class ProductsController {
     return this.productsService.findRandom(query);
   }
 
-  @Get('list-brands')
-  getQueryBrands(@Query() query): Promise<any> {
-    this.logger.log('Handling getQueryBrands() request...');
-    return this.productsService.getQueryBrands(query);
+  @Get('query-brands')
+  findQueryBrands(@Query() query): Promise<any> {
+    this.logger.log('Handling findQueryBrands() request...');
+    return this.productsService.findQueryBrands(query);
   }
 
-  @Get('list-tags')
+  @Get('query-dietary-tags')
   findQueryDietaryTags(@Query() query): Promise<any> {
     this.logger.log('Handling findQueryDietaryTags() request...');
     return this.productsService.findQueryDietaryTags(query);
@@ -74,12 +73,6 @@ export class ProductsController {
   findListBySlug(@Query() query): Promise<IProductsBySlugRO> {
     this.logger.log('Handling findListBySlug() request...');
     return this.productsService.findListBySlug(query);
-  }
-
-  @Get('all-brands')
-  findAllBrands(): Promise<IBrandsRO[]> {
-    this.logger.log('Handling findAllBrands() request...');
-    return this.productsService.findAllBrands();
   }
 
   @Get('top-popular')
@@ -110,5 +103,10 @@ export class ProductsController {
   delete(@Param('id') id: string) {
     this.logger.log('Handling delete() request with id=' + id + '...');
     return this.productsService.delete(id);
+  }
+
+  @Get('merge-brands')
+  _mergeBrands(@Query() query): Promise<any> {
+    return this.productsService._mergeBrands(query);
   }
 }

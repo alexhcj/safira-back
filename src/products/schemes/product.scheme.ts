@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, SchemaTypes } from 'mongoose';
+import { Document, SchemaTypes, Types } from 'mongoose';
 import {
   Ingredient,
   NutritionalData,
@@ -26,18 +26,6 @@ import { SpecArchetype } from '../enums/category-specs.enum';
 import { getSubdocumentPath } from '../utils/get-sub-document-path';
 
 @Schema({ _id: false })
-class Company {
-  @Prop({ required: true })
-  readonly displayName: string;
-
-  @Prop({ required: true })
-  readonly normalizedName: string;
-
-  @Prop({ required: true })
-  readonly slug: string;
-}
-
-@Schema({ _id: false })
 class ShelfLife {
   @Prop({ required: true, min: 1 })
   readonly value: number;
@@ -49,7 +37,7 @@ class ShelfLife {
 @Schema({ _id: false })
 export class Specifications {
   @Prop({ required: true })
-  readonly company: Company;
+  readonly brand: Types.ObjectId;
 
   @Prop()
   readonly producingCountry?: string;
@@ -159,6 +147,8 @@ const perishableProteinSchema = SchemaFactory.createForClass(
 const packagedCountSchema = SchemaFactory.createForClass(PackagedCountSpecs);
 const cookingOilSchema = SchemaFactory.createForClass(CookingOilSpecs);
 const preservedFoodSchema = SchemaFactory.createForClass(PreservedFoodSpecs);
+
+ProductScheme.index({ brandId: 1 });
 
 const specificationsPath = getSubdocumentPath(ProductScheme, 'specifications');
 

@@ -1,6 +1,7 @@
 import {
   IsArray,
   IsDefined,
+  IsMongoId,
   IsNotEmpty,
   IsOptional,
   IsString,
@@ -24,8 +25,8 @@ import { CreateNonAlcoholicBeverageSpecsDto } from './category-specs/create-non-
 
 export class CreateSpecificationsDto {
   @IsNotEmpty()
-  @IsString()
-  readonly companyName: string;
+  @IsMongoId()
+  readonly brand: string;
 
   @IsOptional()
   @IsString()

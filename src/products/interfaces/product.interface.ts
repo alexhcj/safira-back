@@ -4,10 +4,13 @@ import { IPrice, IPriceRaw } from '../../prices/interfaces/price.interface';
 import { ITags } from '../../tags/interfaces/tags.interface';
 import { IReviews } from '../../reviews/interfaces/review.interface';
 import { IInventory } from './inventory.interface';
-import { ISpecifications } from './specifications/specifications.interface';
+import {
+  ISpecifications,
+  ISpecificationsRaw,
+} from './specifications/specifications.interface';
 import { IPackaging } from './packaging/packaging.interface';
 import { IShippingDetails } from './shipping-details/shipping-details.interface';
-import { ICompany } from './specifications/company.interface';
+import { IBrandRaw } from '../../brands/interfaces/brand.interface';
 
 export interface ICreateProduct {
   name: string;
@@ -54,7 +57,7 @@ export interface IProductRaw {
   rating?: number;
   tags?: ITags;
   reviews?: IReviews;
-  specifications: ISpecifications;
+  specifications: ISpecificationsRaw;
 }
 
 export interface IProduct {
@@ -114,11 +117,6 @@ export interface IProductsBySlugRO {
   products: IProductBySlug[];
 }
 
-export interface IBrandsRO {
-  name: string;
-  brands: string[];
-}
-
 export interface IProductQuery {
   name?: string;
   sort?: IProductSort;
@@ -140,8 +138,14 @@ export interface IProductRelatedQuery {
   limit?: string;
 }
 
+interface IQueryBrandData {
+  brand: IBrandRaw;
+  popularity: number;
+  quantity: number;
+}
+
 export interface IFindQueryBrandsRO {
-  brands: ICompany[];
+  brands: IQueryBrandData[];
   dietary?: string[];
 }
 

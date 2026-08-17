@@ -7,6 +7,7 @@ import { Price, PriceScheme } from '../prices/schemes/price.scheme';
 import { Tag, TagScheme } from '../tags/schemes/tag.scheme';
 import { PricesService } from '../prices/prices.service';
 import { TagsModule } from '../tags/tags.module';
+import { BrandsModule } from '../brands/brands.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { TagsModule } from '../tags/tags.module';
       { name: Tag.name, schema: TagScheme },
     ]),
     TagsModule,
+    BrandsModule,
   ],
   controllers: [ProductsController],
   providers: [ProductsService, PricesService],

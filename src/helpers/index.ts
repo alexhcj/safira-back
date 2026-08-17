@@ -25,3 +25,11 @@ export const slugifySearch = (text: string): string => {
     .replace(/[^a-z0-9]+/g, '-') // spaces, parens, etc -> hyphen
     .replace(/^-+|-+$/g, ''); // trim leading/trailing hyphens
 };
+
+export const normalizeCompanyName = (name: string): string => {
+  return name
+    .toLowerCase()
+    .replace(/[^\w\s]/g, '') // Remove punctuation
+    .replace(/\s+/g, ' ') // Normalize whitespace
+    .trim();
+};

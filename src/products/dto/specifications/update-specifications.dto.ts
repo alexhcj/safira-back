@@ -1,7 +1,12 @@
-import { IsArray, IsOptional, IsString, ValidateNested } from 'class-validator';
+import {
+  IsArray,
+  IsMongoId,
+  IsOptional,
+  IsString,
+  ValidateNested,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import { UpdateShelfLifeDto } from './update-shelf-life.dto';
-import { UpdateCompanyDataDto } from '../update-company-data.dto';
 import { UpdateIngredientDto } from './update-ingredient.dto';
 import { UpdateStorageInformationDto } from './update-storage-information.dto';
 import { UpdateNutritionalDataDto } from './update-nutritional-data.dto';
@@ -15,9 +20,8 @@ import { UpdatePackagedCountSpecsDto } from './category-specs/update-packaged-co
 
 export class UpdateSpecificationsDto {
   @IsOptional()
-  @ValidateNested()
-  @Type(() => UpdateCompanyDataDto)
-  readonly company?: UpdateCompanyDataDto;
+  @IsMongoId()
+  readonly brand?: string;
 
   @IsOptional()
   @IsString()
