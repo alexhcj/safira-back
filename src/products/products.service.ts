@@ -902,7 +902,7 @@ export class ProductsService {
 
     if (!product) {
       throw new HttpException(
-        `Такого продукта не существует`,
+        `Thus product doesn't exist`,
         HttpStatus.BAD_REQUEST,
       );
     }
