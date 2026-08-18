@@ -9,6 +9,8 @@ import { PostsService } from '../posts/posts.service';
 import { PricesService } from '../prices/prices.service';
 import { Price, PriceScheme } from '../prices/schemes/price.scheme';
 import { TagsModule } from '../tags/tags.module';
+import { BrandsModule } from '../brands/brands.module';
+import { Brand, BrandSchema } from '../brands/schemes/brand.schema';
 
 @Module({
   imports: [
@@ -16,8 +18,10 @@ import { TagsModule } from '../tags/tags.module';
       { name: Product.name, schema: ProductScheme },
       { name: Post.name, schema: PostScheme },
       { name: Price.name, schema: PriceScheme },
+      { name: Brand.name, schema: BrandSchema },
     ]),
     TagsModule,
+    BrandsModule,
   ],
   controllers: [SearchController],
   providers: [SearchService, ProductsService, PostsService, PricesService],

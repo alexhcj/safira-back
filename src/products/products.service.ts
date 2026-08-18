@@ -4,7 +4,6 @@ import { Aggregate, Model, Types } from 'mongoose';
 import { Product, ProductDocument } from './schemes/product.scheme';
 import { CreateProductDto } from './dto/create-product.dto';
 import {
-  IBrandsRO,
   ICreateProduct,
   IFindQueryBrandsRO,
   IProduct,
@@ -21,9 +20,11 @@ import { UpdateProductDto } from './dto/update-product.dto';
 import { PricesService } from '../prices/prices.service';
 import { TagsService } from '../tags/tags.service';
 import { TagTypeEnum } from '../tags/enum/tag-type.enum';
-import { slugify } from '../common/utils';
+import { buildProductSlug } from '../common/utils';
 import { FindQueryDietaryTagsRdo } from './dto/find-query-dietary-tags.rdo';
 import { slugifySearch } from '../helpers';
+import { BrandsService } from '../brands/brands.service';
+import { BrandStatusEnum } from '../brands/enums/brand-status.enum';
 
 @Injectable()
 export class ProductsService {
@@ -31,6 +32,7 @@ export class ProductsService {
     @InjectModel(Product.name) private productModel: Model<ProductDocument>,
     private readonly pricesService: PricesService,
     private readonly tagsService: TagsService,
+    private readonly brandsService: BrandsService,
   ) {}
 
   async create(data: CreateProductDto): Promise<ProductDocument> {
@@ -55,29 +57,29 @@ export class ProductsService {
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
 
+    const brand = await this.brandsService.findOrCreateBrand(
+      data.specifications.brand,
+    );
+
     const newProduct: ICreateProduct = {
       name: data.name,
-      slug: slugify(data.name),
-      price: priceDocument._id,
+      slug: buildProductSlug(data.name, data.packaging),
       description: data.description,
+      excerpt: data.excerpt,
+      price: priceDocument._id,
       primeCategory: data.primeCategory,
       subCategory: data.subCategory,
       basicCategory: data.basicCategory,
       popularity: data.popularity,
       views: data.views,
-      tags: (data.tags && tagsDocument._id) || undefined,
+      tags: tagsDocument?._id,
       specifications: {
-        company: {
-          displayName: data.specifications.company,
-          slug: slugify(data.specifications.company),
-          normalizedName: this.normalizeCompanyName(
-            data.specifications.company,
-          ),
-        },
-        shelfLife: data.specifications.shelfLife,
-        quantity: data.specifications.quantity,
-        producingCountry: data.specifications.producingCountry,
+        ...data.specifications,
+        brand: brand._id,
       },
+      inventory: data.inventory,
+      packaging: data.packaging,
+      shippingDetails: data.shippingDetails,
     };
 
     const createdProduct = new this.productModel(newProduct);
@@ -108,7 +110,7 @@ export class ProductsService {
     };
   }
 
-  async getAllBySlug(query): Promise<IProductsBySlugRO> {
+  async findListBySlug(query): Promise<IProductsBySlugRO> {
     const { slug }: IProductQuery = query;
 
     const find: IProductFilter = {};
@@ -223,6 +225,15 @@ export class ProductsService {
         { $unwind: '$price' },
         {
           $lookup: {
+            from: 'brands',
+            localField: 'specifications.brand',
+            foreignField: '_id',
+            as: 'specifications.brand',
+          },
+        },
+        { $unwind: '$specifications.brand' },
+        {
+          $lookup: {
             from: 'tags',
             localField: 'tags',
             foreignField: '_id',
@@ -267,12 +278,11 @@ export class ProductsService {
       brand,
     }: IProductQuery = query;
 
-    const brandFilter = brand
-      ? {
-          'specifications.company.slug': {
-            $in: brand.split('+'),
-          },
-        }
+    const brandIds = brand
+      ? await this.brandsService.findIdsBySlugs(brand.split('+'))
+      : undefined;
+    const brandFilter = brandIds
+      ? { 'specifications.brand': { $in: brandIds } }
       : {};
 
     const tags = await this.productModel.aggregate([
@@ -344,7 +354,7 @@ export class ProductsService {
     return tags[0]?.uniqueDietaries || [];
   }
 
-  async getQueryBrands(query): Promise<IFindQueryBrandsRO> {
+  async findQueryBrands(query): Promise<IFindQueryBrandsRO> {
     const {
       slug,
       minPrice = '0',
@@ -356,8 +366,11 @@ export class ProductsService {
       dietary,
     }: IProductQuery = query;
 
-    const brandFilter = brand
-      ? { 'specifications.company.slug': { $in: brand.split('+') } }
+    const brandIds = brand
+      ? await this.brandsService.findIdsBySlugs(brand.split('+'))
+      : undefined;
+    const brandFilter = brandIds
+      ? { 'specifications.brand': { $in: brandIds } }
       : {};
     const categoryFilter = {
       ...(primeCategory && { primeCategory }),
@@ -372,7 +385,7 @@ export class ProductsService {
           ...categoryFilter,
           ...brandFilter,
           ...slugFilter,
-          'specifications.company.slug': { $exists: true, $ne: null },
+          'specifications.brand': { $exists: true, $ne: null },
         },
       },
       {
@@ -419,14 +432,29 @@ export class ProductsService {
       },
       {
         $group: {
-          _id: '$specifications.company.slug',
-          brand: { $first: '$specifications.company' },
+          _id: '$specifications.brand',
           popularity: { $sum: '$popularity' },
           quantity: { $sum: 1 },
         },
       },
-      { $sort: { popularity: -1, 'brand.displayName': 1 } },
-      { $project: { _id: 0, brand: 1, quantity: 1, popularity: 1 } },
+      {
+        $lookup: {
+          from: 'brands',
+          localField: '_id',
+          foreignField: '_id',
+          as: 'brand',
+        },
+      },
+      { $unwind: '$brand' },
+      {
+        $project: {
+          _id: 0,
+          brand: { slug: '$brand.slug', displayName: '$brand.displayName' },
+          quantity: 1,
+          popularity: 1,
+        },
+      },
+      { $sort: { popularity: -1, 'brand.displayName': 1 } }, // moved after $project — displayName only exists post-lookup
     ]);
 
     const dietaryNames = dietary
@@ -448,12 +476,11 @@ export class ProductsService {
       dietary,
     }: IProductQuery = query;
 
-    const brandFilter = brand
-      ? {
-          'specifications.company.slug': {
-            $in: brand.split('+'),
-          },
-        }
+    const brandIds = brand
+      ? await this.brandsService.findIdsBySlugs(brand.split('+'))
+      : undefined;
+    const brandFilter = brandIds
+      ? { 'specifications.brand': { $in: brandIds } }
       : {};
 
     const res = await this.productModel.aggregate([
@@ -569,6 +596,15 @@ export class ProductsService {
         },
       },
       { $unwind: '$price' },
+      {
+        $lookup: {
+          from: 'brands',
+          localField: 'specifications.brand',
+          foreignField: '_id',
+          as: 'specifications.brand',
+        },
+      },
+      { $unwind: '$specifications.brand' },
       {
         $lookup: {
           from: 'tags',
@@ -716,80 +752,9 @@ export class ProductsService {
 
     // aggregate() returns plain objects, not Mongoose documents, so there's
     // no `.id` virtual here - use `_id` directly.
-    await this.update(product._id.toString(), newViews);
+    await this.update(product.slug, newViews);
 
     return { product };
-  }
-
-  // IBrandsRO[]
-  async findAllBrands(): Promise<IBrandsRO[]> {
-    return this.productModel.aggregate([
-      {
-        $project: {
-          company: '$specifications.company',
-          firstLetter: {
-            $toUpper: {
-              $substrCP: ['$specifications.company.displayName', 0, 1],
-            },
-          },
-        },
-      },
-      {
-        $project: {
-          company: 1,
-          group: {
-            $cond: {
-              if: {
-                $regexMatch: {
-                  input: '$firstLetter',
-                  regex: /^[A-Z]$/,
-                },
-              },
-              then: '$firstLetter',
-              else: '#',
-            },
-          },
-        },
-      },
-      {
-        $group: {
-          _id: '$group',
-          brands: {
-            $addToSet: {
-              slug: '$company.slug',
-              displayName: '$company.displayName',
-            },
-          },
-        },
-      },
-      {
-        $addFields: {
-          sortOrder: {
-            $cond: [{ $eq: ['$_id', '#'] }, 0, 1],
-          },
-        },
-      },
-      {
-        $sort: {
-          sortOrder: 1,
-          _id: 1,
-        },
-      },
-      {
-        $project: {
-          _id: 0,
-          name: '$_id',
-          brands: {
-            $sortArray: {
-              input: '$brands',
-              sortBy: {
-                displayName: 1,
-              },
-            },
-          },
-        },
-      },
-    ]);
   }
 
   public async findTopPopular(query?: any): Promise<ProductDocument[]> {
@@ -813,6 +778,15 @@ export class ProductsService {
         },
       },
       { $unwind: '$price' },
+      {
+        $lookup: {
+          from: 'brands',
+          localField: 'specifications.brand',
+          foreignField: '_id',
+          as: 'specifications.brand',
+        },
+      },
+      { $unwind: '$specifications.brand' },
       {
         $lookup: {
           from: 'tags',
@@ -856,8 +830,52 @@ export class ProductsService {
     ]);
   }
 
-  async update(id: string, data: UpdateProductDto): Promise<Product> {
-    const product = await this.findById(new Types.ObjectId(id));
+  // Used by the merge/admin flow — reassigns without either module reaching into the other's model
+  public async reassignBrand(
+    oldBrandId: Types.ObjectId,
+    newBrandId: Types.ObjectId,
+  ): Promise<void> {
+    await this.productModel.updateMany(
+      { 'specifications.brand': oldBrandId },
+      { $set: { 'specifications.brand': newBrandId } },
+    );
+  }
+
+  // New product imports will surface duplicates over time
+  async _mergeBrands({
+    survivorId,
+    loserId,
+  }: {
+    survivorId: Types.ObjectId;
+    loserId: Types.ObjectId;
+  }): Promise<void> {
+    const [survivor, loser] = await Promise.all([
+      this.brandsService.findByIdOrFail(survivorId),
+      this.brandsService.findByIdOrFail(loserId),
+    ]);
+    if (!survivor || !loser)
+      throw new HttpException('Brand not found', HttpStatus.NOT_FOUND);
+
+    // 1. Reassign products from loser to survivor
+    await this.productModel.updateMany(
+      { 'specifications.brand': loser._id },
+      { $set: { 'specifications.brand': survivor._id } },
+    );
+
+    // 2. Fold loser's identity into survivor's aliases so it's caught next time
+    const newAliases = Array.from(
+      new Set([...survivor.aliases, loser.displayName, ...loser.aliases]),
+    );
+    await this.brandsService.update(survivor._id, { aliases: newAliases });
+
+    // 3. Archive, don't delete — keeps the trail intact
+    await this.brandsService.update(loser._id, {
+      status: BrandStatusEnum.ARCHIVED,
+    });
+  }
+
+  async update(slug: string, data: UpdateProductDto): Promise<Product> {
+    const product = await this.productModel.findOne({ slug });
 
     if (!product) {
       throw new HttpException(`Product doesn't exist`, HttpStatus.BAD_REQUEST);
@@ -870,6 +888,8 @@ export class ProductsService {
       name: data.name,
       slug: data.slug,
       description: data.description,
+      excerpt: data.excerpt,
+      price: data.price,
       primeCategory: data.primeCategory,
       subCategory: data.subCategory,
       basicCategory: data.basicCategory,
@@ -877,34 +897,14 @@ export class ProductsService {
       views: data.views,
       tags: data.tags,
       reviews: data.reviews,
-      specifications: {
-        company: data.specifications?.company
-          ? {
-              displayName:
-                data.specifications.company.displayName ||
-                product.specifications.company.displayName,
-              slug:
-                data.specifications.company.slug ||
-                slugify(data.specifications.company.displayName),
-              normalizedName:
-                data.specifications.company.normalizedName ||
-                this.normalizeCompanyName(
-                  data.specifications.company.displayName,
-                ),
-            }
-          : product.specifications.company,
-        producingCountry:
-          data.specifications?.producingCountry ??
-          product.specifications.producingCountry,
-        quantity:
-          data.specifications?.quantity ?? product.specifications.quantity,
-        shelfLife:
-          data.specifications?.shelfLife ?? product.specifications.shelfLife,
-      },
+      specifications: data.specifications,
+      inventory: data.inventory,
+      packaging: data.packaging,
+      shippingDetails: data.shippingDetails,
     };
 
     return this.productModel
-      .findByIdAndUpdate(id, updatedProduct)
+      .findByIdAndUpdate(product._id, updatedProduct)
       .setOptions({ new: true });
   }
 
@@ -913,7 +913,7 @@ export class ProductsService {
 
     if (!product) {
       throw new HttpException(
-        `Такого продукта не существует`,
+        `Thus product doesn't exist`,
         HttpStatus.BAD_REQUEST,
       );
     }
@@ -922,14 +922,6 @@ export class ProductsService {
   }
 
   // Helpers
-  private normalizeCompanyName(name: string): string {
-    return name
-      .toLowerCase()
-      .replace(/[^\w\s]/g, '') // Remove punctuation
-      .replace(/\s+/g, ' ') // Normalize whitespace
-      .trim();
-  }
-
   private toClientProduct(doc: IProductRaw): IProduct {
     const {
       _id,
@@ -942,11 +934,25 @@ export class ProductsService {
         __v: priceV,
         ...priceRest
       },
+      specifications: {
+        brand: {
+          _id: brandId,
+          __v: brandV,
+          createdAt: brandCreatedAt,
+          updatedAt: brandUpdatedAt,
+          ...brandRest
+        },
+        ...restSpecifications
+      },
       ...rest
     } = doc;
     return {
       ...rest,
       price: priceRest,
+      specifications: {
+        brand: brandRest,
+        ...restSpecifications,
+      },
     };
   }
 
@@ -971,26 +977,11 @@ export class ProductsService {
       dietary,
     } = query;
 
-    const brandFilter = brand
-      ? {
-          $or: [
-            // Match by slug (most efficient)
-            {
-              'specifications.company.slug': {
-                $in: brand.split('+'),
-              },
-            },
-            // Fallback to normalized name search if needed
-            {
-              'specifications.company.normalizedName': {
-                $regex: brand
-                  .split('+')
-                  .map((b) => this.normalizeCompanyName(b.replace(/-/g, ' ')))
-                  .join('|'),
-              },
-            },
-          ],
-        }
+    const brandIds = brand
+      ? await this.brandsService.findIdsBySlugs(brand.split('+'))
+      : undefined;
+    const brandFilter = brandIds
+      ? { 'specifications.brand': { $in: brandIds } }
       : {};
 
     // Search normalization
@@ -1091,6 +1082,15 @@ export class ProductsService {
           },
         },
         { $unwind: '$price' },
+        {
+          $lookup: {
+            from: 'brands',
+            localField: 'specifications.brand',
+            foreignField: '_id',
+            as: 'specifications.brand',
+          },
+        },
+        { $unwind: '$specifications.brand' },
         {
           $addFields: {
             sortPrice: {

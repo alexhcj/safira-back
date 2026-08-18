@@ -9,14 +9,20 @@ import { ProductsService } from '../products/products.service';
 import { Price, PriceScheme } from '../prices/schemes/price.scheme';
 import { PricesService } from '../prices/prices.service';
 import { TagsModule } from '../tags/tags.module';
+import { BrandsModule } from '../brands/brands.module';
+import { Brand, BrandSchema } from '../brands/schemes/brand.schema';
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: Review.name, schema: ReviewScheme }]),
     MongooseModule.forFeature([{ name: Product.name, schema: ProductScheme }]),
     MongooseModule.forFeature([{ name: User.name, schema: UserScheme }]),
-    MongooseModule.forFeature([{ name: Price.name, schema: PriceScheme }]),
+    MongooseModule.forFeature([
+      { name: Price.name, schema: PriceScheme },
+      { name: Brand.name, schema: BrandSchema },
+    ]),
     TagsModule,
+    BrandsModule,
   ],
   controllers: [ReviewsController],
   providers: [ReviewsService, ProductsService, PricesService],

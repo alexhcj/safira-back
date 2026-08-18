@@ -12,7 +12,6 @@ import {
 import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import {
-  IBrandsRO,
   IProductRO,
   IProductsBySlugRO,
   IProductsRO,
@@ -52,13 +51,13 @@ export class ProductsController {
     return this.productsService.findRandom(query);
   }
 
-  @Get('list-brands')
-  getQueryBrands(@Query() query): Promise<any> {
-    this.logger.log('Handling getQueryBrands() request...');
-    return this.productsService.getQueryBrands(query);
+  @Get('query-brands')
+  findQueryBrands(@Query() query): Promise<any> {
+    this.logger.log('Handling findQueryBrands() request...');
+    return this.productsService.findQueryBrands(query);
   }
 
-  @Get('list-tags')
+  @Get('query-dietary-tags')
   findQueryDietaryTags(@Query() query): Promise<any> {
     this.logger.log('Handling findQueryDietaryTags() request...');
     return this.productsService.findQueryDietaryTags(query);
@@ -71,15 +70,9 @@ export class ProductsController {
   }
 
   @Get('list-by-slug')
-  getAllBySlug(@Query() query): Promise<IProductsBySlugRO> {
-    this.logger.log('Handling getAllByName() request...');
-    return this.productsService.getAllBySlug(query);
-  }
-
-  @Get('all-brands')
-  findAllBrands(): Promise<IBrandsRO[]> {
-    this.logger.log('Handling findAllBrands() request...');
-    return this.productsService.findAllBrands();
+  findListBySlug(@Query() query): Promise<IProductsBySlugRO> {
+    this.logger.log('Handling findListBySlug() request...');
+    return this.productsService.findListBySlug(query);
   }
 
   @Get('top-popular')
@@ -93,21 +86,27 @@ export class ProductsController {
     this.logger.log('Handling findTopByPrimeCategories() request...');
     return this.productsService.findTopByPrimeCategories();
   }
+
   @Get(':slug')
   findBySlug(@Param('slug') slug: string): Promise<IProductRO> {
     this.logger.log('Handling findBySlug() request...');
     return this.productsService.findBySlug(slug);
   }
 
-  @Put(':id')
-  update(@Param('id') id: string, @Body() data: UpdateProductDto) {
-    this.logger.log('Handling update() request with id=' + id + '...');
-    return this.productsService.update(id, data);
+  @Put(':slug')
+  update(@Param('slug') slug: string, @Body() data: UpdateProductDto) {
+    this.logger.log('Handling update() request for product = ' + slug);
+    return this.productsService.update(slug, data);
   }
 
   @Delete(':id')
   delete(@Param('id') id: string) {
     this.logger.log('Handling delete() request with id=' + id + '...');
     return this.productsService.delete(id);
+  }
+
+  @Get('merge-brands')
+  _mergeBrands(@Query() query): Promise<any> {
+    return this.productsService._mergeBrands(query);
   }
 }

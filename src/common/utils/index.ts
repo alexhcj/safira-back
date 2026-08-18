@@ -1,3 +1,5 @@
+import { IPackaging } from '../../products/interfaces/packaging/packaging.interface';
+
 export function toSlug(value: string): string {
   return value.toLowerCase().replace(/_/g, '-');
 }
@@ -18,16 +20,27 @@ export function fromSlugValue(
   return map[slug];
 }
 
-export function slugify(title: string, addRandom = false): string {
-  const base = title
+export function slugify(text: string): string {
+  return text
     .toLowerCase()
     .trim()
     .replace(/'/g, '') // replace single quotes with hyphens
     .replace(/\s+/g, '-') // spaces to hyphens
     .replace(/[^\w-]/g, '') // remove non-url characters but retain hyphens
     .replace(/-+/g, '-'); // replace multiple consecutive hyphens with a single one
+}
 
-  const suffix = addRandom ? '-' + Math.random().toString(36).slice(2, 8) : '';
+export function buildProductSlug(name: string, packaging: IPackaging): string {
+  const base = slugify(name);
+  const parts = [base];
 
-  return base + suffix;
+  if (packaging.unitsPerPack > 1) {
+    parts.push(`${packaging.unitsPerPack}x`);
+  }
+
+  if (packaging.unitSize) {
+    parts.push(`${packaging.unitSize.value}${packaging.unitSize.unit}`);
+  }
+
+  return parts.join('-');
 }

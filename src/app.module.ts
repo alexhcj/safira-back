@@ -20,6 +20,7 @@ import { ProfilesModule } from './profiles/profiles.module';
 import { FilesModule } from './files/files.module';
 import { EmailerModule } from './emailer/emailer.module';
 import { CategoriesModule } from './categories/categories.module';
+import { BrandsModule } from './brands/brands.module';
 import configuration from './config/configuration';
 
 @Module({
@@ -63,6 +64,7 @@ import configuration from './config/configuration';
     FilesModule,
     EmailerModule,
     CategoriesModule,
+    BrandsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

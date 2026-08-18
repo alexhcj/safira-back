@@ -1,14 +1,18 @@
 import {
+  IsDefined,
   IsNotEmpty,
   IsNumber,
   IsOptional,
   IsString,
   ValidateNested,
 } from 'class-validator';
-import { CreateSpecificationsDto } from './specifications.dto';
 import { Type } from 'class-transformer';
 import { TagsDto } from '../../tags/dto/tags.dto';
 import { CreatePriceDto } from '../../prices/dto/price.dto';
+import { CreateSpecificationsDto } from './specifications/create-specifications.dto';
+import { CreateInventoryDto } from './create-inventory.dto';
+import { CreatePackagingDto } from './packaging/create-packaging.dto';
+import { CreateShippingDetailsDto } from './shipping-details/create-shipping-details.dto';
 
 export class CreateProductDto {
   @IsNotEmpty()
@@ -20,6 +24,10 @@ export class CreateProductDto {
   readonly description?: string;
 
   @IsNotEmpty()
+  @IsString()
+  readonly excerpt: string;
+
+  @IsDefined()
   @ValidateNested()
   @Type(() => CreatePriceDto)
   readonly price: CreatePriceDto;
@@ -45,15 +53,27 @@ export class CreateProductDto {
   readonly views: number;
 
   @IsOptional()
-  @IsString()
-  readonly producingCountry: string;
-
-  @IsOptional()
   @ValidateNested()
   @Type(() => TagsDto)
   readonly tags: TagsDto;
 
+  @IsDefined()
   @ValidateNested()
   @Type(() => CreateSpecificationsDto)
   readonly specifications: CreateSpecificationsDto;
+
+  @IsDefined()
+  @ValidateNested()
+  @Type(() => CreateInventoryDto)
+  readonly inventory: CreateInventoryDto;
+
+  @IsDefined()
+  @ValidateNested()
+  @Type(() => CreatePackagingDto)
+  readonly packaging: CreatePackagingDto;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => CreateShippingDetailsDto)
+  readonly shippingDetails?: CreateShippingDetailsDto;
 }

@@ -1,13 +1,15 @@
 import {
   IsNumber,
-  IsObject,
   IsOptional,
   IsString,
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { UpdateSpecificationsDto } from './specifications.dto';
-import { Types } from 'mongoose';
+import { UpdateSpecificationsDto } from './specifications/update-specifications.dto';
+import { UpdateInventoryDto } from './update-inventory.dto';
+import { UpdatePriceDto } from '../../prices/dto/price.dto';
+import { UpdatePackagingDto } from './packaging/update-packaging.dto';
+import { UpdateShippingDetailsDto } from './shipping-details/update-shipping-details.dto';
 
 export class UpdateProductDto {
   @IsOptional()
@@ -19,15 +21,16 @@ export class UpdateProductDto {
   readonly slug?: string;
 
   @IsOptional()
-  @IsObject()
-  readonly price?: {
-    price: number;
-    discountPrice?: number;
-  };
+  @IsString()
+  readonly description?: string;
 
   @IsOptional()
   @IsString()
-  readonly description?: string;
+  readonly excerpt?: string;
+
+  @IsOptional()
+  @ValidateNested()
+  readonly price?: UpdatePriceDto;
 
   @IsOptional()
   @IsString()
@@ -42,8 +45,8 @@ export class UpdateProductDto {
   readonly basicCategory?: string;
 
   @IsOptional()
-  @IsString()
-  readonly popularity?: string;
+  @IsNumber()
+  readonly popularity?: number;
 
   @IsOptional()
   @IsNumber()
@@ -54,10 +57,26 @@ export class UpdateProductDto {
   readonly tags?: string;
 
   @IsOptional()
-  readonly reviews?: Types.ObjectId;
+  @IsString()
+  readonly reviews?: string;
 
   @IsOptional()
   @ValidateNested()
   @Type(() => UpdateSpecificationsDto)
   readonly specifications?: UpdateSpecificationsDto;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => UpdateInventoryDto)
+  readonly inventory?: UpdateInventoryDto;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => UpdatePackagingDto)
+  readonly packaging?: UpdatePackagingDto;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => UpdateShippingDetailsDto)
+  readonly shippingDetails?: UpdateShippingDetailsDto;
 }

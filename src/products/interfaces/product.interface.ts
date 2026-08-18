@@ -1,15 +1,22 @@
 import { ProductDocument } from '../schemes/product.scheme';
 import { Types } from 'mongoose';
 import { IPrice, IPriceRaw } from '../../prices/interfaces/price.interface';
-import { ISpecifications } from './specifications.interface';
 import { ITags } from '../../tags/interfaces/tags.interface';
 import { IReviews } from '../../reviews/interfaces/review.interface';
-import { ICompany } from './specifications/company.interface';
+import { IInventory } from './inventory.interface';
+import {
+  ISpecifications,
+  ISpecificationsRaw,
+} from './specifications/specifications.interface';
+import { IPackaging } from './packaging/packaging.interface';
+import { IShippingDetails } from './shipping-details/shipping-details.interface';
+import { IBrandRaw } from '../../brands/interfaces/brand.interface';
 
 export interface ICreateProduct {
   name: string;
   slug: string;
   price: Types.ObjectId;
+  excerpt: string;
   description?: string;
   primeCategory: string;
   subCategory?: string;
@@ -20,6 +27,9 @@ export interface ICreateProduct {
   tags?: Types.ObjectId;
   reviews?: Types.ObjectId;
   specifications: ISpecifications;
+  inventory: IInventory;
+  packaging: IPackaging;
+  shippingDetails?: IShippingDetails;
 }
 
 export interface IProductRaw {
@@ -47,7 +57,7 @@ export interface IProductRaw {
   rating?: number;
   tags?: ITags;
   reviews?: IReviews;
-  specifications: ISpecifications;
+  specifications: ISpecificationsRaw;
 }
 
 export interface IProduct {
@@ -107,11 +117,6 @@ export interface IProductsBySlugRO {
   products: IProductBySlug[];
 }
 
-export interface IBrandsRO {
-  name: string;
-  brands: string[];
-}
-
 export interface IProductQuery {
   name?: string;
   sort?: IProductSort;
@@ -133,8 +138,14 @@ export interface IProductRelatedQuery {
   limit?: string;
 }
 
+interface IQueryBrandData {
+  brand: IBrandRaw;
+  popularity: number;
+  quantity: number;
+}
+
 export interface IFindQueryBrandsRO {
-  brands: ICompany[];
+  brands: IQueryBrandData[];
   dietary?: string[];
 }
 
