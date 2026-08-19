@@ -1,10 +1,4 @@
-import {
-  forwardRef,
-  HttpException,
-  HttpStatus,
-  Inject,
-  Injectable,
-} from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import {
   Verification,
@@ -31,9 +25,11 @@ import {
 import { EmailerService } from '../emailer/emailer.service';
 import { UsersService } from '../users/users.service';
 import { VerificationCodeEnum } from './enums/verification.enum';
-import { AuthService } from '../auth/auth.service';
 import { VerifyEmailTemplateIdEnum } from '../emailer/enums/emailer.enum';
 import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
+import { SessionsService } from '../sessions/sessions.service';
+import { IIsUserEmailVerifiedRO } from './interfaces/verifications.interface';
 
 @Injectable()
 export class VerificationsService {
@@ -42,9 +38,9 @@ export class VerificationsService {
     private verificationModel: Model<VerificationDocument>,
     private readonly emailerService: EmailerService,
     private readonly usersService: UsersService,
-    @Inject(forwardRef(() => AuthService))
-    private readonly authService: AuthService,
     private readonly configService: ConfigService,
+    private readonly jwtService: JwtService,
+    private readonly sessionsService: SessionsService,
   ) {}
 
   public async createVerification(
@@ -150,7 +146,6 @@ export class VerificationsService {
       new Date(verification.codeCreatedAt).getTime() +
       VerificationCodeEnum.VERIFY_EMAIL_CODE_EXPIRATION;
 
-    // If current time is past the expiration time, the code has expired
     if (now > expirationTime) {
       throw new HttpException(
         'Code expired. Try new code.',
@@ -237,11 +232,19 @@ export class VerificationsService {
     };
   }
 
+  /**
+   * Final step of the email-change flow. The JWT payload carries `email`,
+   * which just changed, so this reissues a session the same way a fresh
+   * login would - previous sessions on other devices are revoked, the
+   * current device gets a new access + refresh token pair.
+   */
   public async validatePassword(
     email: string,
     password: string,
+    clientId: string,
+    ipAddress: string,
   ): Promise<ValidatePasswordRO> {
-    const user = await this.authService.validateUser(email, password);
+    const user = await this.usersService.validateCredentials(email, password);
 
     if (!user)
       throw new HttpException(
@@ -262,9 +265,15 @@ export class VerificationsService {
 
     await this.emailerService.sendChangeEmailSuccess(user.email);
 
-    const creds = await this.authService.login({
+    await this.sessionsService.revokeAllForUser(user._id);
+    const { rawToken: refreshToken } = await this.sessionsService.createSession(
+      user._id,
+      clientId,
+      ipAddress,
+    );
+    const accessToken = this.jwtService.sign({
       email: verification.newEmail,
-      password,
+      userId: user._id,
     });
 
     verification.code = undefined;
@@ -277,7 +286,8 @@ export class VerificationsService {
     return {
       message: 'Email has been changed.',
       statusCode: HttpStatus.OK,
-      accessToken: creds.accessToken,
+      accessToken,
+      refreshToken,
     };
   }
 
@@ -336,15 +346,6 @@ export class VerificationsService {
     };
   }
 
-  /**
-   * Change password 2-nd step - verifies code from email and sends link to reset password
-   * @param userId - ID of the user
-   * @param clientIp - IP address of client
-   * @param browser - Browser used
-   * @param os - Operating system used
-   * @param email - User's email address
-   * @param code - Verification code from email
-   */
   public async verifyCode(
     userId: string,
     clientIp: string,
@@ -360,7 +361,6 @@ export class VerificationsService {
       new Date(verification.codeCreatedAt).getTime() +
       VerificationCodeEnum.PASSWORD_CHANGE_CODE_EXPIRATION;
 
-    // If current time is past the expiration time, the code has expired
     if (now > expirationTime) {
       throw new HttpException(
         'Code expired. Try new code.',
@@ -397,6 +397,11 @@ export class VerificationsService {
     };
   }
 
+  /**
+   * Actual password change (authenticated flow). Revokes every other
+   * session and reissues one for the device making this request, so the
+   * person isn't logged out of the device they used to change it.
+   */
   public async resetPassword(
     reqUserId: string,
     userId: string,
@@ -447,9 +452,19 @@ export class VerificationsService {
 
     await this.emailerService.sendChangePasswordSuccess(email);
 
+    await this.sessionsService.revokeAllForUser(userId);
+    const { rawToken: refreshToken } = await this.sessionsService.createSession(
+      userId,
+      `${browser} ${os}`,
+      clientIp,
+    );
+    const accessToken = this.jwtService.sign({ email, userId });
+
     return {
       message: 'Password has been changed.',
       statusCode: HttpStatus.OK,
+      accessToken,
+      refreshToken,
     };
   }
 
@@ -517,6 +532,12 @@ export class VerificationsService {
     };
   }
 
+  /**
+   * Actual password change (unauthenticated "forgot password" flow).
+   * Revokes every session with no reissue - there's no existing session
+   * to preserve here, and this path often follows a suspected compromise,
+   * so the safer default is to require a fresh login everywhere.
+   */
   public async resetForgotPassword(
     userId: string,
     expirationTime: number,
@@ -574,19 +595,25 @@ export class VerificationsService {
 
     await this.emailerService.sendResetPasswordSuccess(user.email);
 
+    await this.sessionsService.revokeAllForUser(userId);
+
     return {
       message: 'Password has been reset.',
       statusCode: HttpStatus.OK,
     };
   }
 
-  public async isUserEmailVerified(id: string): Promise<boolean> {
+  public async isUserEmailVerified(
+    id: string,
+  ): Promise<IIsUserEmailVerifiedRO> {
     const verification = await this._findByUserId(id);
 
     if (!verification)
       throw new HttpException('Verification not found', HttpStatus.NOT_FOUND);
 
-    return verification.isEmailVerified;
+    return {
+      isEmailVerified: verification.isEmailVerified,
+    };
   }
 
   private _generateCode(): number {

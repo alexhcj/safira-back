@@ -92,4 +92,16 @@ export class UsersService {
   ): Promise<UserDocument> {
     return this.userModel.findByIdAndUpdate(id, data).setOptions({ new: true });
   }
+
+  public async validateCredentials(
+    email: string,
+    password: string,
+  ): Promise<UserDocument> {
+    const user = await this.findByEmail(email);
+
+    if (user && bcrypt.compareSync(password, user.passwordHash)) {
+      return user;
+    }
+    throw new HttpException('Wrong email or password', HttpStatus.NOT_FOUND);
+  }
 }

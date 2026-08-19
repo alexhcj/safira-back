@@ -1,24 +1,22 @@
-import {
-  forwardRef,
-  HttpException,
-  HttpStatus,
-  Inject,
-  Injectable,
-} from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { UsersService } from '../users/users.service';
 import { UserDocument } from '../users/schemes/user.scheme';
 import { JwtService } from '@nestjs/jwt';
-import { AuthLoginRO } from './interfaces/auth.interface';
+import {
+  IAuthLoginWithSessionRO,
+  IRefreshRO,
+} from './interfaces/auth.interface';
 import { LoginUserDto, RegisterUserDto } from './dto/auth.dto';
 import { VerificationsService } from '../verifications/verifications.service';
+import { SessionsService } from '../sessions/sessions.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
-    @Inject(forwardRef(() => VerificationsService))
+    private sessionsService: SessionsService,
     private verificationService: VerificationsService,
   ) {}
 
@@ -26,36 +24,60 @@ export class AuthService {
     email: string,
     password: string,
   ): Promise<UserDocument> {
-    const user = await this.usersService.findByEmail(email);
-
-    if (user && AuthService.comparePassword(password, user.passwordHash)) {
-      return user;
-    }
-    throw new HttpException('Wrong email or password', HttpStatus.NOT_FOUND);
+    return this.usersService.validateCredentials(email, password);
   }
 
-  async login(user: LoginUserDto): Promise<AuthLoginRO> {
-    const validatedUser = await this.validateUser(user.email, user.password);
-
-    if (!validatedUser) {
-      throw new HttpException('User not validated', HttpStatus.FORBIDDEN);
-    }
+  async login(
+    data: LoginUserDto,
+    clientId: string,
+    ipAddress: string,
+  ): Promise<IAuthLoginWithSessionRO> {
+    const validatedUser = await this.validateUser(data.email, data.password);
 
     const payload = { email: validatedUser.email, userId: validatedUser.id };
-
     const accessToken = this.jwtService.sign(payload);
 
-    const isUserEmailVerified =
-      await this.verificationService.isUserEmailVerified(validatedUser.id);
+    const { rawToken: refreshToken } = await this.sessionsService.createSession(
+      validatedUser.id,
+      clientId,
+      ipAddress,
+    );
 
     return {
       id: validatedUser.id,
       accessToken,
-      isEmailVerified: isUserEmailVerified,
+      refreshToken,
     };
   }
 
-  async register(user: RegisterUserDto): Promise<any> {
+  async refresh(
+    rawToken: string,
+    clientId: string,
+    ipAddress: string,
+  ): Promise<IRefreshRO> {
+    const rotated = await this.sessionsService.rotate(
+      rawToken,
+      clientId,
+      ipAddress,
+    );
+    const user = await this.usersService.findById(rotated.userId);
+    const accessToken = this.jwtService.sign({
+      email: user.email,
+      userId: user.id,
+    });
+
+    return {
+      userId: user.id,
+      accessToken,
+      refreshToken: rotated.rawToken,
+    };
+  }
+
+  async register(
+    user: RegisterUserDto,
+    clientId: string,
+    ipAddress: string,
+  ): Promise<any> {
     if (!user.isPrivacyConfirmed)
       throw new HttpException(
         'User not confirmed terms and policies',
@@ -73,10 +95,11 @@ export class AuthService {
       user.isPrivacyConfirmed,
     );
 
-    return this.login({
-      email: newUser.email,
-      password: user.password,
-    });
+    return this.login(
+      { email: newUser.email, password: user.password },
+      clientId,
+      ipAddress,
+    );
   }
 
   private static comparePassword(password, passwordHash): boolean {

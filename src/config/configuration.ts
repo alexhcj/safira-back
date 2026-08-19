@@ -13,6 +13,9 @@ export default (): IConfig => ({
   jwt: {
     secret: process.env.JWT_SECRET,
     expiresIn: process.env.JWT_EXPIRES_IN,
+    refreshExpiresInSeconds:
+      parseInt(process.env.JWT_REFRESH_EXPIRES_IN_SECONDS, 10) ||
+      60 * 60 * 24 * 30, // 30 days
   },
   mongodb: {
     database: {

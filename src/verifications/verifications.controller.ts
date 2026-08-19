@@ -1,14 +1,17 @@
 import {
   Body,
   Controller,
+  Get,
   Ip,
   Logger,
   Post,
   Query,
   Req,
+  Res,
   UseGuards,
 } from '@nestjs/common';
 import { UAParser } from 'ua-parser-js';
+import { Response } from 'express';
 import { VerificationsService } from './verifications.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import {
@@ -22,6 +25,10 @@ import {
   VerifyCodeDto,
   VerifyNewEmailDto,
 } from './dto/verification.dto';
+import {
+  REFRESH_COOKIE_NAME,
+  REFRESH_COOKIE_OPTIONS,
+} from '../common/cookies/refresh-cookie.constants';
 
 @Controller('verifications')
 export class VerificationsController {
@@ -66,13 +73,27 @@ export class VerificationsController {
 
   @UseGuards(JwtAuthGuard)
   @Post('validate-password')
-  validatePassword(@Req() req, @Body() data: ValidatePasswordDto) {
+  async validatePassword(
+    @Req() req,
+    @Ip() ip: string,
+    @Body() data: ValidatePasswordDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     this.logger.log('Handling validatePassword() request');
 
-    return this.verificationsService.validatePassword(
-      req.user.email,
-      data.password,
-    );
+    const { browser, os } = UAParser(req.headers['user-agent']);
+    const clientId = `${browser.name} ${browser.major} / ${os.name} ${os.version}`;
+
+    const { refreshToken, ...result } =
+      await this.verificationsService.validatePassword(
+        req.user.email,
+        data.password,
+        clientId,
+        ip,
+      );
+
+    res.cookie(REFRESH_COOKIE_NAME, refreshToken, REFRESH_COOKIE_OPTIONS);
+    return result;
   }
 
   @UseGuards(JwtAuthGuard)
@@ -166,5 +187,12 @@ export class VerificationsController {
       `${os.name} ${os.version}`,
       data,
     );
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('email-status')
+  async getEmailStatus(@Req() req) {
+    this.logger.log('Handling getEmailStatus() request');
+    return this.verificationsService.isUserEmailVerified(req.user.userId);
   }
 }

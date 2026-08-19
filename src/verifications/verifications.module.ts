@@ -1,4 +1,4 @@
-import { forwardRef, Module } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { VerificationsService } from './verifications.service';
 import { MongooseModule } from '@nestjs/mongoose';
 import {
@@ -8,7 +8,8 @@ import {
 import { EmailerModule } from '../emailer/emailer.module';
 import { UsersModule } from '../users/users.module';
 import { VerificationsController } from './verifications.controller';
-import { AuthModule } from '../auth/auth.module';
+import { SessionsModule } from '../sessions/sessions.module';
+import { JwtConfigModule } from '../common/jwt/jwt-config.module';
 
 @Module({
   imports: [
@@ -17,7 +18,8 @@ import { AuthModule } from '../auth/auth.module';
     ]),
     EmailerModule,
     UsersModule,
-    forwardRef(() => AuthModule),
+    SessionsModule,
+    JwtConfigModule,
   ],
   providers: [VerificationsService],
   controllers: [VerificationsController],

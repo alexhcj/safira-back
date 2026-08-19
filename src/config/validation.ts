@@ -1,4 +1,4 @@
-import * as Joi from 'joi';
+import Joi from 'joi';
 import { IConfig } from './config.interface';
 
 export const validationSchema = Joi.object<IConfig>({
@@ -14,6 +14,7 @@ export const validationSchema = Joi.object<IConfig>({
   jwt: {
     secret: Joi.string().required(),
     expiresIn: Joi.string().required(),
+    refreshExpiresInSeconds: Joi.number().required(),
   },
   mongodb: {
     database: {

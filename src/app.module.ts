@@ -21,6 +21,7 @@ import { FilesModule } from './files/files.module';
 import { EmailerModule } from './emailer/emailer.module';
 import { CategoriesModule } from './categories/categories.module';
 import { BrandsModule } from './brands/brands.module';
+import { SessionsModule } from './sessions/sessions.module';
 import configuration from './config/configuration';
 
 @Module({
@@ -65,6 +66,7 @@ import configuration from './config/configuration';
     EmailerModule,
     CategoriesModule,
     BrandsModule,
+    SessionsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -10,6 +10,7 @@ interface IClient {
 interface IJwt {
   secret: string;
   expiresIn: string;
+  refreshExpiresInSeconds: number;
 }
 
 interface IMongodb {

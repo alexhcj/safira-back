@@ -92,6 +92,7 @@ export class ValidatePasswordRO {
   message: string;
   statusCode: HttpStatus;
   accessToken: string;
+  refreshToken: string;
 }
 
 export class ChangePasswordDto {
@@ -157,6 +158,8 @@ export class ResetForgotPasswordDto {
 export class ResetPasswordRO {
   message: string;
   statusCode: HttpStatus;
+  accessToken: string;
+  refreshToken: string;
 }
 
 export class ResetForgotPasswordRO {
