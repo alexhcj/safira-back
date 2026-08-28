@@ -5,6 +5,7 @@ import { UserDocument } from '../users/schemes/user.scheme';
 import { JwtService } from '@nestjs/jwt';
 import {
   IAuthLoginWithSessionRO,
+  IMeRO,
   IRefreshRO,
 } from './interfaces/auth.interface';
 import { LoginUserDto, RegisterUserDto } from './dto/auth.dto';
@@ -27,12 +28,22 @@ export class AuthService {
     return this.usersService.validateCredentials(email, password);
   }
 
+  async me(id: string): Promise<IMeRO> {
+    const user = await this.usersService.findById(id);
+
+    if (!user) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+
+    return { id: user.id };
+  }
+
   async login(
     data: LoginUserDto,
     clientId: string,
     ipAddress: string,
   ): Promise<IAuthLoginWithSessionRO> {
     const validatedUser = await this.validateUser(data.email, data.password);
+    const { isEmailVerified } =
+      await this.verificationService.isUserEmailVerified(validatedUser.id);
 
     const payload = { email: validatedUser.email, userId: validatedUser.id };
     const accessToken = this.jwtService.sign(payload);
@@ -47,6 +58,7 @@ export class AuthService {
       id: validatedUser.id,
       accessToken,
       refreshToken,
+      isEmailVerified,
     };
   }
 
@@ -77,7 +89,7 @@ export class AuthService {
     user: RegisterUserDto,
     clientId: string,
     ipAddress: string,
-  ): Promise<any> {
+  ): Promise<IAuthLoginWithSessionRO> {
     if (!user.isPrivacyConfirmed)
       throw new HttpException(
         'User not confirmed terms and policies',

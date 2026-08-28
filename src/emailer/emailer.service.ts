@@ -771,11 +771,12 @@ export class EmailerService implements IEmailer {
     category: UnsubscribeCategoryEnum,
   ) {
     const timestamp = Date.now();
-    const expiresIn = UnsubscribeExpirationEnum.UNSUBSCRIBE_EXPIRATION;
+    const unsubscribeExpiresIn =
+      UnsubscribeExpirationEnum.UNSUBSCRIBE_EXPIRATION;
     const salt = await bcrypt.genSalt(15);
 
     return await bcrypt.hash(
-      `${userId}${email}${category}${timestamp}${expiresIn}`,
+      `${userId}${email}${category}${timestamp}${unsubscribeExpiresIn}`,
       salt,
     );
   }

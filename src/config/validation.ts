@@ -13,8 +13,8 @@ export const validationSchema = Joi.object<IConfig>({
   },
   jwt: {
     secret: Joi.string().required(),
-    expiresIn: Joi.string().required(),
-    refreshExpiresInSeconds: Joi.number().required(),
+    accessExpiresIn: Joi.number().required(),
+    refreshExpiresIn: Joi.number().required(),
   },
   mongodb: {
     database: {

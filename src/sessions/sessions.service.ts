@@ -25,9 +25,7 @@ export class SessionsService {
   }
 
   private getExpiresAt(): Date {
-    const ttlSeconds = this.configService.get<number>(
-      'jwt.refreshExpiresInSeconds',
-    );
+    const ttlSeconds = this.configService.get<number>('jwt.refreshExpiresIn');
     return new Date(Date.now() + ttlSeconds * 1000);
   }
 

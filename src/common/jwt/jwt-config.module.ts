@@ -8,7 +8,9 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
         secret: configService.get<string>('jwt.secret'),
-        signOptions: { expiresIn: configService.get<string>('jwt.expiresIn') },
+        signOptions: {
+          expiresIn: configService.get<number>('jwt.accessExpiresIn'),
+        },
       }),
       inject: [ConfigService],
     }),

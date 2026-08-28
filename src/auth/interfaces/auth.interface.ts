@@ -1,6 +1,7 @@
 export interface IAuthLoginRO {
   id: string;
   accessToken: string;
+  isEmailVerified: boolean;
 }
 
 export interface IAuthLoginWithSessionRO extends IAuthLoginRO {
@@ -11,4 +12,8 @@ export interface IRefreshRO {
   userId: string;
   accessToken: string;
   refreshToken: string;
+}
+
+export interface IMeRO {
+  id: string;
 }

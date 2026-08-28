@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Get,
   Ip,
   Logger,
   Post,
@@ -63,6 +64,14 @@ export class AuthController {
     );
 
     return result;
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('me')
+  async me(@Req() req) {
+    this.logger.log('Handling me() request...');
+
+    return this.authService.me(req.user.id);
   }
 
   @Post('refresh')
