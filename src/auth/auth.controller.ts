@@ -71,7 +71,7 @@ export class AuthController {
   async me(@Req() req) {
     this.logger.log('Handling me() request...');
 
-    return this.authService.me(req.user.id);
+    return this.authService.me(req.user.userId);
   }
 
   @Post('refresh')
