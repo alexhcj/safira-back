@@ -11,6 +11,7 @@ import {
 import { UsersService } from './users.service';
 import { UserDto } from './dto/user.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
 
 @Controller('users')
 export class UsersController {
@@ -32,9 +33,9 @@ export class UsersController {
 
   @UseGuards(JwtAuthGuard)
   @Get('find-profile')
-  findProfile(@Req() req) {
+  findProfile(@CurrentUser('id') id: string) {
     this.logger.log('Handling findProfile() request');
-    return this.userService.findProfile(req.user.userId);
+    return this.userService.findProfile(id);
   }
 
   @Get(':id')

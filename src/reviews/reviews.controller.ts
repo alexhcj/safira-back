@@ -13,6 +13,7 @@ import {
 import { ReviewDto } from './dto/review.dto';
 import { ReviewsService } from './reviews.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
 
 @Controller('reviews')
 export class ReviewsController {
@@ -22,9 +23,9 @@ export class ReviewsController {
 
   @UseGuards(JwtAuthGuard)
   @Post('create')
-  create(@Body() data: ReviewDto, @Req() req: any) {
+  create(@CurrentUser('id') id: string, @Body() data: ReviewDto) {
     this.logger.log('Handling create() request...');
-    return this.reviewsService.create(data, req.user.userId);
+    return this.reviewsService.create(data, id);
   }
 
   @Get('list')

@@ -17,6 +17,8 @@ import {
   UpdateSubscriptionDto,
 } from './dto/subscription.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { ICurrentUser } from '../common/interfaces/current-user.interface';
 
 @Controller('emailer')
 export class EmailerController {
@@ -26,9 +28,9 @@ export class EmailerController {
 
   @UseGuards(JwtAuthGuard)
   @Get()
-  findSubscription(@Req() req) {
+  findSubscription(@CurrentUser('id') id: string) {
     this.logger.log('Handling findSubscription() request...');
-    return this.emailerService.findSubscription(req.user.userId);
+    return this.emailerService.findSubscription(id);
   }
 
   @Post('send-verify-email')
@@ -39,23 +41,29 @@ export class EmailerController {
 
   @UseGuards(JwtAuthGuard)
   @Post('subscribe-user')
-  subscribeUser(@Req() req, @Body() data: SubscribeUserDto) {
+  subscribeUser(@CurrentUser('id') id: string, @Body() data: SubscribeUserDto) {
     this.logger.log('Handling subscribeUser() request...');
-    return this.emailerService.subscribeUser(req.user.userId, data);
+    return this.emailerService.subscribeUser(id, data);
   }
 
   @UseGuards(JwtAuthGuard)
   @Put('update-subscription')
-  updateSubscription(@Req() req, @Body() data: UpdateSubscriptionDto) {
+  updateSubscription(
+    @CurrentUser() user: ICurrentUser,
+    @Body() data: UpdateSubscriptionDto,
+  ) {
     this.logger.log('Handling updateSubscription() request...');
-    return this.emailerService.updateSubscription(req.user.email, data);
+    return this.emailerService.updateSubscription(user.email, data);
   }
 
   @UseGuards(JwtAuthGuard)
   @Put('unsubscribe')
-  unsubscribeUser(@Req() req, @Body() data: UnsubscribeUserDto) {
+  unsubscribeUser(
+    @CurrentUser('id') id: string,
+    @Body() data: UnsubscribeUserDto,
+  ) {
     this.logger.log('Handling unsubscribeUser() request...');
-    return this.emailerService.unsubscribeUser(req.user.userId, data);
+    return this.emailerService.unsubscribeUser(id, data);
   }
 
   @Get('send-most-popular-products')
@@ -66,8 +74,8 @@ export class EmailerController {
 
   @UseGuards(JwtAuthGuard)
   @Post('send-feedback')
-  sendFeedback(@Req() req, @Body() data: CreateFeedbackDto) {
+  sendFeedback(@CurrentUser('id') id: string, @Body() data: CreateFeedbackDto) {
     this.logger.log('Handling sendFeedback() request...');
-    return this.emailerService.sendFeedback(req.user.userId, data);
+    return this.emailerService.sendFeedback(id, data);
   }
 }

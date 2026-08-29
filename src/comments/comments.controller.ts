@@ -15,6 +15,7 @@ import { CommentsService } from './comments.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
 
 @Controller('comments')
 export class CommentsController {
@@ -38,23 +39,23 @@ export class CommentsController {
   @Post(':slug')
   create(
     @Param('slug') slug: string,
-    @Req() req,
+    @CurrentUser('id') id: string,
     @Body() data: CreateCommentDto,
   ) {
     this.logger.log('Handling create() request...');
-    return this.commentsService.create(slug, req.user.userId, data);
+    return this.commentsService.create(slug, id, data);
   }
 
   @UseGuards(JwtAuthGuard)
   @Put(':postSlug')
   update(
     @Param('postSlug') postSlug: string,
-    @Req() req,
+    @CurrentUser('id') id: string,
     @Body() data: UpdateCommentDto,
     @Query() query,
   ) {
     this.logger.log('Handling update() request with id=' + postSlug + '...');
-    return this.commentsService.update(postSlug, req.user.userId, data, query);
+    return this.commentsService.update(postSlug, id, data, query);
   }
 
   @Delete(':id')

@@ -9,7 +9,6 @@ import {
   Param,
   ParseFilePipe,
   Post,
-  Req,
   Res,
   StreamableFile,
   UploadedFile,
@@ -22,6 +21,8 @@ import { join } from 'path';
 import { FilesService } from './files.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import LocalFilesInterceptor from '../interceptors/local-files.interceptor';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { ICurrentUser } from '../common/interfaces/current-user.interface';
 
 @Controller('files')
 @UseInterceptors(ClassSerializerInterceptor)
@@ -56,7 +57,7 @@ export default class FilesController {
     }),
   )
   async uploadAvatar(
-    @Req() req,
+    @CurrentUser('id') id: string,
     @UploadedFile(
       new ParseFilePipe({
         validators: [
@@ -67,14 +68,13 @@ export default class FilesController {
     )
     data: Express.Multer.File,
   ) {
-    console.log(data);
-    return this.filesService.uploadAvatar(req.user.userId, data);
+    return this.filesService.uploadAvatar(id, data);
   }
 
   @UseGuards(JwtAuthGuard)
   @Delete('avatar/:id')
-  deleteAvatar(@Req() req, @Param('id') id: string) {
+  deleteAvatar(@CurrentUser() user: ICurrentUser, @Param('id') id: string) {
     this.logger.log('Handling deleteAvatar() request...');
-    return this.filesService.deleteAvatar(req.user.userId, id);
+    return this.filesService.deleteAvatar(user.id, id);
   }
 }

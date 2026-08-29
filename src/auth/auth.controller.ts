@@ -20,6 +20,7 @@ import {
   REFRESH_COOKIE_NAME,
   REFRESH_COOKIE_OPTIONS,
 } from '../common/cookies/refresh-cookie.constants';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
 
 @Controller('auth')
 export class AuthController {
@@ -68,10 +69,10 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @Get('me')
-  async me(@Req() req) {
+  async me(@CurrentUser('id') id: string) {
     this.logger.log('Handling me() request...');
 
-    return this.authService.me(req.user.userId);
+    return this.authService.me(id);
   }
 
   @Post('refresh')
@@ -107,10 +108,13 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @Post('logout-all')
-  async logoutAll(@Req() req, @Res({ passthrough: true }) res: Response) {
+  async logoutAll(
+    @CurrentUser('id') id: string,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     this.logger.log('Handling logoutAll() request...');
 
-    await this.sessionsService.revokeAllForUser(req.user.userId);
+    await this.sessionsService.revokeAllForUser(id);
     res.clearCookie(REFRESH_COOKIE_NAME, { path: '/auth' });
 
     return { success: true };

@@ -29,6 +29,8 @@ import {
   REFRESH_COOKIE_NAME,
   REFRESH_COOKIE_OPTIONS,
 } from '../common/cookies/refresh-cookie.constants';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { ICurrentUser } from '../common/interfaces/current-user.interface';
 
 @Controller('verifications')
 export class VerificationsController {
@@ -38,43 +40,50 @@ export class VerificationsController {
 
   @UseGuards(JwtAuthGuard)
   @Post('verify-email')
-  verifyEmail(@Req() req, @Body() data: { code: string }) {
+  verifyEmail(
+    @CurrentUser() user: ICurrentUser,
+    @Body() data: { code: string },
+  ) {
     this.logger.log('Handling verifyEmail() request');
     return this.verificationsService.verifyEmail({
-      userId: req.user.userId,
-      email: req.user.email,
+      userId: user.id,
+      email: user.email,
       code: +data.code,
     });
   }
 
   @UseGuards(JwtAuthGuard)
   @Post('resend-verify-email')
-  resendVerifyEmail(@Req() req, @Body() data: ResendVerifyEmailDto) {
+  resendVerifyEmail(
+    @CurrentUser('id') id: string,
+    @Body() data: ResendVerifyEmailDto,
+  ) {
     this.logger.log('Handling resendVerifyEmail() request');
-    return this.verificationsService.resendVerifyEmail(
-      data.type,
-      req.user.userId,
-    );
+    return this.verificationsService.resendVerifyEmail(data.type, id);
   }
 
   @UseGuards(JwtAuthGuard)
   @Post('change-email')
-  changeEmail(@Req() req, @Body() data: ChangeEmailDto) {
+  changeEmail(@CurrentUser('id') id: string, @Body() data: ChangeEmailDto) {
     this.logger.log('Handling changeEmail() request');
-    return this.verificationsService.changeEmail(req.user.userId, data.email);
+    return this.verificationsService.changeEmail(id, data.email);
   }
 
   @UseGuards(JwtAuthGuard)
   @Post('verify-new-email')
-  verifyNewEmail(@Req() req, @Body() data: VerifyNewEmailDto) {
+  verifyNewEmail(
+    @CurrentUser('id') id: string,
+    @Body() data: VerifyNewEmailDto,
+  ) {
     this.logger.log('Handling verifyNewEmail() request');
-    return this.verificationsService.verifyNewEmail(req.user.userId, data.code);
+    return this.verificationsService.verifyNewEmail(id, data.code);
   }
 
   @UseGuards(JwtAuthGuard)
   @Post('validate-password')
   async validatePassword(
     @Req() req,
+    @CurrentUser() user: ICurrentUser,
     @Ip() ip: string,
     @Body() data: ValidatePasswordDto,
     @Res({ passthrough: true }) res: Response,
@@ -86,7 +95,7 @@ export class VerificationsController {
 
     const { refreshToken, ...result } =
       await this.verificationsService.validatePassword(
-        req.user.email,
+        user.email,
         data.password,
         clientId,
         ip,
@@ -98,13 +107,17 @@ export class VerificationsController {
 
   @UseGuards(JwtAuthGuard)
   @Post('change-password')
-  changePassword(@Req() req, @Body() data: ChangePasswordDto) {
+  changePassword(
+    @Req() req,
+    @CurrentUser('id') id: string,
+    @Body() data: ChangePasswordDto,
+  ) {
     this.logger.log('Handling changePassword() request');
 
     const { browser, os } = UAParser(req.headers['user-agent']);
 
     return this.verificationsService.changePassword(
-      req.user.userId,
+      id,
       data.email,
       `${browser.name} ${browser.major}`,
       `${os.name} ${os.version}`,
@@ -127,17 +140,22 @@ export class VerificationsController {
 
   @UseGuards(JwtAuthGuard)
   @Post('verify-code')
-  verifyCode(@Req() req, @Ip() ip, @Body() data: VerifyCodeDto) {
+  verifyCode(
+    @Req() req,
+    @CurrentUser() user: ICurrentUser,
+    @Ip() ip,
+    @Body() data: VerifyCodeDto,
+  ) {
     this.logger.log('Handling verifyCode() request');
 
     const { browser, os } = UAParser(req.headers['user-agent']);
 
     return this.verificationsService.verifyCode(
-      req.user.userId,
+      user.id,
       ip,
       `${browser.name} ${browser.major}`,
       `${os.name} ${os.version}`,
-      req.user.email,
+      user.email,
       data.code,
     );
   }
@@ -146,6 +164,7 @@ export class VerificationsController {
   @Post('reset-password')
   resetPassword(
     @Req() req,
+    @CurrentUser() user: ICurrentUser,
     @Query() query,
     @Ip() ip,
     @Body() data: ResetPasswordDto,
@@ -155,14 +174,14 @@ export class VerificationsController {
     const { browser, os } = UAParser(req.headers['user-agent']);
 
     return this.verificationsService.resetPassword(
-      req.user.userId,
+      user.id,
       query.userId,
       +query.expirationTime,
       query.token,
       ip,
       `${browser.name} ${browser.major}`,
       `${os.name} ${os.version}`,
-      req.user.email,
+      user.email,
       data,
     );
   }
@@ -191,8 +210,8 @@ export class VerificationsController {
 
   @UseGuards(JwtAuthGuard)
   @Get('email-status')
-  async getEmailStatus(@Req() req) {
+  async getEmailStatus(@CurrentUser('id') id: string) {
     this.logger.log('Handling getEmailStatus() request');
-    return this.verificationsService.isUserEmailVerified(req.user.userId);
+    return this.verificationsService.isUserEmailVerified(id);
   }
 }

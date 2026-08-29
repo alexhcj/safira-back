@@ -11,6 +11,7 @@ import {
 import { ProfilesService } from './profiles.service';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
 
 @Controller('profiles')
 export class ProfilesController {
@@ -26,8 +27,8 @@ export class ProfilesController {
 
   @UseGuards(JwtAuthGuard)
   @Put()
-  update(@Req() req, @Body() data: UpdateProfileDto) {
+  update(@CurrentUser('id') id: string, @Body() data: UpdateProfileDto) {
     this.logger.log('Handling update() request...');
-    return this.profilesService.update(req.user.userId, data);
+    return this.profilesService.update(id, data);
   }
 }
